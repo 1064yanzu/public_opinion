@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="assets/images/favicon.png" type="image/png">
+  <title></title>
+
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link href="{{  url_for('static', filename='assets/plugins/summernote-master/summernote.css') }}" rel="stylesheet" type="text/css"/>
+    <!-- END PAGE LEVEL STYLES -->
+    <link href="{{ url_for('static', filename='assets/css/icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/responsive.css') }}" rel="stylesheet">
+    
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="{{ url_for('static', filename='js/html5shiv.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/respond.min.js') }}"></script>
+    <![endif]-->
+
+</head>
+
+<body class="sticky-header">
+
+
+    <!--Start left side Menu-->
+    <div class="left-side sticky-left-side">
+
+
+        <!--logo-->
+        <div class="logo">
+             <img src="/static/assets/images/舆情-舆情搜索.png" style="width: 50px; height: 50px;"   alt="舆情监测系统"></a>
+        </div>
+
+        <div class="logo-icon text-center">
+            <img src="/static/assets/images/舆情-舆情搜索.png" style="width: 50px; height: 50px;"   alt="舆情监测系统"></a>
+        </div>
+        <!--logo-->
+
+
+        <div class="left-side-inner">
+            <!--Sidebar nav-->
+            <ul class="nav nav-pills nav-stacked custom-nav">
+                <li class="menu-list nav-active"><a href="{{ url_for('page.home') }}"><i class="icon-home"></i> <span>主页面</span></a>
+                    <ul class="sub-menu-list">
+                        <li  class="active"><a href="{{ url_for('page.home') }}"> 舆情分析概况</a></li>
+                        <li><a href="{{ url_for('page.tableData') }}"> 舆情分布地图</a></li>
+                    </ul>
+                </li>
+
+
+                <li class="menu-list"><a href="#"><i class="icon-grid"></i> <span>菜单栏</span></a>
+                    <ul class="sub-menu-list">
+                        <li><a href="table-static.html"> 爬取设置</a></li>
+{#                        <li><a href="table-responsive.html"> </a></li>#}
+                        <li><a href="table-datatable.html">舆情应对方案</a></li>
+                        <li><a href="{{ url_for('page.q_a') }}">舆情提问</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-list"><a href="#"><i class="icon-lock"></i> <span>用户界面</span></a>
+                    <ul class="sub-menu-list">
+                       <li><a href="{{ url_for('user.login') }}"> 登录页面 </a></li>
+                       <li><a href="forgot-password.html"> 忘记密码 </a></li>
+                        <li><a href="{{ url_for('user.register') }}"> 新用户注册 </a></li>
+                    </ul>
+                </li>
+
+            </ul>
+            <!--End sidebar nav-->
+
+        </div>
+    </div>
+    <!--End left side menu-->
+
+    
+    <!-- main content start-->
+    <div class="main-content" >
+
+        <!-- header section start-->
+        <div class="header-section">
+
+            <a class="toggle-btn"><i class="fa fa-bars"></i></a>
+
+            <form class="searchform">
+                <input type="text" class="form-control" name="keyword" placeholder="Search here..." />
+            </form>
+
+            <!--notification menu start -->
+            <div class="menu-right">}
+                {% block menu_right %}
+                {% endblock %}
+            </div>
+{#            <div class="menu-right">#}
+{#                <ul class="notification-menu">#}
+{#                    <li>#}
+{#                        <a href="#" class="btn btn-default dropdown-toggle info-number" data-toggle="dropdown">#}
+{#                            <i class="fa fa-tasks"></i>#}
+{#                            <span class="badge">8</span>#}
+{#                        </a>#}
+{#                        <div class="dropdown-menu dropdown-menu-head pull-right">#}
+{#                            <h5 class="title">You have 8 pending task</h5>#}
+{#                            <ul class="dropdown-list">#}
+{#                            <li class="notification-scroll-list notification-list ">#}
+{#                               <!-- list item-->#}
+{#                               <a href="javascript:void(0);" class="list-group-item">#}
+{#                                  <div class="media">#}
+{#                                     <div class="pull-left p-r-10">#}
+{#                                        <em class="fa  fa-shopping-cart noti-primary"></em>#}
+{#                                     </div>#}
+{#                                     <div class="media-body">#}
+{#                                        <h5 class="media-heading">A new order has been placed.</h5>#}
+{#                                        <p class="m-0">#}
+{#                                            <small>29 min ago</small>#}
+{#                                        </p>#}
+{#                                     </div>#}
+{#                                  </div>#}
+{#                               </a>#}
+{##}
+{#                               <!-- list item-->#}
+{#                               <a href="javascript:void(0);" class="list-group-item">#}
+{#                                  <div class="media">#}
+{#                                     <div class="pull-left p-r-10">#}
+{#                                        <em class="fa fa-check noti-success"></em>#}
+{#                                     </div>#}
+{#                                     <div class="media-body">#}
+{#                                        <h5 class="media-heading">Databse backup is complete</h5>#}
+{#                                        <p class="m-0">#}
+{#                                            <small>12 min ago</small>#}
+{#                                        </p>#}
+{#                                     </div>#}
+{#                                  </div>#}
+{#                               </a>#}
+{##}
+{#                               <!-- list item-->#}
+{#                               <a href="javascript:void(0);" class="list-group-item">#}
+{#                                  <div class="media">#}
+{#                                     <div class="pull-left p-r-10">#}
+{#                                        <em class="fa fa-user-plus noti-info"></em>#}
+{#                                     </div>#}
+{#                                     <div class="media-body">#}
+{#                                        <h5 class="media-heading">New user registered</h5>#}
+{#                                        <p class="m-0">#}
+{#                                             <small>17 min ago</small>#}
+{#                                        </p>#}
+{#                                     </div>#}
+{#                                  </div>#}
+{#                               </a>#}
+{##}
+{#                                <!-- list item-->#}
+{#                               <a href="javascript:void(0);" class="list-group-item">#}
+{#                                  <div class="media">#}
+{#                                     <div class="pull-left p-r-10">#}
+{#                                        <em class="fa fa-diamond noti-danger"></em>#}
+{#                                     </div>#}
+{#                                     <div class="media-body">#}
+{#                                        <h5 class="media-heading">Database error.</h5>#}
+{#                                        <p class="m-0">#}
+{#                                             <small>11 min ago</small>#}
+{#                                        </p>#}
+{#                                     </div>#}
+{#                                  </div>#}
+{#                               </a>#}
+{##}
+{#                               <!-- list item-->#}
+{#                               <a href="javascript:void(0);" class="list-group-item">#}
+{#                                  <div class="media">#}
+{#                                     <div class="pull-left p-r-10">#}
+{#                                        <em class="fa fa-cog noti-warning"></em>#}
+{#                                     </div>#}
+{#                                     <div class="media-body">#}
+{#                                        <h5 class="media-heading">New settings</h5>#}
+{#                                        <p class="m-0">#}
+{#                                             <small>18 min ago</small>#}
+{#                                        </p>#}
+{#                                     </div>#}
+{#                                  </div>#}
+{#                               </a>#}
+{#                             </li>#}
+{#                             <li class="last"> <a href="#">View all notifications</a> </li>#}
+{#							</ul>#}
+{#                        </div>#}
+{#                    </li>#}
+{##}
+{#                    <li>#}
+{#                        <a href="#" class="btn btn-default dropdown-toggle info-number" data-toggle="dropdown">#}
+{#                            <i class="fa fa-bell-o"></i>#}
+{#                            <span class="badge">4</span>#}
+{#                        </a>#}
+{#                        <div class="dropdown-menu dropdown-menu-head pull-right">#}
+{#                         <h5 class="title">Notifications</h5>#}
+{#                        <ul class="dropdown-list normal-list">#}
+{#						 <li class="message-list message-scroll-list">#}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-8.jpg" class="img-circle" alt="img"></span>#}
+{#                              <span class="subject">John Doe</span>#}
+{#                              <span class="message"> New tasks needs to be done</span>#}
+{#                               <span class="time">15 minutes ago</span>#}
+{#                          </a>#}
+{##}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-7.jpg" class="img-circle" alt="img"></span>#}
+{#                              <span class="subject">John Doe</span>#}
+{#                              <span class="message"> New tasks needs to be done</span>#}
+{#                               <span class="time">10 minutes ago</span>#}
+{#                          </a>#}
+{##}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-6.jpg" class="img-circle" alt="img"></span>#}
+{#                               <span class="subject">John Doe</span>#}
+{#                               <span class="message"> New tasks needs to be done</span>#}
+{#                              <span class="time">20 minutes ago</span>#}
+{#                          </a>#}
+{##}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-6.jpg" class="img-circle" alt="img"></span>#}
+{#                               <span class="subject">John Doe</span>#}
+{#                               <span class="message"> New tasks needs to be done</span>#}
+{#                              <span class="time">20 minutes ago</span>#}
+{#                          </a>#}
+{##}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-6.jpg" class="img-circle" alt="img"></span>#}
+{#                               <span class="subject">John Doe</span>#}
+{#                               <span class="message"> New tasks needs to be done</span>#}
+{#                              <span class="time">20 minutes ago</span>#}
+{#                          </a>#}
+{##}
+{#                          <a href="#">#}
+{#                              <span class="photo"> <img src="/assets/images/users/avatar-6.jpg" class="img-circle" alt="img"></span>#}
+{#                               <span class="subject">John Doe</span>#}
+{#                               <span class="message"> New tasks needs to be done</span>#}
+{#                              <span class="time">20 minutes ago</span>#}
+{#                          </a>#}
+{#						</li>#}
+{#						<li class="last"> <a  href="#">All Messages</a> </li>#}
+{#					</ul>#}
+{#                        </div>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown">#}
+{#                            <img src="/assets/images/users/avatar-6.jpg" alt="" />#}
+{#                            John Doe#}
+{#                            <span class="caret"></span>#}
+{#                        </a>#}
+{#                        <ul class="dropdown-menu dropdown-menu-usermenu pull-right">#}
+{#                          <li> <a href="#"> <i class="fa fa-wrench"></i> Settings </a> </li>#}
+{#                          <li> <a href="#"> <i class="fa fa-user"></i> Profile </a> </li>#}
+{#                          <li> <a href="#"> <i class="fa fa-info"></i> Help </a> </li>#}
+{#                          <li> <a href="#"> <i class="fa fa-lock"></i> Logout </a> </li>#}
+{#                        </ul>#}
+{#                    </li>#}
+{##}
+{#                </ul>#}
+{#            </div>#}
+            <!--notification menu end -->
+
+        </div>
+        <!-- header section end-->
+
+
+        <!--body wrapper start-->
+        <div class="wrapper">
+              
+              <!--Start Page Title-->
+               <div class="page-title-box">
+                    <h4 class="page-title">舆情提问</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a>舆情提问</a>
+                        </li>
+                        <li class="active">
+                            菜单栏
+                        </li>
+                    </ol>
+                    <div class="clearfix"></div>
+                 </div>
+                  <!--End Page Title-->          
+           
+                  <!--Start row-->
+                    <div class="row">
+                       <div class="col-md-12">
+                       
+                        
+                       <div class="row">
+                        <div class="col-md-9">
+                          <div class="white-box">
+                            <div class="mailbox-content">
+                            
+<!--                             <div class="mailbox-header">-->
+<!--                                  <div class="compose-options">-->
+<!--                                        <div class="pull-right">-->
+<!--                                            <a href="inbox.html" class="btn btn-default"><i class="fa fa-trash m-r-5"></i>Discard</a>-->
+<!--                                        </div>-->
+<!--                                 </div>-->
+<!--                            </div>-->
+                            
+                                <div class="compose-body">
+{#                                    <form class="row">#}
+{#                                        <div class="form-group">#}
+{#                                            <label for="to" class="col-md-2 control-label">To</label>#}
+{#                                            <div class="col-md-10">#}
+{#                                                <input type="text" class="form-control" id="to">#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                        <div class="form-group">#}
+{#                                            <label for="subject" class="col-md-2 control-label">Subject</label>#}
+{#                                            <div class="col-md-10">#}
+{#                                                <input type="text" class="form-control" id="subject">#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </form>#}
+                                </div>
+                                <div class="compose-message">
+                                    <div class="summernote"></div>
+                                </div>
+                                <div class="compose-options">
+                                    <div class="pull-right">
+                                        <a href="inbox.html" class="btn btn-primary"><i class="fa fa-send"></i> Send</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                          </div>
+                       </div>
+                      </div>
+                    </div>
+                    <!--End row-->
+                
+			   
+			    </div>
+        <!-- End Wrapper-->
+
+
+        <!--Start  Footer -->
+        <footer class="footer-main">Copyright &copy; 2018.Company name All rights reserved.<a target="_blank" href="http://sc.chinaz.com/moban/">&#x7F51;&#x9875;&#x6A21;&#x677F;</a></footer>	
+         <!--End footer -->
+
+       </div>
+      <!--End main content -->
+    
+
+
+    <!--Begin core plugin -->
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/moment/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/jquery.slimscroll.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/jquery.nicescroll.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/functions.js') }}"></script>
+    <!-- End core plugin -->
+    
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{{ url_for('static', filename='assets/plugins/summernote-master/summernote.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/pages/compose.js') }}"></script>
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+   
+
+</body>
+
+</html>

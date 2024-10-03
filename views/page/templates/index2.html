@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="/assets/images/favicon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <title></title>
+
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link href="{{ url_for('static', filename='assets/plugins/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ url_for('static', filename='assets/plugins/datatables/css/jquery.dataTables-custom.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ url_for('static', filename='assets/plugins/cropper-master/cropper.min.css') }}" rel="stylesheet" type="text/css"/>
+{#    <link href="{{ url_for('static', filename='assets/css/hot-news.css') }}" rel="stylesheet">#}
+    <link href="{{ url_for('static', filename='assets/css/index.css') }}" rel="stylesheet">
+    {% block css %}{% endblock %}
+
+           <!-- END PAGE LEVEL STYLES -->
+    <link href="{{ url_for('static', filename='assets/css/icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/css/responsive.css') }}" rel="stylesheet">
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom-sidebar.css') }}">
+    <style>
+        
+        :root {
+            --sidebar-bg-gradient: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+            --sidebar-hover-color: rgba(255, 255, 255, 0.2);
+            --sidebar-active-color: rgba(255, 255, 255, 0.3);
+            --text-color: #fff;
+            --accent-color: #fff;
+            --primary-color: #8a7b7b;
+            --secondary-color: #225dc2;
+            --text-color: #333;
+            /* --bg-color: #F5F5F5; */
+            --bg-color: #E375A64;
+        }
+
+        body {
+            background: #FFFFE0;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar {
+            background: var(--sidebar-bg-gradient);
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) transparent;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+
+        .sidebar-header .logo {
+            font-size: 28px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 25px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 0 30px 30px 0;
+            margin-right: 20px;
+            font-size: 16px;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: var(--sidebar-hover-color);
+        }
+
+        .sidebar-menu a.active {
+            background-color: var(--sidebar-active-color);
+            font-weight: bold;
+        }
+
+        .sidebar-menu i {
+            margin-right: 15px;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .sidebar.collapsed .sidebar-menu span {
+            display: none;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            color: var(--accent-color);
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        .top-bar {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+
+        .top-bar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+        }
+
+        .top-bar h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .top-bar-actions > * {
+            margin-left: 15px;
+        }
+
+        .btn-mode, .language-selector {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-mode:hover, .language-selector:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .language-selector {
+            appearance: none;
+            padding-right: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        /* 夜间模式样式 */
+        body.dark-mode {
+            --bg-color: #070707;
+            --text-color: #918686;
+        }
+
+        body.dark-mode .top-bar {
+            background: linear-gradient(to right, #2c3e50, #34495e);
+        }
+
+        body.dark-mode .card {
+            background-color: #242323;
+            color: #b6adad;
+        }
+
+        body {
+    background: linear-gradient(135deg, #f6f9fc 0%, #e9f2f9 100%);
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 卡片样式 */
+.card {
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: none;
+        overflow: hidden;
+    }
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 20px 25px;
+    font-weight: 600;
+    color: #334e68;
+    font-size: 18px;
+}
+
+.card-body {
+        padding: 30px;
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    }
+
+/* 信息概览卡片 */
+.info-box {
+        text-align: center;
+        padding: 30px;
+        transition: all 0.4s ease;
+        border-radius: 35px;
+        background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+        backdrop-filter: blur(5px);
+        margin-bottom: 20px;
+    }
+
+.info-box:hover {
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    transform: translateY(-5px);
+    }
+
+.info-box-content i {
+    font-size: 60px;
+    color: #00acc1;
+    margin-bottom: 20px;
+    transition: all 0.4s ease;
+}
+
+.info-box:hover .info-box-content i {
+    transform: scale(1.2) rotate(10deg);
+    color: #0097a7;
+}
+
+.info-box-content p {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 15px 0;
+    color: #006064;
+}
+
+.info-box-content span {
+    font-size: 18px;
+    color: #e0eaeb;
+}
+
+/* 词云图和放大图预览 */
+.wordcloud-card, .preview-card {
+    height: 800px;
+    border-radius: 40px;
+    margin-bottom: 30px;
+}
+
+.image-crop, .img-preview {
+    height: calc(100% - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    border-radius: 35px; /* 增加圆角 */
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.image-crop img, .img-preview img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    transition: all 0.4s ease;
+    border-radius: 30px; /* 增加圆角 */
+}
+
+.image-crop:hover, .img-preview:hover {
+    background-color: rgba(178, 235, 242, 0.6);
+}
+
+.image-crop:hover img, .img-preview:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 词云图选择框 */
+.selection-box {
+    position: absolute;
+    border: 2px solid #4fc3f7;
+    background-color: rgba(79, 195, 247, 0.2);
+    pointer-events: none;
+}
+
+/* 词云图未选中区域的毛玻璃效果 */
+.blur-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    z-index: 1;
+    display: none;
+}
+
+/* 按钮样式 */
+.btn {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+}
+
+/* 表格样式 */
+.table-responsive {
+    margin-top: 30px;
+    border-radius: 20px; /* 增加圆角 */
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.table th,
+.table td {
+    padding: 18px;
+    vertical-align: middle;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.table tr:hover td {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(174, 208, 238, 0.5);
+    color: #2c3e50;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 每日热点样式 */
+.news-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s ease;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+.news-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.news-image {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: all 0.4s ease;
+    border-radius: 15px;
+}
+
+.news-card:hover .news-image {
+    height: 240px;
+    filter: brightness(1.1);
+}
+
+.news-card .card-body {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    border-radius: 40px;
+}
+
+.news-card .card-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    color: #006064;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 40px;
+}
+
+.news-card:hover .card-title {
+    color: #00838f;
+}
+
+.news-card .card-text {
+    font-size: 16px;
+    margin-top: auto;
+    color: #0097a7;
+}
+
+
+        /* 增加信息概览卡片的上边距 */
+        .row:first-of-type {
+            margin-top: 30px;
+        }
+
+        /* 调整每日热点卡片文字部分的背景颜色 */
+        .news-card .card-body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e1e8f0 100%);
+            border-radius: 0 0 30px 30px;
+        }
+
+        .news-card .card-title {
+            color: #334e68;
+        }
+
+        .news-card .card-text {
+            color: #486581;
+        }
+
+    </style>
+
+
+
+<!-- 其他HTML结构保持不变 -->
+{% block js %}
+
+{% endblock %}
+</head>
+{% block left_side %}
+<body class="sticky-header">
+
+<!--Start left side Menu-->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>舆情分析</span>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{{ url_for('page.home') }}" class="active" data-title="主页面">
+                    <i class="fas fa-home"></i>
+                    <span>主页面</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('page.tableData') }}" data-title="舆情看板">
+                    <i class="fas fa-table"></i>
+                    <span>舆情看板</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('page.setting_spider') }}" data-title="爬取设置">
+                    <i class="fas fa-spider"></i>
+                    <span>爬取设置</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.login') }}" data-title="退出登录">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>退出登录</span>
+                </a>
+            </li>
+        </ul>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </nav>
+{% endblock %}
+
+    <!-- main content start-->
+    <div class="main-content" id="mainContent">
+        {% block header %}
+        <!-- header section start-->
+        <header class="top-bar">
+            <div class="container">
+                <div class="top-bar-content">
+                    <h1>舆情分析系统</h1>
+                    <div class="top-bar-actions">
+                        <button class="btn-mode" id="toggleMode">
+                            <i class="fas fa-moon"></i> 夜间模式
+                        </button>
+                        <select class="language-selector" id="languageSelect">
+                            <option value="zh">中文</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </header>
+        {% endblock %}
+        {% block content %}
+        <!-- 主要内容 -->
+        <div class="wrapper">
+            <!-- 信息概览 -->
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                        <div class="info-box">
+                            <div class="info-box-content">
+                                <i class="fas fa-comments"></i>
+                                <p>{{ row_count }}</p>
+                                <span>总信息数量</span>
+                            </div>
+                        </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                        <div class="info-box">
+                            <div class="info-box-content">
+                                <i class="fas fa-users"></i>
+                                <p>{{ unique_user_count }}</p>
+                                <span>评论者数量</span>
+                            </div>
+                        </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                        <div class="info-box">
+                            <div class="info-box-content">
+                                <i class="fas fa-network-wired"></i>
+                                <p>{{ unique_ip_count }}</p>
+                                <span>评论IP地址数</span>
+                            </div>
+                        </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                        <div class="info-box">
+                            <div class="info-box-content">
+                                <i class="fas fa-fire-alt"></i>
+                                <p>{{ total_heat_value }}</p>
+                                <span>热度值</span>
+                            </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card wordcloud-card">
+                        <div class="card-header">
+                            <h2 class="header-title">词云图</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="image-crop">
+                                <img src="{{ url_for('static', filename='assets/images/wordcloud.png') }}" alt="词云图" id="image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card preview-card">
+                        <div class="card-header">
+                            <h2 class="header-title">放大图预览</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-preview"></div>
+                            <div class="button-group">
+                                <button class="btn btn-primary" id="zoomIn">放大</button>
+                                <button class="btn btn-primary" id="zoomOut">缩小</button>
+                                <button class="btn btn-primary" id="rotateLeft">向左旋转</button>
+                                <button class="btn btn-primary" id="rotateRight">向右旋转</button>
+                                <button class="btn btn-danger" id="reset">重置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+</div>
+
+            <!-- 爬取结果展示 -->
+            <div class="card">
+                <div class="card-header">爬取结果展示</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="example" class="display table">
+                            <thead>
+                                <tr>
+                                    <th>发文者</th>
+                                    <th>内容</th>
+                                    <th>发布时间</th>
+                                    <th>转发数</th>
+                                    <th>评论数</th>
+                                    <th>点赞数</th>
+                                    <th>ip地址</th>
+                                    <th>情感态度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in infos2_data %}
+                                <tr>
+                                    <td>{{ data.微博作者 }}</td>
+                                    <td>{{ data.微博内容 }}</td>
+                                    <td>{{ data.发布时间 }}</td>
+                                    <td>{{ data.转发数 }}</td>
+                                    <td>{{ data.评论数 }}</td>
+                                    <td>{{ data.点赞数 }}</td>
+                                    <td>{{ data.省份 }}</td>
+                                    <td>
+                                        {% if data.情感倾向 == '正面' %}
+                                        <span class="text-success">{{ data.情感倾向 }}</span>
+                                        {% elif data.情感倾向 == '负面' %}
+                                        <span class="text-danger">{{ data.情感倾向 }}</span>
+                                        {% else %}
+                                        <span class="text-warning">{{ data.情感倾向 }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日热点 -->
+            <div class="card">
+            <div class="card daily-hotspots">
+                <div class="card-header">每日热点</div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for news in daily_hotspots %}
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="card news-card">
+                                <a href="{{ news.link }}" target="_blank" class="text-decoration-none">
+                                    <div class="news-image" style="background-image: url('{{ url_for('static', filename=news.read_link) }}');"></div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ news.title | truncate(length=50, end='...') }}</h5>
+                                        <p class="card-text text-muted">来源: {{ news.source }}</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        {% endblock %}
+    <!--Begin core plugin -->
+
+        </div>
+
+        {% block js2 %}
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/moment/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/jquery.slimscroll.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/jquery.nicescroll.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/functions.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5/1H7BnC+WqB8QoIwiWvLQbZiRz+D887z5z+g8s6k"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/datatables/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/pages/table-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/cropper-master/cropper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/pages/imagecrop-custom.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            var $image = $('#preview-img');
+            var originalImageData;
+
+            $image.cropper({
+                aspectRatio: NaN,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+            });
+
+            originalImageData = $image.cropper('getImageData');
+
+            $('#zoomIn').click(function() {
+                $image.cropper('zoom', 0.1);
+            });
+
+            $('#zoomOut').click(function() {
+                $image.cropper('zoom', -0.1);
+            });
+
+            $('#rotateLeft').click(function() {
+                $image.cropper('rotate', -45);
+            });
+
+            $('#rotateRight').click(function() {
+                $image.cropper('rotate', 45);
+            });
+
+            $('#reset').click(function() {
+                $image.cropper('reset');
+                $image.cropper('setImageData', originalImageData);
+            });
+        });
+        $(function () {
+            var $image = $('#image');
+            var options = {
+                aspectRatio: NaN,
+                preview: '.img-preview',
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+            };
+
+            // 初始化 Cropper
+            $image.cropper(options);
+
+            // 按钮事件
+            $('#zoomIn').click(function () {
+                $image.cropper('zoom', 0.1);
+            });
+
+            $('#zoomOut').click(function () {
+                $image.cropper('zoom', -0.1);
+            });
+
+            $('#rotateLeft').click(function () {
+                $image.cropper('rotate', -45);
+            });
+
+            $('#rotateRight').click(function () {
+                $image.cropper('rotate', 45);
+            });
+
+            $('#reset').click(function () {
+                $image.cropper('reset');
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                }
+
+                // 保存侧边栏状态
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            // 页面加载时应用保存的侧边栏状态
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                toggleBtn.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                } else {
+                    toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // 保存侧边栏状态到 localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            // 页面加载时检查并应用保存的侧边栏状态
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+        });
+    </script>
+
+    <script>
+        // 夜间模式切换
+        const toggleModeBtn = document.getElementById('toggleMode');
+        const body = document.body;
+
+        function setDarkMode(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                toggleModeBtn.innerHTML = '<i class="fas fa-sun"></i> 日间模式';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                body.classList.remove('dark-mode');
+                toggleModeBtn.innerHTML = '<i class="fas fa-moon"></i> 夜间模式';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        toggleModeBtn.addEventListener('click', function() {
+            setDarkMode(!body.classList.contains('dark-mode'));
+        });
+
+        // 检查本地存储中的夜间模式设置
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
+
+        // 语言切换
+        const languageSelect = document.getElementById('languageSelect');
+
+        languageSelect.addEventListener('change', function() {
+            const selectedLanguage = this.value;
+            localStorage.setItem('selectedLanguage', selectedLanguage);
+            // 这里可以添加切换语言的逻辑，例如重新加载页面或更新内容
+            location.reload();
+        });
+
+        // 检查本地存储中的语言设置
+        const savedLanguage = localStorage.getItem('selectedLanguage');
+        if (savedLanguage) {
+            languageSelect.value = savedLanguage;
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const wordcloudImg = document.querySelector('.image-crop img');
+            const wordcloudContainer = document.querySelector('.image-crop');
+            let selectionBox = null;
+            let startX, startY;
+
+            // 创建毛玻璃遮罩
+            const blurOverlay = document.createElement('div');
+            blurOverlay.classList.add('blur-overlay');
+            wordcloudContainer.appendChild(blurOverlay);
+
+            wordcloudContainer.addEventListener('mousedown', startSelection);
+            wordcloudContainer.addEventListener('mousemove', updateSelection);
+            wordcloudContainer.addEventListener('mouseup', endSelection);
+
+            function startSelection(e) {
+                startX = e.clientX - wordcloudContainer.getBoundingClientRect().left;
+                startY = e.clientY - wordcloudContainer.getBoundingClientRect().top;
+
+                selectionBox = document.createElement('div');
+                selectionBox.classList.add('selection-box');
+                selectionBox.style.left = startX + 'px';
+                selectionBox.style.top = startY + 'px';
+                wordcloudContainer.appendChild(selectionBox);
+            }
+
+            function updateSelection(e) {
+                if (!selectionBox) return;
+
+                const currentX = e.clientX - wordcloudContainer.getBoundingClientRect().left;
+                const currentY = e.clientY - wordcloudContainer.getBoundingClientRect().top;
+
+                const width = currentX - startX;
+                const height = currentY - startY;
+
+                selectionBox.style.width = Math.abs(width) + 'px';
+                selectionBox.style.height = Math.abs(height) + 'px';
+                selectionBox.style.left = (width < 0 ? currentX : startX) + 'px';
+                selectionBox.style.top = (height < 0 ? currentY : startY) + 'px';
+            }
+
+            function endSelection() {
+                if (selectionBox) {
+                    blurOverlay.style.display = 'block';
+                    blurOverlay.style.clipPath = `inset(${selectionBox.style.top} ${parseInt(wordcloudContainer.clientWidth) - parseInt(selectionBox.style.left) - parseInt(selectionBox.style.width)}px ${parseInt(wordcloudContainer.clientHeight) - parseInt(selectionBox.style.top) - parseInt(selectionBox.style.height)}px ${selectionBox.style.left})`;
+                    selectionBox.remove();
+                    selectionBox = null;
+                }
+            }
+        });
+    </script>
+{% endblock %}
+</body>
+
+</html>

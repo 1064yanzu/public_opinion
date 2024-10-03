@@ -1,0 +1,256 @@
+
+        body {
+    background: linear-gradient(135deg, #f6f9fc 0%, #e9f2f9 100%);
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 卡片样式 */
+.card {
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: none;
+        overflow: hidden;
+    }
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 20px 25px;
+    font-weight: 600;
+    color: #334e68;
+    font-size: 18px;
+}
+
+.card-body {
+        padding: 30px;
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    }
+
+/* 信息概览卡片 */
+.info-box {
+        text-align: center;
+        padding: 30px;
+        transition: all 0.4s ease;
+        border-radius: 35px;
+        background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+        backdrop-filter: blur(5px);
+        margin-bottom: 20px;
+    }
+
+.info-box:hover {
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    transform: translateY(-5px);
+    }
+
+.info-box-content i {
+    font-size: 60px;
+    color: #00acc1;
+    margin-bottom: 20px;
+    transition: all 0.4s ease;
+}
+
+.info-box:hover .info-box-content i {
+    transform: scale(1.2) rotate(10deg);
+    color: #0097a7;
+}
+
+.info-box-content p {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 15px 0;
+    color: #006064;
+}
+
+.info-box-content span {
+    font-size: 18px;
+    color: #e0eaeb;
+}
+
+/* 词云图和放大图预览 */
+.wordcloud-card, .preview-card {
+    height: 800px;
+    border-radius: 40px;
+    margin-bottom: 30px;
+}
+
+.image-crop, .img-preview {
+    height: calc(100% - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    border-radius: 35px; /* 增加圆角 */
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.image-crop img, .img-preview img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    transition: all 0.4s ease;
+    border-radius: 30px; /* 增加圆角 */
+}
+
+.image-crop:hover, .img-preview:hover {
+    background-color: rgba(178, 235, 242, 0.6);
+}
+
+.image-crop:hover img, .img-preview:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 词云图选择框 */
+.selection-box {
+    position: absolute;
+    border: 2px solid #4fc3f7;
+    background-color: rgba(79, 195, 247, 0.2);
+    pointer-events: none;
+}
+
+/* 词云图未选中区域的毛玻璃效果 */
+.blur-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    z-index: 1;
+    display: none;
+}
+
+/* 按钮样式 */
+.btn {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+}
+
+/* 表格样式 */
+.table-responsive {
+    margin-top: 30px;
+    border-radius: 20px; /* 增加圆角 */
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.table th,
+.table td {
+    padding: 18px;
+    vertical-align: middle;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.table tr:hover td {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(174, 208, 238, 0.5);
+    color: #2c3e50;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 每日热点样式 */
+.news-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s ease;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+.news-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.news-image {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: all 0.4s ease;
+    border-radius: 15px;
+}
+
+.news-card:hover .news-image {
+    height: 240px;
+    filter: brightness(1.1);
+}
+
+.news-card .card-body {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #8a7b7b 0%, #225dc2 100%);
+    border-radius: 40px;
+}
+
+.news-card .card-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    color: #006064;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 40px;
+}
+
+.news-card:hover .card-title {
+    color: #00838f;
+}
+
+.news-card .card-text {
+    font-size: 16px;
+    margin-top: auto;
+    color: #0097a7;
+}
