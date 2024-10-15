@@ -22,7 +22,7 @@ atexit.register(lambda: scheduler.shutdown())
 
 
 pb = Blueprint('page',__name__,url_prefix='/page',template_folder='templates')
-
+ready_path = get_persistent_file_path('all','any')
 # 全局字典来存储每个任务的状态
 task_status = {}
 def run_wordcloud_task(csv_path, task_id):
@@ -39,7 +39,7 @@ def home():
     users = session.get('username')
     unique_user_count, total_heat_value, unique_ip_count, row_count = fenxi()
     try:
-        infos2_data = get_info3('E:\\python\\flaskProject\\model\\database.csv')
+        infos2_data = get_info3(ready_path)
     except Exception as e:
         return errorResponse(e)
     current_date = datetime.now().strftime('%Y%m%d')
@@ -284,7 +284,7 @@ def table():
 @pb.route('/api/chart-data')
 def get_chart_data():
     try:
-        df_sentiment = pd.read_csv('E:\\python\\flaskProject\\model\\database.csv')
+        df_sentiment = pd.read_csv(ready_path)
         if '情感倾向' not in df_sentiment.columns:
             raise ValueError("sentiment_result column not found in CSV")
 
@@ -361,7 +361,7 @@ def get_hot_topics():
 
 @pb.route('/api/realtime-monitoring')
 def get_realtime_monitoring():
-    df = pd.read_csv('E:\\python\\flaskProject\\model\\database.csv', encoding='utf-8')
+    df = pd.read_csv(ready_path, encoding='utf-8')
     selected_columns = ['微博作者', '微博内容', 'url']
     selected_df = df[selected_columns]
     json_data = []

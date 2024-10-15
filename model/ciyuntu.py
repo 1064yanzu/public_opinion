@@ -4,6 +4,7 @@ import imageio
 import numpy as np
 from PIL import Image
 import csv
+import os
 import pandas as pd
 import pymysql
 def get_wordcloud():
@@ -89,31 +90,38 @@ with open("E:\\python\\venv\\ciyuntu\\stopwords.txt", 'r', encoding='utf-8') as 
         stopwords.add(line.strip())
 def remove_stopwords(text):
     # 分词
-    words = jieba.lcut(text)
+    words = str(jieba.lcut(text))
     # 去除停用词
     filtered_text = [word for word in words if word.casefold() not in stopwords]
     return ' '.join(filtered_text)
 def read_weibo_content(csv_path):
 
     df = pd.read_csv(csv_path)
-
+    weibo_content_list = []
     # 检查是否存在‘微博内容’这一列
-    if '微博内容' not in df.columns:
-        raise ValueError("CSV文件缺少'微博内容'列")
+    if '微博内容' in df.columns:
+        # 提取‘微博内容’列的内容
+        weibo_content_list = df['微博内容'].tolist()
 
-    # 提取‘微博内容’列的内容
-    weibo_content_list = df['微博内容'].tolist()
-
-    # 返回微博内容列表
-
+    elif '视频描述' in df.columns:
+        weibo_content_list = df['视频描述'].tolist()
     return weibo_content_list
 
 def get_wordcloud_csv(csv_path):
+    # 获取当前脚本的绝对路径
+    script_dir = os.path.abspath(__file__)
+
+    # 计算项目根目录的绝对路径
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+
+    # 拼接 CSV 文件的完整路径
+    csv_path = os.path.join(project_root, csv_path)
+    print(csv_path)
     global weibo_content_list
     weibo_content_list = read_weibo_content(csv_path)
     filtered_contents = []
     for row in weibo_content_list:
-        cleaned_text = remove_stopwords(row)
+        cleaned_text = remove_stopwords(str(row))
         filtered_contents.append(cleaned_text)
     combined_text = ' '.join(filtered_contents)
     img = Image.open("E:\\python\\venv\\ciyuntu\\xuexi.jpg")
@@ -162,4 +170,4 @@ def get_wordcloud_csv(csv_path):
     w.to_file('E:\\python\\flaskProject\\static\\assets\\images\wordcloud.png')
 
 if __name__ == '__main__':
-    get_wordcloud_csv('E:\\python\\flaskProject\\微博清单_小米_前15页.csv')
+    get_wordcloud_csv('软件.csv')

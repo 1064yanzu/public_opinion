@@ -10,7 +10,7 @@ from utils.common import update_persistent_file,get_persistent_file_path,get_tem
 from spiders.articles_spider import get_weibo_list
 from spiders.douyin import get_douyin_list
 
-
+ready_path = get_persistent_file_path('all','any')
 def target_file():
     target_file = 'target.csv'
     # comments = getAllCommentsData()
@@ -139,7 +139,7 @@ def get_info3(csv_path):
     infos2_data = df.to_dict(orient='records')
     return infos2_data
 
-def get_ip(csv_path ='E:\\python\\flaskProject\\model\\database.csv'):
+def get_ip(csv_path =ready_path):
     # 读取CSV文件
     try:
         df = pd.read_csv(csv_path)
@@ -196,41 +196,6 @@ def target_file2_mysql():
 
 
 def nlp_weibo(csv_path):
-    # # 读取CSV文件
-    # df = pd.read_csv(csv_path)
-
-    # # 获取当前时间
-    # current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    # # 初始化情感统计
-    # global sentiments
-    # sentiments = []
-    # global sentiment_counts
-    # sentiment_counts = {'正面': 0, '负面': 0, '中性': 0}
-
-    # # 对每条微博记录进行情感分析
-    # for _, row in df.iterrows():
-    #     content = str(row['微博内容'])
-    #     sentiment_value = SnowNLP(content).sentiments
-    #     sentiment = '正面' if sentiment_value > 0.6 else '负面' if sentiment_value < 0.3 else '中性'
-
-    #     # 更新情感计数器
-    #     sentiment_counts[sentiment] += 1
-
-    #     # 添加情感结果到DataFrame
-    #     df.at[_, 'sentiment_result'] = sentiment
-
-    #     # 添加爬取时间到DataFrame
-    #     df.at[_, 'crawl_time'] = current_time  # 添加当前时间为爬取时间
-
-    #     sentiments.append(sentiment)
-    # if csv_path == 'weibo_temp.csv':
-    #     df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    # else:
-    #     # 将更新后的数据写回CSV文件
-    #     df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    #     df.to_csv('E:\\python\\flaskProject\\model\\database.csv', index=False, encoding='utf-8-sig')
-    #     return sentiments, sentiment_counts
     print(f"开始处理微博数据: {csv_path}")
     df = pd.read_csv(csv_path)
     print(f"数据形状: {df.shape}")
@@ -251,7 +216,7 @@ def nlp_weibo(csv_path):
     print(f"情感分析结果的前几行:\n{df['情感倾向'].head()}")
     
     df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    df.to_csv('E:\\python\\flaskProject\\model\\database.csv', index=False, encoding='utf-8-sig')
+    df.to_csv(ready_path, index=False, encoding='utf-8-sig')
     print(f"处理后的数据已保存到: {csv_path}")
 
 

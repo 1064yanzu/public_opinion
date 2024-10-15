@@ -208,12 +208,15 @@
                                     <td>{{ data.点赞数 }}</td>
                                     <td>{{ data.省份 }}</td>
                                     <td>
-                                        {% if data.情感倾向 == '正面' %}
-                                        <span class="text-success">{{ data.情感倾向 }}</span>
-                                        {% elif data.情感倾向 == '负面' %}
-                                        <span class="text-danger">{{ data.情感倾向 }}</span>
+                                        {% if data.情感倾向 >= 0.7 %}
+{#                                        <span class="text-success">{{ data.情感倾向 }}</span>#}
+                                             <span class="text-success">正面</span>
+                                        {% elif data.情感倾向 <= 0.3 %}
+{#                                        <span class="text-danger">{{ data.情感倾向 }}</span>#}
+                                            <span class="text-danger">负面</span>
                                         {% else %}
-                                        <span class="text-warning">{{ data.情感倾向 }}</span>
+{#                                        <span class="text-warning">{{ data.情感倾向 }}</span>#}
+                                            <span class="text-warning">中性</span>
                                         {% endif %}
                                     </td>
                                 </tr>

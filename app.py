@@ -43,7 +43,7 @@ def handle_exception(e):
 
 @app.route('/get_chart_data')
 def get_chart_data():
-    infos2, share_num, comment_num, like_num = get_info2('E:\\python\\flaskProject\\model\\database.csv')
+    infos2, share_num, comment_num, like_num = get_info2(ready_path)
     pie = (
         Pie()
         .add("", [("转发数", share_num), ("点赞数", like_num), ("评论数", comment_num)])
