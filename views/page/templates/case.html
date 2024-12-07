@@ -1,0 +1,78 @@
+{% extends 'index.html' %}
+{% block css %}
+<link href="{{ url_for('static', filename='assets/css/case_analysis.css') }}" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- 顶部搜索区 -->
+    <div class="header-section">
+        <h2><i class="fas fa-database"></i> 舆情案例分析库</h2>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="输入关键词搜索案例...">
+            <button type="button" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- 左侧筛选器 -->
+        <div class="filter-section">
+            <h4><i class="fas fa-filter"></i> 筛选条件</h4>
+            <div class="filter-group">
+                <label><i class="fas fa-tag"></i> 案例类型</label>
+                <select id="caseType" class="form-select">
+                    <option value="">全部类型</option>
+                    <option value="政府舆情">政府舆情</option>
+                    <option value="企业舆情">企业舆情</option>
+                    <option value="教育舆情">教育舆情</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-check-circle"></i> 处理结果</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="result" value="all" checked>
+                        <span>全部</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="result" value="success">
+                        <span>处理得当</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="result" value="failure">
+                        <span>应对失策</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-alt"></i> 时间范围</label>
+                <div class="date-range">
+                    <input type="date" id="startDate" class="form-control">
+                    <span>至</span>
+                    <input type="date" id="endDate" class="form-control">
+                </div>
+            </div>
+
+            <button id="applyFilter" class="filter-button">
+                <i class="fas fa-check"></i> 应用筛选
+            </button>
+        </div>
+
+        <!-- 右侧案例展示区 -->
+        <div class="cases-section" id="casesContainer">
+            <!-- 案例卡片将由 JavaScript 动态生成 -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js2 %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@1.1.3/dist/echarts-wordcloud.min.js"></script>
+<script src="{{ url_for('static', filename='assets/js/case_analysis.js') }}"></script>
+{% endblock %}
