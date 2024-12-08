@@ -319,7 +319,7 @@ def get_chart_data():
                 else:
                     return '中性'
             except ValueError:
-                return '中性'  # 如果无法转换为浮点数,默认为中性
+                return '中性'  # 如果无法转换为浮点数,默认���中性
 
         df_sentiment['情感倾向'] = df_sentiment['情感倾向'].apply(classify_sentiment)
 
@@ -588,89 +588,39 @@ def generate_report():
 @pb.route('/api/realtime_data')
 def get_realtime_data():
     """获取实时舆情数据"""
-    print("\n=== 开始获取实时数据 ===")
-    print(f"CSV文件路径: {ready_path}")
-    
-    default_response = {
-        'latestComment': "暂无数据",
-        'commentTime': "暂无数据",
-        'trend': "0%",
-        'spreadRange': "暂无数据",
-        'keywords': ["暂无数据"],
-        'sentiment': 50,
-        'eventDescription': "暂无数据"
-    }
-    
     try:
-        # 检查文件是否存在
-        if not os.path.exists(ready_path):
-            print(f"文件不存在: {ready_path}")
-            return jsonify(default_response)
+        df = pd.read_csv(ready_path)
+        
+        # 计算涉及的省份数量
+        province_count = df['省份'].nunique()
+        
+        # 根据省份数量判断传播范围
+        if province_count > 20:
+            spread_range = "全国性传播"
+        elif province_count > 10:
+            spread_range = "区域性传播"
+        else:
+            spread_range = "局部传播"
 
-        # 读取CSV文件
-        try:
-            df = pd.read_csv(ready_path)
-            print(f"成功读取CSV文件，行数：{len(df)}")
-            print(f"列名：{df.columns.tolist()}")
-        except Exception as e:
-            print(f"读取CSV文件失败: {e}")
-            return jsonify(default_response)
-
-        # 检查必要的列是否存在
-        required_columns = ['微博内容', '发布时间', '转发数', '省份']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            print(f"缺少必要列: {missing_columns}")
-            return jsonify(default_response)
-
-        # 数据处理
-        try:
-            # 获取最新评论
-            if len(df) > 0:
-                latest_post = df.iloc[-1]
-                latest_comment = str(latest_post['微博内容']) if pd.notna(latest_post['微博内容']) else "暂无数据"
-                comment_time = str(latest_post['发布时间']) if pd.notna(latest_post['发布时间']) else "暂无数据"
-            else:
-                latest_comment = "暂无数据"
-                comment_time = "暂无数据"
-
-            # 计算热度趋势
-            df['转发数'] = pd.to_numeric(df['转发数'], errors='coerce').fillna(0)
-            if len(df) >= 20:
-                current_heat = df.tail(10)['转发数'].mean()
-                previous_heat = df.tail(20).head(10)['转发数'].mean()
-                trend_percentage = ((current_heat - previous_heat) / previous_heat * 100) if previous_heat != 0 else 0
-                trend = f"{'上升' if trend_percentage > 0 else '下降'} {abs(round(trend_percentage, 1))}%"
-            else:
-                trend = "0%"
-
-            # 计算传播范围
-            df['省份'] = df['省份'].fillna('未知')
-            provinces = df['省份'].nunique()
-            spread_range = "全国性传播" if provinces > 20 else "区域性传播" if provinces > 10 else "局部传播"
-
-            result = {
-                'latestComment': latest_comment,
-                'commentTime': comment_time,
-                'trend': trend,
-                'spreadRange': spread_range,
-                'keywords': ['热点话题', '用户反馈', '社会关注', '热门事件', '公众讨论'],
-                'sentiment': 50,
-                'eventDescription': latest_comment
-            }
-
-            print("成功生成返回数据")
-            return jsonify(result)
-
-        except Exception as e:
-            print(f"数据处理错误: {e}")
-            print(traceback.format_exc())
-            return jsonify(default_response)
-
+        result = {
+            'latestComment': str(df.iloc[-1]['微博内容']) if len(df) > 0 else "暂无数据",
+            'commentTime': str(df.iloc[-1]['发布时间']) if len(df) > 0 else "暂无数据",
+            'provinceCount': f"{province_count}个",
+            'spreadRange': spread_range,
+            'keywords': ['热点话题', '用户反馈', '社会关注', '热门事件', '公众讨论'],
+            'sentiment': 50
+        }
+        return jsonify(result)
     except Exception as e:
-        print(f"未知错误: {e}")
-        print(traceback.format_exc())
-        return jsonify(default_response)
+        print(f"获取实时数据错误: {str(e)}")
+        return jsonify({
+            'latestComment': "暂无数据",
+            'commentTime': "暂无数据",
+            'provinceCount': "0个",
+            'spreadRange': "暂无数据",
+            'keywords': ["暂无数据"],
+            'sentiment': 50
+        })
 
 def extract_keywords_from_df(df, top_n=5):
     """从DataFrame中提取关键词"""
