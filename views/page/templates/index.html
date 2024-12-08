@@ -12,25 +12,28 @@
   <title></title>
 
     <!-- BEGIN PAGE LEVEL STYLES -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index.css') }}">
+    {% block css %}
     <link href="{{ url_for('static', filename='assets/plugins/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet" type="text/css"/>
     <link href="{{ url_for('static', filename='assets/plugins/datatables/css/jquery.dataTables-custom.css') }}" rel="stylesheet" type="text/css"/>
     <link href="{{ url_for('static', filename='assets/plugins/cropper-master/cropper.min.css') }}" rel="stylesheet" type="text/css"/>
     <link href="{{ url_for('static', filename='assets/css/index.css') }}" rel="stylesheet">
-    {% block css %}{% endblock %}
+        <!-- END PAGE LEVEL STYLES -->
+        <link href="{{ url_for('static', filename='assets/css/icons.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='assets/css/responsive.css') }}" rel="stylesheet">
+    
+    
+    
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom-sidebar.css') }}">
 
-           <!-- END PAGE LEVEL STYLES -->
-    <link href="{{ url_for('static', filename='assets/css/icons.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='assets/css/responsive.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index3.css') }}">
+    {% endblock %}
 
 
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom-sidebar.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index2.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/index3.css') }}">
 
 
 
@@ -67,6 +70,12 @@
                 <a href="{{ url_for('page.setting_spider') }}" data-title="爬取设置">
                     <i class="fas fa-spider"></i>
                     <span>爬取设置</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('page.case_study') }}" data-title="爬取设置">
+                    <i class="fas fa-spider"></i>
+                    <span>舆情案例</span>
                 </a>
             </li>
             <li>

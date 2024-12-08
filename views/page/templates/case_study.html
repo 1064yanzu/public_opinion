@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舆情案例库</title>
+    <link href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-light: #7dd3fc;
+            --primary-dark: #0284c7;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --accent: #6366f1;
+            --shadow: 0 4px 20px rgba(79, 70, 229, 0.1);
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 4px;
+            opacity: 0.5;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: row; /* 修改为 row 以适应固定侧边栏 */
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 2rem;
+            height: 100vh;
+            position: fixed;
+            width: 300px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                background: var(--surface);
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+
+        .filter-group {
+            margin-bottom: 2.5rem;
+        }
+
+        .filter-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-option:hover {
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        .filter-option.active {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+        }
+
+        .filter-option.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            margin-left: 300px; /* 为固定的侧边栏留出空间 */
+            padding: 1rem;
+            max-width: none; /* 移除 max-width */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* 使卡片在左上方对齐 */
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* 移动端取消左边距 */
+            }
+        }
+
+        /* 搜索框样式 */
+        .search-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            padding-left: 3rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--surface);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+                /* 案例卡片网格布局 */
+                .case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+
+        /* 案例卡片样式 */
+        .case-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .case-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .case-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-right: 1rem;
+        }
+
+        .case-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .case-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .case-summary {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .case-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .heat-indicator {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .heat-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .heat-value {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        /* 详情页模态框样式 */
+        .case-detail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* 初始隐藏 */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .case-detail.active {
+            display: flex;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .detail-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 95%;
+            max-width: 1400px;
+            max-height: 95vh;
+            overflow-y: auto; /* 允许垂直滚动 */
+            background: var(--background);
+            border-radius: 16px;
+            padding: 1rem;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        /* 头部卡片样式 */
+        .header-card {
+            background: var(--gradient);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            color: white;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        /* 头部样式 */
+        .detail-header {
+            background: var(--primary);
+            padding: 2rem;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.2s ease;
+            z-index: 11; /* 确保位于其他内容之上 */
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .detail-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 内容区域样式 */
+        .detail-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 2rem;
+            overflow-y: scroll;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .detail-content::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 1200px) {
+            .detail-content {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            /* 建议卡片在平板尺寸下占据整行 */
+            .analysis-card.suggestions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-card.suggestions {
+                grid-column: auto;
+            }
+        }
+
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.25rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 2px solid var (--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        /* 分析区域样式 */
+        .analysis-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            background: var(--background);
+            color: var(--primary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 经验教训区域样式 */
+        .detail-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 2rem;
+            background: var(--background);
+        }
+
+        .lessons-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .lesson-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+                flex-direction: column;
+                gap: 1rem;
+            display: flex; /* 添加 flex 布局 */
+        }
+
+        /* 头部卡片内容样式 */
+        .header-content {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 16px;
+            line-height: 1.8;
+            letter-spacing: 0.3px;
+        }
+
+        .header-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .header-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            text-align: justify;
+            margin-bottom: 1rem;
+        }
+
+        /* 统计卡片样式 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* 主要内容区样式 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-left: 0;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 时间线卡片样式 */
+        .timeline-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .timeline-item {
+            padding: 1.5rem;
+            border-left: 4px solid var(--accent);
+            background: var(--background);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-phase {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-date {
+            display: block;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0.75rem 0;
+        }
+
+        .timeline-item p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin: 0.75rem 0;
+            text-align: justify;
+        }
+
+        /* 分析卡片样式 */
+        .analysis-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 4px 25px rgba(79, 70, 229, 0.08);
+        }
+
+        .analysis-point {
+            position: relative;
+            padding: 2rem 2rem 2rem 3rem;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .point-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .point-title::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+
+        .analysis-point p {
+            color: var(--text-secondary);
+            line-height: 1.9;
+            font-size: 1.05rem;
+            text-align: justify;
+            margin: 0;
+            padding-right: 1rem;
+        }
+
+        /* 建议卡片特殊样式 */
+        .suggestions .analysis-point {
+            background: linear-gradient(145deg, #ffffff, #fafafa);
+            border: none;
+            padding: 2.5rem;
+        }
+
+        .suggestions .point-title {
+            color: var (--accent);
+            font-weight: 600;
+        }
+
+        .suggestions .point-title::before {
+            background: var(--accent);
+        }
+
+        .suggestions .analysis-point p {
+            position: relative;
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.06);
+            margin-left: 1rem;
+        }
+
+        /* 交互动画样式 */
+        .timeline-item:hover {
+            transform: translateX(8px);
+            background: white;
+            box-shadow: var(--shadow);
+        }
+
+        .analysis-point:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.12);
+            border-color: rgba(79, 70, 229, 0.2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .suggestions .analysis-point:hover {
+            background: linear-gradient(145deg, #ffffff, #f5f7ff);
+        }
+
+        .suggestions .analysis-point:hover p {
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.08);
+        }
+
+        .analysis-point::before {
+            content: '';
+            position: absolute;
+            top: 2rem;
+            left: 1rem;
+            width: 8px;
+            height: 8px;
+            background: var(--gradient);
+            border-radius: 50%;
+        }
+
+        .suggestions .analysis-point::after {
+            content: '��';
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: var(--accent);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .suggestions .analysis-point:hover::after {
+            opacity: 1;
+            right: 1.5rem;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1.5rem;
+            }
+
+            .header-content h2 {
+                font-size: 1.25rem;
+            }
+
+            .header-content p {
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .analysis-card, .timeline-card {
+                padding: 1.5rem;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 修改 .detail-container 样式 */
+        .detail-container {
+            width: 95%;
+            max-width: 1400px;
+            max-height: 95vh;
+            background: var(--background);
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+        /* 修改主内容区内的卡片样式 */
+        .detail-content .timeline-card,
+        .detail-content .analysis-card {
+            height: 100%;
+            overflow-y: auto;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .detail-content .timeline-card {
+            padding: 2rem;
+        }
+
+        .detail-content .analysis-card {
+            padding: 2rem;
+        }
+
+        /* 响应式布局调整 */
+        @media (max-width: 1200px) {
+            .detail-content {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .detail-content .analysis-card.suggestions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-content .analysis-card.suggestions {
+                grid-column: auto;
+            }
+        }
+
+        /* 移除电脑端的 grid 布局 */
+        @media (min-width: 1200px) {
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+                padding: 2rem;
+            }
+
+            .timeline-card, .analysis-card {
+                padding: 2rem;
+            }
+
+            .analysis-card.suggestions {
+                /* 让建议卡片占据整个宽度 */
+                width: 100%;
+            }
+        }
+
+        /* 恢复主内容区为垂直��列，移除网格布局 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            /* 移除 grid-template-columns */
+        }
+
+        /* 移除详情模态框的滚动条 */
+        .detail-container {
+            /* 移除 overflow-y: auto; */
+            /* 确保内容根据需要自动扩展高度 */
+            height: auto;
+            max-height: none;
+            /* ...existing styles... */
+        }
+
+        /* 调整详情模态框内的内容布局以避免拥挤 */
+        .detail-content {
+            display: block;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .detail-footer {
+            display: block;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        /* 初始化时隐藏 .case-detail */
+        .case-detail {
+            display: none;
+            /* ...其他样式... */
+        }
+
+        /* 激活时显示 .case-detail */
+        .case-detail.active {
+            display: flex;
+            /* ...其他样式... */
+        }
+
+        /* 调整 .detail-container，确保内���可滚动且无滚动条 */
+        .detail-container {
+            overflow: auto;
+            scrollbar-width: none; /* Firefox */
+            /* ...其他样式... */
+        }
+
+        .detail-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="filter-group">
+                <h3 class="filter-title">事件分类</h3>
+                <div class="filter-options" id="categoryFilter">
+                    <div class="filter-option active" data-value="all">全部类型</div>
+                    <div class="filter-option" data-value="education">教育舆情</div>
+                    <div class="filter-option" data-value="government">政务舆情</div>
+                    <div class="filter-option" data-value="social">社会治理</div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h3 class="filter-title">时间范围</h3>
+                <div class="filter-options" id="timeFilter">
+                    <div class="filter-option" data-value="week">最近一周</div>
+                    <div class="filter-option" data-value="month">最近一月</div>
+                    <div class="filter-option" data-value="year">最近一年</div>
+                    <div class="filter-option active" data-value="all">全部时间</div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h3 class="filter-title">舆情热度</h3>
+                <div class="filter-options" id="heatFilter">
+                    <div class="filter-option" data-value="high">高热度</div>
+                    <div class="filter-option" data-value="medium">中等热度</div>
+                    <div class="filter-option" data-value="low">低热度</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索案例关键词...">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+
+            <div class="case-grid" id="caseContainer">
+                <!-- 案例卡片将通过JavaScript动态生成 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 详情页模板 -->
+    <template id="caseDetailTemplate">
+        <div class="case-detail">
+            <div class="detail-container">
+                <!-- 移除 onclick 属性 -->
+                <button class="close-btn">×</button>
+                
+                <!-- 添加必要的 detail 内容 -->
+                <div class="detail-header">
+                    <h2 class="detail-title"></h2>
+                    <div class="detail-meta">
+                        <span class="read-count"></span>
+                        <!-- ...其他 meta 信息... -->
+                    </div>
+                </div>
+                <div class="detail-content">
+                    <p class="case-summary"></p>
+                    <div class="timeline"></div>
+                    <div id="trendChart" style="width: 100%; height: 400px;"></div>
+                    <!-- ...其他内容... -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // 案例数据
+        const caseData = {
+            'case1': {
+                id: 'case1',
+                title: '成都四十九中学生坠亡事件',
+                type: 'education',
+                date: '2021-05-09',
+                readCount: '4500万',
+                heat: 'high',
+                summary: '事件经历了从舆情失控到有效管控的过程，最终通过及时发布权威信息、回应公众关切等措施得到化解。',
+                timeline: [
+                    {
+                        date: '5月9日18:40',
+                        phase: '酝酿扩散期',
+                        content: '该生校内坠亡的消息在微博上曝光。'
+                    },
+                    {
+                        date: '5月10日12:32',
+                        phase: '爆发蔓延期',
+                        content: '事件在社交媒体引发广泛关注。'
+                    },
+                    {
+                        date: '5月11日3:54',
+                        phase: '反复波动期',
+                        content: '官方发布第一则情况通报。'
+                    },
+                    {
+                        date: '5月13日',
+                        phase: '衰减消退期',
+                        content: '舆情逐渐平息。'
+                    }
+                ],
+                trendData: {
+                    dates: ['5/9', '5/10', '5/11', '5/12', '5/13'],
+                    values: [30, 90, 85, 70, 40]
+                }
+            }
+        };
+        
+        // 创建案例卡片
+        function createCaseCard(caseItem) {
+            const card = document.createElement('div');
+            card.className = 'case-card fade-in';
+            
+            card.innerHTML = `
+                <div class="case-header">
+                    <h3 class="case-title">${caseItem.title}</h3>
+                    <span class="tag">${caseItem.type}</span>
+                </div>
+                <div class="case-meta">
+                    <span class="case-meta-item">
+                        <!-- ...existing SVG icons... -->
+                        ${caseItem.date}
+                    </span>
+                    <span class="case-meta-item">
+                        <!-- ...existing SVG icons... -->
+                        ${caseItem.readCount}
+                    </span>
+                </div>
+                <p class="case-summary">${caseItem.summary}</p>
+                <div class="case-footer">
+                    <div class="heat-indicator">
+                        <span>舆情热度</span>
+                        <div class="heat-bar">
+                            <div class="heat-value" style="width: ${caseItem.heat === 'high' ? '90%' : caseItem.heat === 'medium' ? '60%' : '30%'}"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary view-detail">查看详情</button>
+                </div>
+            `;
+        
+            const viewDetailBtn = card.querySelector('.view-detail');
+            viewDetailBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showCaseDetail(caseItem.id);
+            });
+        
+            return card;
+        }
+        
+        // 显示案例详情
+        function showCaseDetail(caseId) {
+            const caseItem = caseData[caseId];
+            if (!caseItem) return;
+        
+            const detailTemplate = document.getElementById('caseDetailTemplate');
+            const detailElement = detailTemplate.content.cloneNode(true);
+            const caseDetail = detailElement.querySelector('.case-detail');
+        
+            // 填充基本信息
+            caseDetail.querySelector('.detail-title').textContent = caseItem.title;
+            caseDetail.querySelector('.case-summary').textContent = caseItem.summary;
+            caseDetail.querySelector('.read-count').textContent = `阅读数: ${caseItem.readCount}`;
+        
+            // 生成时间线
+            const timeline = caseDetail.querySelector('.timeline');
+            timeline.innerHTML = caseItem.timeline.map(item => `
+                <div class="timeline-item">
+                    <span class="timeline-phase">${item.phase}</span>
+                    <time class="timeline-date">${item.date}</time>
+                    <p>${item.content}</p>
+                </div>
+            `).join('');
+        
+            // 将模板添加到DOM后再初始化图表
+            document.body.appendChild(detailElement);
+            
+            // 触发动画
+            requestAnimationFrame(() => {
+                caseDetail.classList.add('active');
+                // 初始化图表
+                initCharts(caseItem);
+            });
+        
+            // 添加关闭事件
+            const closeBtn = caseDetail.querySelector('.close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    hideCaseDetail();
+                });
+            } else {
+                console.warn('关闭按钮未找到');
+            }
+        
+            // 点击遮罩层关闭
+            if (caseDetail) {
+                caseDetail.addEventListener('click', (e) => {
+                    if (e.target === caseDetail) {
+                        hideCaseDetail();
+                    }
+                });
+            } else {
+                console.warn('.case-detail 元素未找到');
+            }
+        }
+        
+        // 隐藏案例详情
+        function hideCaseDetail() {
+            const detail = document.querySelector('.case-detail');
+            if (detail) {
+                detail.classList.remove('active');
+                setTimeout(() => detail.remove(), 300); // 移除元素以防止积累
+            }
+        }
+        
+        // 初始化图表
+        function initCharts(caseItem) {
+            const trendChart = echarts.init(document.getElementById('trendChart'));
+            trendChart.setOption({
+                title: {
+                    text: '舆情热度趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: caseItem.trendData.dates
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: caseItem.trendData.values,
+                    type: 'line',
+                    smooth: true,
+                    color: '#0ea5e9'
+                }]
+            });
+        }
+        
+        // 初始化
+        function renderCaseCards() {
+            const container = document.getElementById('caseContainer');
+            container.innerHTML = ''; // 清空现有内容
+            const filteredCases = filterCases();
+            filteredCases.forEach(caseItem => {
+                container.appendChild(createCaseCard(caseItem));
+            });
+        }
+        
+        // 过滤案例
+        function filterCases() {
+            const activeCategory = document.querySelector('#categoryFilter .active')?.dataset.value || 'all';
+            const activeTime = document.querySelector('#timeFilter .active')?.dataset.value || 'all';
+            const activeHeat = document.querySelector('#heatFilter .active')?.dataset.value || null;
+        
+            return Object.values(caseData).filter(caseItem => {
+                const categoryMatch = activeCategory === 'all' || caseItem.type === activeCategory;
+                const heatMatch = !activeHeat || caseItem.heat === activeHeat;
+                
+                let timeMatch = true;
+                if (activeTime !== 'all') {
+                    const caseDate = new Date(caseItem.date);
+                    const now = new Date();
+                    const diff = now - caseDate;
+                    const days = diff / (1000 * 60 * 60 * 24);
+                    
+                    switch(activeTime) {
+                        case 'week': timeMatch = days <= 7; break;
+                        case 'month': timeMatch = days <= 30; break;
+                        case 'year': timeMatch = days <= 365; break;
+                        default: timeMatch = true;
+                    }
+                }
+        
+                return categoryMatch && heatMatch && timeMatch;
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCaseCards();
+        
+            // 绑定筛选选项点击事件
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    renderCaseCards();
+                });
+            });
+
+            // 绑定搜索功能
+            document.getElementById('searchInput').addEventListener('input', () => {
+                renderCaseCards();
+            });
+        });
+        
+        // ...其他 JavaScript 代码...
+    </script>
+</body>
+</html>
