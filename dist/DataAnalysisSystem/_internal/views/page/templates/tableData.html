@@ -1,0 +1,126 @@
+{% extends 'index2.html' %}
+{% block js1 %}
+<script src="{{ url_for('static', filename='assets/js/china.js') }}"></script>
+{% endblock %}
+{% block css%}
+<style>
+        #map {
+            height: 600px;
+        }
+    </style>
+
+ <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .heatmap-container {
+            flex: 2;
+        }
+        .table-container {
+            flex: 1;
+            margin-left: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block wrapper %}
+<body>
+<div class="container">
+
+
+    <div class="heatmap-container">
+        <h1>中国热力图</h1>
+        <div id="map" style="width: 100%; height: 600px;"></div>
+    </div>
+    <div class="table-container">
+        <h2>省份热力值</h2>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">省份</th>
+                    <th scope="col">热力值</th>
+                </tr>
+            </thead>
+            <tbody id="provinceTableBody">
+                <!-- 数据将在这里动态填充 -->
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+<script>
+    var myChart = echarts.init(document.getElementById('map'));
+
+    // 默认地图配置
+    myChart.setOption({
+        title: {
+            text: '中国热力图',
+            subtext: '省份热力值',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                return params.name + ': ' + params.value;
+            }
+        },
+        visualMap: {
+            min: 0,
+            max: 1000,
+            left: 'left',
+            top: 'bottom',
+            text: ['高', '低'],
+            calculable: true
+        },
+        series: [{
+            name: '热力值',
+            type: 'map',
+            map: 'china',
+            roam: true,
+            label: {
+                show: true,
+                position: 'inside',
+                formatter: function(params) {
+                    return params.name;
+                }
+            },
+            data: []  // 初始为空数组
+        }]
+    });
+
+    // 从后端传入热力图数据
+    var heatMapData = {{ heat_map_data | safe }};
+
+    // 将数据转换为ECharts所需的格式
+    var seriesData = heatMapData.map(function(item) {
+        return {
+            name: item.province,
+            value: item.value  // 直接使用value属性
+        };
+    });
+
+    // 更新图表数据
+    myChart.setOption({
+        series: [{
+            data: seriesData
+        }]
+    });
+
+    // 动态填充省份数据表格
+    var tableBody = document.getElementById('provinceTableBody');
+    heatMapData.forEach(function(item) {
+        var row = document.createElement('tr');
+        var provinceCell = document.createElement('td');
+        provinceCell.textContent = item.province;
+        var valueCell = document.createElement('td');
+        valueCell.textContent = item.value;
+
+        row.appendChild(provinceCell);
+        row.appendChild(valueCell);
+        tableBody.appendChild(row);
+    });
+</script>
+</body>
+        {% endblock %}
+

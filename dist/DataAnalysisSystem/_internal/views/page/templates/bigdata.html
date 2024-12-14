@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络舆情大数据看板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+    <script src="{{ url_for('static', filename='assets/js/china.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bigdata.js') }}"></script>
+    <!-- 在这里引入您的 CSS 文件 -->
+    <link href="{{ url_for('static', filename='assets/css/bigdata.css') }}" rel="stylesheet">
+</head>
+<body>
+    <header id="header">
+        <h1>网络舆情大数据看板</h1>
+    </header>
+
+    <a href="{{ url_for('page.home') }}" class="return-button" title="返回首页">
+        ←
+    </a>
+    <div id="real-time-clock"></div>
+    <div class="container">
+        <div class="card" id="china-heatmap">
+            <div class="card-header">
+                <h2>中国热力图</h2>
+            </div>
+            <div class="card-body">
+                <div id="map" class="chart-container"></div>
+            </div>
+        </div>
+
+        <div class="card" id="sentiment-analysis">
+            <div class="card-header">
+                <h2>情感分析</h2>
+            </div>
+            <div class="card-body">
+                <div id="sentiment-pie" class="chart-container"></div>
+            </div>
+        </div>
+
+        <div class="card" id="gender-distribution">
+            <div class="card-header">
+                <h2>性别分布</h2>
+            </div>
+            <div class="card-body">
+                <div id="gender-pie" class="chart-container"></div>
+            </div>
+        </div>
+
+        <div class="card" id="alert">
+            <div class="card-header">
+                <h2>预警提示</h2>
+            </div>
+            <div class="card-body">
+                <div id="warning-box" class="warning-box"></div>
+            </div>
+        </div>
+
+        <div class="card" id="hot-topics">
+    <div class="card-header">
+        <h2>时事热点</h2>
+    </div>
+    <div class="card-body">
+        <div id="hot-topics-grid" class="hot-topics-grid">
+            <!-- 热点话题将通过 JavaScript 动态添加到这里 -->
+        </div>
+    </div>
+</div>
+        <div class="card" id="realtime-monitoring">
+    <div class="card-header">
+        <h2>实时监测</h2>
+    </div>
+    <div class="card-body">
+        <ul id="realtime-list" class="scrolling-list">
+            <!-- 实时监测数据将通过 JavaScript 动态添加到这里 -->
+        </ul>
+    </div>
+</div>
+    </div>
+</body>
+</html>

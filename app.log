@@ -1,0 +1,14 @@
+2024-12-14 11:00:43,606 - tzlocal - DEBUG - Looking up time zone info from registry
+2024-12-14 11:00:43,613 - apscheduler.scheduler - INFO - Scheduler started
+2024-12-14 11:00:43,615 - apscheduler.scheduler - DEBUG - Looking for jobs to run
+2024-12-14 11:00:43,615 - apscheduler.scheduler - DEBUG - No jobs; waiting until a job is added
+2024-12-14 11:00:43,615 - app - INFO - Successfully imported all required modules
+2024-12-14 11:00:43,616 - app - INFO - Base directory: E:\python\flaskProject
+2024-12-14 11:00:43,617 - app - DEBUG - Directory ensured: E:\python\flaskProject\persistent_data
+2024-12-14 11:00:43,633 - app - INFO - Flask app configured successfully
+2024-12-14 11:00:43,648 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-12-14 11:00:43,648 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2024-12-14 11:01:34,299 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2024-12-14 11:01:34,300 - apscheduler.scheduler - DEBUG - Looking for jobs to run
+2024-12-14 11:01:34,300 - apscheduler.scheduler - DEBUG - No jobs; waiting until a job is added

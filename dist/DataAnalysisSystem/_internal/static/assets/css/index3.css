@@ -1,0 +1,20 @@
+
+
+        /* 增加信息概览卡片的上边距 */
+        .row:first-of-type {
+            margin-top: 30px;
+        }
+
+        /* 调整每日热点卡片文字部分的背景颜色 */
+        .news-card .card-body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e1e8f0 100%);
+            border-radius: 0 0 30px 30px;
+        }
+
+        .news-card .card-title {
+            color: #334e68;
+        }
+
+        .news-card .card-text {
+            color: #486581;
+        }
