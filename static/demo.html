@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="舆情分析,数据分析,社交媒体分析">
+    <meta name="description" content="舆情分析系统 - 实时监控与分析社交媒体动态">
+    <meta name="author" content="">
+    <title>舆情分析系统</title>
+
+    <!-- CDN资源 -->
+    <link href="https://lib.baomitu.com/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://lib.baomitu.com/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://lib.baomitu.com/datatables/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet">
+    
+    <!-- 本地样式 -->
+    <link rel="stylesheet" href="assets/plugins/cropper-master/cropper.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --info-color: #4895ef;
+            --dark-color: #1e1e2c;
+            --light-color: #f8f9fa;
+            --text-primary: #2b2d42;
+            --text-secondary: #8d99ae;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --transition-speed: 0.3s;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4cc9f0;
+            --secondary-color: #4895ef;
+            --text-primary: #e9ecef;
+            --text-secondary: #ced4da;
+            --bg-primary: #1e1e2c;
+            --bg-secondary: #2d2d3f;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 260px;
+            background: var(--bg-primary);
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-speed);
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-speed);
+            gap: 0.75rem;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            color: var(--primary-color);
+            background: var(--bg-secondary);
+        }
+
+        .sidebar-menu li a i {
+            font-size: 1.25rem;
+            min-width: 1.5rem;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            transition: margin var(--transition-speed);
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        .top-bar {
+            background: var(--bg-primary);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .top-bar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-mode {
+            background: var(--bg-secondary);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-mode:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .language-selector {
+            background: var(--bg-secondary);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .info-box {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-speed);
+        }
+
+        .info-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-box-content {
+            text-align: center;
+        }
+
+        .info-box-content i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .info-box-content p {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .info-box-content span {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: none;
+            transition: all var(--transition-speed);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--bg-secondary);
+            padding: 1.5rem;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .wordcloud-card,
+        .preview-card {
+            height: 500px;
+        }
+
+        .image-crop,
+        .img-preview {
+            height: calc(100% - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .table th {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            transition: all var(--transition-speed);
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .news-card {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .news-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: all var(--transition-speed);
+        }
+
+        .news-card:hover .news-image {
+            transform: scale(1.05);
+        }
+
+        .news-card .card-title {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .news-card .card-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+            }
+            
+            .top-bar {
+                padding: 1rem;
+            }
+            
+            .info-box {
+                margin-bottom: 1rem;
+            }
+            
+            .wordcloud-card,
+            .preview-card {
+                height: 400px;
+            }
+            
+            .button-group {
+                justify-content: center;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: var(--border-radius);
+            background: var(--bg-secondary);
+            border: none;
+            color: var(--text-primary) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--primary-color);
+            color: white !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--primary-color);
+            color: white !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 侧边栏导航 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>舆情分析</span>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#" class="active" data-title="主页面">
+                    <i class="fas fa-home"></i>
+                    <span>主页面</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-title="舆情看板">
+                    <i class="fas fa-table"></i>
+                    <span>舆情看板</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-title="爬取设置">
+                    <i class="fas fa-spider"></i>
+                    <span>爬取设置</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-title="舆情案例">
+                    <i class="fas fa-book-open"></i>
+                    <span>舆情案例</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-title="舆情报告及应对方案">
+                    <i class="fas fa-file-alt"></i>
+                    <span>舆情报告及应对方案</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-title="退出登录">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>退出登录</span>
+                </a>
+            </li>
+        </ul>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="main-content" id="mainContent">
+        <!-- 顶部导航栏 -->
+        <header class="top-bar">
+            <div class="top-bar-content">
+                <h1>舆情分析系统</h1>
+                <div class="top-bar-actions">
+                    <button class="btn-mode" id="toggleMode">
+                        <i class="fas fa-moon"></i> 夜间模式
+                    </button>
+                    <select class="language-selector" id="languageSelect">
+                        <option value="zh">中文</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容容器 -->
+        <div class="wrapper">
+            <!-- 信息概览卡片 -->
+            <div class="row g-4 animate-fade-in">
+                <div class="col-md-3 col-sm-6">
+                    <div class="info-box">
+                        <div class="info-box-content">
+                            <i class="fas fa-comments"></i>
+                            <p>1234</p>
+                            <span>总信息数量</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="info-box">
+                        <div class="info-box-content">
+                            <i class="fas fa-users"></i>
+                            <p>567</p>
+                            <span>评论者数量</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="info-box">
+                        <div class="info-box-content">
+                            <i class="fas fa-network-wired"></i>
+                            <p>89</p>
+                            <span>评论IP地址数</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="info-box">
+                        <div class="info-box-content">
+                            <i class="fas fa-fire-alt"></i>
+                            <p>9999</p>
+                            <span>热度值</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 词云图和预览区域 -->
+            <div class="row g-4 mt-4 animate-fade-in">
+                <div class="col-md-6">
+                    <div class="card wordcloud-card">
+                        <div class="card-header">
+                            <h2 class="header-title">词云图</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="image-crop">
+                                <img src="assets/images/wordcloud.png" alt="词云图" id="image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card preview-card">
+                        <div class="card-header">
+                            <h2 class="header-title">放大图预览</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-preview"></div>
+                            <div class="button-group">
+                                <button class="btn btn-primary" id="zoomIn"><i class="fas fa-search-plus"></i> 放大</button>
+                                <button class="btn btn-primary" id="zoomOut"><i class="fas fa-search-minus"></i> 缩小</button>
+                                <button class="btn btn-primary" id="rotateLeft"><i class="fas fa-undo"></i> 向左旋转</button>
+                                <button class="btn btn-primary" id="rotateRight"><i class="fas fa-redo"></i> 向右旋转</button>
+                                <button class="btn btn-danger" id="reset"><i class="fas fa-sync"></i> 重置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 爬取结果展示 -->
+            <div class="card mt-4 animate-fade-in">
+                <div class="card-header">
+                    <h2 class="header-title">爬取结果展示</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="example" class="display table">
+                            <thead>
+                                <tr>
+                                    <th>发文者</th>
+                                    <th>内容</th>
+                                    <th>发布时间</th>
+                                    <th>转发数</th>
+                                    <th>评论数</th>
+                                    <th>点赞数</th>
+                                    <th>ip地址</th>
+                                    <th>情感态度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>用户A</td>
+                                    <td>这是一条示例内容</td>
+                                    <td>2024-01-08 12:34:56</td>
+                                    <td>100</td>
+                                    <td>50</td>
+                                    <td>200</td>
+                                    <td>北京</td>
+                                    <td><span class="badge bg-success">正面</span></td>
+                                </tr>
+                                <tr>
+                                    <td>用户B</td>
+                                    <td>另一条示例内容</td>
+                                    <td>2024-01-08 11:22:33</td>
+                                    <td>80</td>
+                                    <td>30</td>
+                                    <td>150</td>
+                                    <td>上海</td>
+                                    <td><span class="badge bg-warning">中性</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日热点 -->
+            <div class="card mt-4 animate-fade-in">
+                <div class="card-header">
+                    <h2 class="header-title">每日热点</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card news-card h-100">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="news-image" style="background-image: url(assets/images/news1.jpg)"></div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">示例新闻标题1</h5>
+                                        <p class="card-text text-muted">
+                                            <i class="fas fa-newspaper"></i> 来源: 新闻网
+                                        </p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card news-card h-100">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="news-image" style="background-image: url(assets/images/news2.jpg)"></div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">示例新闻标题2</h5>
+                                        <p class="card-text text-muted">
+                                            <i class="fas fa-newspaper"></i> 来源: 新闻网
+                                        </p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS资源 -->
+    <script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://lib.baomitu.com/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://lib.baomitu.com/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://lib.baomitu.com/moment.js/2.29.1/moment.min.js"></script>
+    <script src="assets/plugins/cropper-master/cropper.min.js"></script>
+    
+    <script>
+        // 初始化DataTable
+        $(document).ready(function() {
+            $('#example').DataTable({
+                language: {
+                    url: 'https://lib.baomitu.com/datatables/1.10.21/i18n/zh.json'
+                },
+                responsive: true,
+                pageLength: 10,
+                order: [[2, 'desc']],
+                columnDefs: [{
+                    targets: 1,
+                    render: function(data, type, row) {
+                        return type === 'display' && data.length > 100 ?
+                            data.substr(0, 100) + '...' : data;
+                    }
+                }]
+            });
+        });
+
+        // 词云图相关功能
+        $(function () {
+            var $image = $('#image');
+            var options = {
+                aspectRatio: NaN,
+                preview: '.img-preview',
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+            };
+
+            $image.cropper(options);
+
+            $('#zoomIn').click(() => $image.cropper('zoom', 0.1));
+            $('#zoomOut').click(() => $image.cropper('zoom', -0.1));
+            $('#rotateLeft').click(() => $image.cropper('rotate', -45));
+            $('#rotateRight').click(() => $image.cropper('rotate', 45));
+            $('#reset').click(() => $image.cropper('reset'));
+        });
+
+        // 侧边栏切换
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.innerHTML = sidebar.classList.contains('collapsed') ? 
+                    '<i class="fas fa-chevron-right"></i>' : 
+                    '<i class="fas fa-chevron-left"></i>';
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            }
+
+            sidebarToggle.addEventListener('click', toggleSidebar);
+
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                toggleSidebar();
+            }
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+        });
+
+        // 夜间模式切换
+        const toggleModeBtn = document.getElementById('toggleMode');
+        const body = document.body;
+
+        function setDarkMode(isDark) {
+            body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            toggleModeBtn.innerHTML = isDark ? 
+                '<i class="fas fa-sun"></i> 日间模式' : 
+                '<i class="fas fa-moon"></i> 夜间模式';
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+        }
+
+        toggleModeBtn.addEventListener('click', () => {
+            setDarkMode(body.getAttribute('data-theme') !== 'dark');
+        });
+
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
+
+        // 语言切换
+        const languageSelect = document.getElementById('languageSelect');
+        
+        languageSelect.addEventListener('change', function() {
+            localStorage.setItem('selectedLanguage', this.value);
+            location.reload();
+        });
+
+        const savedLanguage = localStorage.getItem('selectedLanguage');
+        if (savedLanguage) {
+            languageSelect.value = savedLanguage;
+        }
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.animate-fade-in').forEach((element, index) => {
+                element.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html> 
