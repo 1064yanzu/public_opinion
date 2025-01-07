@@ -43,8 +43,14 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
     print(f"开始执行动态爬虫任务: keyword={keyword}, platforms={platforms}, start_date={start_date}, end_date={end_date}, precision={precision}")
     
     try:
+        # 获取当前时间段的间隔时间
         interval = get_current_interval()
+        if interval is None:
+            print("警告: 无法获取当前时间段的间隔时间，使用默认值60分钟")
+            interval = 60
         print(f"当前间隔时间: {interval}分钟")
+
+        # 执行爬虫任务并获取数据
         infos2_data, share_num, comment_num, like_num, sentiment_counts = main_nlp(keyword, precision, platforms)
         
         print(f"main_nlp 返回数据类型:")
@@ -54,27 +60,36 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
         print(f"like_num: {type(like_num)}, 值: {like_num}")
         print(f"sentiment_counts: {type(sentiment_counts)}, 值: {sentiment_counts}")
 
+        # 计算下次执行时间
         next_run_time = datetime.now() + timedelta(minutes=interval)
         print(f"下次执行时间: {next_run_time}")
 
-        # 使用全局scheduler
+        # 使用全局scheduler添加下一次任务
         from views.page.page import scheduler
+        job_id = f'spider_job_{keyword}'
+        
+        # 如果已存在相同ID的任务，先移除它
+        if scheduler.get_job(job_id):
+            scheduler.remove_job(job_id)
 
+        # 添加新的定时任务
         scheduler.add_job(
             func=dynamic_spider_task,
             trigger='date',
             run_date=next_run_time,
             args=[keyword, platforms, start_date, end_date, precision],
-            id=f'spider_job_{keyword}',
+            id=job_id,
             replace_existing=True
         )
-        print(f"成功添加下一次任务: spider_job_{keyword}")
+        print(f"成功添加下一次任务: {job_id}")
 
+        # 更新数据文件
         csv_2 = 'weibo_temp.csv'
         csv_1 = f'{keyword}.csv'
         update_database(csv_1, csv_2)
 
-        return infos2_data, share_num, comment_num, like_num, sentiment_counts
+        # 转换数据类型并返回
+        return to_python_type(infos2_data), to_python_type(share_num), to_python_type(comment_num), to_python_type(like_num), to_python_type(sentiment_counts)
     except Exception as e:
         print(f"动态爬虫任务执行出错: {str(e)}")
         import traceback
@@ -99,32 +114,54 @@ def to_python_type(data):
         return data
 
 
-def update_database(DATABASE_PATH, new_data):
-    # 读取现有数据
-    if os.path.exists(DATABASE_PATH):
-        existing_data = pd.read_csv(DATABASE_PATH)
-    else:
-        existing_data = pd.DataFrame(
-            columns=['微博id', '微博内容', '转发数', '评论数', '点赞数', '用户简介', '用户关注数', '粉丝数', '性别',
-                     '主页', '情感倾向', '爬取时间'])
-
-    # 将新数据转换为DataFrame，并添加爬取时间
-    new_df = pd.read_csv(new_data)
-    new_df['爬取时间'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    # 合并数据，使用'微博id'作为键，更新指定字段
-    merged_df = existing_data.set_index('微博id').combine_first(new_df.set_index('微博id')).reset_index()
-
-    # 更新指定字段
-    fields_to_update = ['微博内容', '转发数', '评论数', '点赞数', '用户简介', '用户关注数', '粉丝数', '性别', '主页',
-                        '情感倾向', '爬取时间']
-    for field in fields_to_update:
-        merged_df.loc[merged_df.index.isin(new_df.index), field] = new_df[field]
-
-    # 按爬取时间降序排序
-    merged_df = merged_df.sort_values(by='爬取时间', ascending=False)
-
-    # 保存更新后的数据
-    merged_df.to_csv(DATABASE_PATH, index=False)
+def update_database(csv_1, csv_2):
+    """
+    更新数据库
+    :param csv_1: 现有数据文件路径
+    :param csv_2: 新数据文件路径
+    :return: None
+    """
+    try:
+        # 读取现有数据和新数据
+        existing_data = pd.read_csv(csv_1) if os.path.exists(csv_1) else pd.DataFrame()
+        new_df = pd.read_csv(csv_2)
+        
+        # 确保两个DataFrame都有必要的列
+        required_columns = ['微博id', '微博bid', '微博作者', '微博内容', '发布时间', '转发数', '评论数', '点赞数', 'url']
+        
+        # 处理现有数据
+        if not existing_data.empty:
+            for col in required_columns:
+                if col not in existing_data.columns:
+                    if col == '微博id':
+                        # 如果没有微博id列，使用微博bid作为id
+                        existing_data['微博id'] = existing_data['微博bid'] if '微博bid' in existing_data.columns else range(len(existing_data))
+                    else:
+                        existing_data[col] = 'N/A'
+        
+        # 处理新数据
+        for col in required_columns:
+            if col not in new_df.columns:
+                if col == '微博id':
+                    # 如果没有微博id列，使用微博bid作为id
+                    new_df['微博id'] = new_df['微博bid'] if '微博bid' in new_df.columns else range(len(new_df))
+                else:
+                    new_df[col] = 'N/A'
+        
+        # 合并数据
+        if existing_data.empty:
+            merged_df = new_df
+        else:
+            # 使用微博id作为索引合并数据
+            merged_df = pd.concat([existing_data, new_df]).drop_duplicates(subset=['微博id'], keep='last')
+        
+        # 保存合并后的数据
+        merged_df.to_csv(csv_1, index=False, encoding='utf-8-sig')
+        print(f"数据库更新成功，保存到: {csv_1}")
+        
+    except Exception as e:
+        print(f"更新数据库时出错: {str(e)}")
+        raise
 
 
 def update_database_douyin(DATABASE_PATH, new_data):

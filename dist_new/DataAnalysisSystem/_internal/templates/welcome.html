@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未来科技 - 欢迎来到新纪元</title>
+    <link href="https://fonts.loli.net/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Orbitron', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 5em;
+            font-weight: 700;
+            letter-spacing: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientFlow 5s ease infinite;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            color: #000;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+    <div class="content">
+        <h1>数据洞见</h1>
+        <a href="{{ url_for('user.login') }}" class="btn">开启旅程</a>
+    </div>
+
+    <script>
+        let scene, camera, renderer, raycaster, mouse;
+        let centralModel, particles;
+        let clock = new THREE.Clock();
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
+            camera.position.z = 1000;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('scene-container').appendChild(renderer.domElement);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            createCentralModel();
+            createParticles();
+            addEventListeners();
+            animate();
+        }
+
+        function createCentralModel() {
+            const geometry = new THREE.IcosahedronGeometry(200, 1);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x00ffff,
+                wireframe: true,
+                emissive: 0x0088ff,
+                emissiveIntensity: 0.5,
+                shininess: 100
+            });
+            centralModel = new THREE.Mesh(geometry, material);
+            scene.add(centralModel);
+
+            const light = new THREE.PointLight(0xffffff, 1, 1000);
+            light.position.set(0, 0, 300);
+            scene.add(light);
+        }
+
+        function createParticles() {
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCnt = 5000;
+            const posArray = new Float32Array(particlesCnt * 3);
+            const velocityArray = new Float32Array(particlesCnt * 3);
+
+            for (let i = 0; i < particlesCnt * 3; i += 3) {
+                posArray[i] = (Math.random() - 0.5) * window.innerWidth * 2;
+                posArray[i+1] = (Math.random() - 0.5) * window.innerHeight * 2;
+                posArray[i+2] = (Math.random() - 0.5) * 1000;
+
+                velocityArray[i] = (Math.random() - 0.5) * 2;
+                velocityArray[i+1] = (Math.random() - 0.5) * 2;
+                velocityArray[i+2] = (Math.random() - 0.5) * 2;
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            particlesGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocityArray, 3));
+
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 2,
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particles);
+        }
+
+        function addEventListeners() {
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('wheel', onMouseWheel);
+            window.addEventListener('click', onClick);
+            window.addEventListener('dblclick', onDoubleClick);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // 粒子跟随鼠标效果
+            const positions = particles.geometry.attributes.position.array;
+            const velocities = particles.geometry.attributes.velocity.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                const distance = Math.sqrt(
+                    Math.pow(positions[i] - mouse.x * 1000, 2) +
+                    Math.pow(positions[i+1] + mouse.y * 500, 2)
+                );
+                if (distance < 100) {
+                    velocities[i] += (mouse.x * 10 - positions[i]) * 0.01;
+                    velocities[i+1] += (-mouse.y * 5 - positions[i+1]) * 0.01;
+                }
+            }
+            particles.geometry.attributes.velocity.needsUpdate = true;
+        }
+
+        function onMouseWheel(event) {
+            const zoomSpeed = 50;
+            camera.position.z += event.deltaY * 0.1;
+            camera.position.z = Math.max(500, Math.min(2000, camera.position.z));
+        }
+
+        function onClick(event) {
+            // 点击时创建波纹效果
+            const geometry = new THREE.RingGeometry(1, 2, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 1 });
+            const ripple = new THREE.Mesh(geometry, material);
+            ripple.position.set((mouse.x * window.innerWidth / 2), (-mouse.y * window.innerHeight / 2), 0);
+            scene.add(ripple);
+
+            new TWEEN.Tween(ripple.scale)
+                .to({ x: 100, y: 100 }, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+
+            new TWEEN.Tween(material)
+                .to({ opacity: 0 }, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .onComplete(() => {
+                    scene.remove(ripple);
+                    geometry.dispose();
+                    material.dispose();
+                })
+                .start();
+        }
+
+        function onDoubleClick() {
+            // 双击时改变中央模型的形状
+            const geometries = [
+                new THREE.IcosahedronGeometry(200, 1),
+                new THREE.BoxGeometry(300, 300, 300),
+                new THREE.SphereGeometry(200, 32, 32),
+                new THREE.TorusGeometry(150, 60, 16, 100)
+            ];
+            const newGeometry = geometries[Math.floor(Math.random() * geometries.length)];
+            centralModel.geometry.dispose();
+            centralModel.geometry = newGeometry;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            // 更新中央模型
+            centralModel.rotation.x += 0.001;
+            centralModel.rotation.y += 0.002;
+            centralModel.position.x = mouse.x * 20;
+            centralModel.position.y = mouse.y * 20;
+
+            // 更新粒子位置
+            const positions = particles.geometry.attributes.position.array;
+            const velocities = particles.geometry.attributes.velocity.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i] += velocities[i];
+                positions[i+1] += velocities[i+1];
+                positions[i+2] += velocities[i+2];
+
+                // 如果粒子移出视野，将其重置到随机位置
+                if (Math.abs(positions[i]) > window.innerWidth ||
+                    Math.abs(positions[i+1]) > window.innerHeight ||
+                    Math.abs(positions[i+2]) > 1000) {
+                    positions[i] = (Math.random() - 0.5) * window.innerWidth * 2;
+                    positions[i+1] = (Math.random() - 0.5) * window.innerHeight * 2;
+                    positions[i+2] = (Math.random() - 0.5) * 1000;
+                    velocities[i] = (Math.random() - 0.5) * 2;
+                    velocities[i+1] = (Math.random() - 0.5) * 2;
+                    velocities[i+2] = (Math.random() - 0.5) * 2;
+                }
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+
+            TWEEN.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

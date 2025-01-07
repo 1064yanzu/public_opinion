@@ -1,8 +1,6 @@
 import os
 import traceback
-
 from snownlp import SnowNLP
-import pymysql
 import pandas as pd
 from datetime import datetime
 import ast
@@ -38,41 +36,6 @@ def target_file():
     print(f"正面评论数: {good}")
     print(f"负面评论数: {bad}")
     print(f"中性评论数: {middle}")
-
-def get_info2_mysql() :
-    # 连接到MySQL数据库
-    conn = pymysql.connect(
-      host="localhost",
-      user="root",
-      password="123456",
-      database='weiboarticles',
-      charset='utf8mb4',
-    )
-
-    # 使用Pandas执行SQL查询
-    sql_query = "SELECT 微博作者,微博内容,转发数,发布时间,评论数,点赞数 FROM weibo_spider"
-    df = pd.read_sql(sql_query, conn)
-    # 将DataFrame转换为字典列表
-    infos2_data = df.to_dict(orient='records')
-
-    # 使用Pandas执行SQL查询
-    sql_query = "SELECT 转发数, 评论数, 点赞数 FROM weibo_spider"
-    df = pd.read_sql(sql_query, conn)
-
-    # 检查查询结果是否为空
-    if df.empty:  # 如果DataFrame为空
-        # 直接返回默认值0
-        return [],0,0,0
-    else:
-        # 对各列进行求和
-        summary = df.sum(numeric_only=True)  # numeric_only=True确保只对数值型列求和
-
-        # 确保即使在极端情况下（比如某列在数据库中无数据）也能安全访问
-        share_num = summary.get('转发数', 0)
-        comment_num = summary.get('评论数', 0)
-        like_num = summary.get('点赞数', 0)
-
-    return infos2_data,share_num,comment_num,like_num
 
 def get_info2(csv_path):
     try:
@@ -166,60 +129,87 @@ def get_ip(csv_path =ready_path):
 
     return infos2_data, share_num, comment_num, like_num
 
-def target_file2_mysql():
-    # 创建数据库连接
-    connection = pymysql.connect(host='localhost',
-                                 user='root',
-                                 password='123456',
-                                 database='weiboarticles',
-                                 charset='utf8mb4',
-                                 cursorclass=pymysql.cursors.DictCursor)
-
+def analyze_sentiment(text):
+    """
+    分析文本情感倾向
+    :param text: 待分析的文本
+    :return: 情感标签 (positive/negative/neutral)
+    """
     try:
-        with connection.cursor() as cursor:
-            # 获取所有评论
-            sql = "SELECT `微博id`, `微博内容` FROM `weibo_spider`"
-            cursor.execute(sql)
-            results = cursor.fetchall()
-            for row in results:
-                comment_id = row['微博id']
-                content = row['微博内容']
-                sentiment_value = SnowNLP(content).sentiments
-                sentiment = '正面' if sentiment_value > 0.5 else '负面' if sentiment_value < 0.5 else '中性'
-                update_sql = f"UPDATE `comments` SET `sentiment_result` = '{sentiment}' WHERE `id` = {comment_id}"
-                cursor.execute(update_sql)
-            # 提交事务，确保更改被保存到数据库
-            connection.commit()
+        if pd.isna(text) or not isinstance(text, str):
+            return 'neutral'
+            
+        sentiment_score = SnowNLP(str(text)).sentiments
+        
+        if sentiment_score > 0.7:
+            return 'positive'
+        elif sentiment_score < 0.3:
+            return 'negative'
+        else:
+            return 'neutral'
+            
+    except Exception as e:
+        print(f"情感分析出错: {str(e)}, 文本: {text}")
+        return 'neutral'
 
-    finally:
-        connection.close()
-
+def convert_sentiment_to_text(score):
+    """
+    将情感分数转换为文字描述
+    :param score: 情感分数
+    :return: 情感文字描述
+    """
+    try:
+        if isinstance(score, str):
+            if score == 'positive':
+                return '正面'
+            elif score == 'negative':
+                return '负面'
+            else:
+                return '中性'
+                
+        score = float(score)
+        if score > 0.7:
+            return '正面'
+        elif score < 0.3:
+            return '负面'
+        else:
+            return '中性'
+    except (ValueError, TypeError):
+        return '中性'
 
 def nlp_weibo(csv_path):
+    """
+    处理微博数据的情感分析
+    :param csv_path: CSV文件路径
+    """
     print(f"开始处理微博数据: {csv_path}")
-    df = pd.read_csv(csv_path)
-    print(f"数据形状: {df.shape}")
-    print(f"列名: {df.columns.tolist()}")
+    try:
+        df = pd.read_csv(csv_path)
+        print(f"数据形状: {df.shape}")
+        print(f"列名: {df.columns.tolist()}")
 
-    def safe_sentiment(content):
-        if pd.isna(content) or not isinstance(content, str):
-            return 0.5  # 默认中性情感
-        try:
-            return SnowNLP(str(content)).sentiments
-        except Exception as e:
-            print(f"情感分析错误: {str(e)}, 内容: {content}")
-            return 0.5  # 出错时返回中性情感
+        def safe_sentiment(content):
+            if pd.isna(content) or not isinstance(content, str):
+                return 0.5  # 默认中性情感
+            try:
+                return SnowNLP(str(content)).sentiments
+            except Exception as e:
+                print(f"情感分析错误: {str(e)}, 内容: {content}")
+                return 0.5  # 出错时返回中性情感
 
-    df['情感倾向'] = df['微博内容'].apply(safe_sentiment)
-    
-    print("情感分析完成")
-    print(f"情感分析结果的前几行:\n{df['情感倾向'].head()}")
-    
-    df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    df.to_csv(ready_path, index=False, encoding='utf-8-sig')
-    print(f"处理后的数据已保存到: {csv_path}")
-
-
+        # 进行情感分析
+        df['情感倾向'] = df['微博内容'].apply(safe_sentiment)
+        print("情感分析完成")
+        print(f"情感分析结果的前几行:\n{df['情感倾向'].head()}")
+        
+        # 保存结果
+        df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+        df.to_csv(ready_path, index=False, encoding='utf-8-sig')
+        print(f"处理后的数据已保存到: {csv_path}")
+        
+    except Exception as e:
+        print(f"处理微博数据时出错: {str(e)}")
+        raise
 
 def nlp_douyin(temp_file):
     print(f"开始处理抖音数据: {temp_file}")
@@ -304,36 +294,92 @@ def main_douyin(keyword, max_page):
     return df
 
 
+def normalize_gender(value):
+    """标准化性别数据"""
+    if pd.isna(value):
+        return '未知'
+    value = str(value).lower()
+    if value in ['m', '男', 'male', '1']:
+        return '男'
+    elif value in ['f', '女', 'female', '2']:
+        return '女'
+    else:
+        return '未知'
+
 def process_platform_data(platforms, keyword):
     print(f"开始处理平台数据: platforms={platforms}, keyword={keyword}")
     
     dfs = []
-    column_mapping = {
-        '微博': {
-            '微博作者': '用户名',
-            '微博内容': '内容',
-            '转发数': '分享数',
-            '评论数': '评论数',
-            '点赞数': '点赞数',
-            '情感倾向': '情感倾向',
-            'crawl_time': '爬取时间',
-            'url': 'url',
-            # '微博bid': 'uni_id',
-            '发布时间': '发布时间'
+    # 统一的列名映射，key为标准列名，value为各平台的原始列名
+    unified_columns = {
+        # 基础信息
+        '用户名': {
+            '微博': '微博作者',
+            '抖音': '用户名'
         },
-        '抖音': {
-            '用户名': '用户名',
-            '视频描述': '内容',
-            '分享数': '分享数',
-            '评论数': '评论数',
-            '点赞数': '点赞数',
-            '情感倾向': '情感倾向',
-            'crawl_time': '爬取时间',
-            'url': 'url',
-            # 'aweme_id': 'uni_id',
-            '发布时间': '发布时间'
+        '内容': {
+            '微博': '微博内容',
+            '抖音': '视频描述'
+        },
+        '发布时间': {
+            '微博': '发布时间',
+            '抖音': '发布时间'
+        },
+        
+        # 互动数据
+        '分享数': {
+            '微博': '转发数',
+            '抖音': '分享数'
+        },
+        '评论数': {
+            '微博': '评论数',
+            '抖音': '评论数'
+        },
+        '点赞数': {
+            '微博': '点赞数',
+            '抖音': '点赞数'
+        },
+        
+        # ID和链接
+        'uni_id': {
+            '微博': '微博bid',
+            '抖音': '视频id'
+        },
+        'url': {
+            '微博': 'url',
+            '抖音': 'url'
+        },
+        
+        # 情感分析
+        '情感倾向': {
+            '微博': '情感倾向',
+            '抖音': '情感倾向'
+        },
+        'sentiment_result': {
+            '微博': 'sentiment_result',
+            '抖音': 'sentiment_result'
+        },
+        
+        # 性别信息
+        '性别': {
+            '微博': '性别',
+            '抖音': '性别'
+        },
+        
+        # 地理信息
+        '省份': {
+            '微博': '省份',
+            '抖音': '省份'
         }
     }
+    
+    # 数值型列表
+    numeric_columns = [
+        '分享数', '评论数', '点赞数', '收藏数', 
+        '用户关注数', '粉丝数', '抖音粉丝数', 
+        '抖音关注数', '获赞数', '作品数', 
+        '播放量', '商品数'
+    ]
     
     for platform in platforms:
         try:
@@ -348,14 +394,45 @@ def process_platform_data(platforms, keyword):
             print(f"{platform} 数据形状：{df.shape}")
             print(f"{platform} 数据列名：{df.columns.tolist()}")
             
-            # 重命名列
-            df = df.rename(columns=column_mapping[platform])
-            print(f"{platform} 重命名后的列名：{df.columns.tolist()}")
+            # 创建新的DataFrame，使用统一的列名
+            new_df = pd.DataFrame()
             
-            # 添加平台列
-            df['平台'] = platform
+            # 遍历统一列名，进行映射
+            for standard_col, platform_cols in unified_columns.items():
+                if platform in platform_cols:
+                    original_col = platform_cols[platform]
+                    if original_col in df.columns:
+                        new_df[standard_col] = df[original_col]
+                    else:
+                        # 如果是数值型列，填充0，否则填充空字符串
+                        if standard_col in numeric_columns:
+                            new_df[standard_col] = 0
+                        else:
+                            new_df[standard_col] = ''
+                else:
+                    # 该平台没有这个字段，填充默认值
+                    if standard_col in numeric_columns:
+                        new_df[standard_col] = 0
+                    else:
+                        new_df[standard_col] = ''
             
-            dfs.append(df)
+            # 标准化性别数据
+            if '性别' in new_df.columns:
+                new_df['性别'] = new_df['性别'].apply(normalize_gender)
+            else:
+                new_df['性别'] = '未知'
+            
+            # 添加平台标识列
+            new_df['平台'] = platform
+            
+            # 确保数值列为整数类型
+            for col in numeric_columns:
+                if col in new_df.columns:
+                    new_df[col] = pd.to_numeric(new_df[col], errors='coerce').fillna(0).astype(int)
+            
+            dfs.append(new_df)
+            print(f"{platform} 数据处理完成")
+            
         except Exception as e:
             print(f"处理 {platform} 数据时出错：{str(e)}")
             import traceback
@@ -366,28 +443,17 @@ def process_platform_data(platforms, keyword):
         return pd.DataFrame()
     
     try:
+        # 合并所有平台的数据
         merged_df = pd.concat(dfs, ignore_index=True)
         print(f"合并后的数据形状：{merged_df.shape}")
         print(f"合并后的数据列名：{merged_df.columns.tolist()}")
         
-        # 选择需要保留的列
-        final_columns = ['平台', '用户名', '内容', '分享数', '评论数', '点赞数', '情感倾向', '爬取时间', 'url', 'uni_id', '发布时间']
-        existing_columns = [col for col in final_columns if col in merged_df.columns]
-        merged_df = merged_df[existing_columns]
-        
-        # 确保数值列为数值类型
-        numeric_columns = ['分享数', '评论数', '点赞数']
-        for col in numeric_columns:
-            if col in merged_df.columns:
-                merged_df[col] = pd.to_numeric(merged_df[col], errors='coerce').fillna(0).astype(int)
-        
         # 保存合并后的数据
-        output_file = f'merged_{keyword}.csv'
-        merged_df.to_csv(output_file, index=False, encoding='utf-8-sig')
-        print(f"合并后的数据已保存到：{output_file}")
-        print(f"最终数据列名：{merged_df.columns.tolist()}")
+        merged_df.to_csv(ready_path, index=False, encoding='utf-8-sig')
+        print(f"合并后的数据已保存到：{ready_path}")
         
         return merged_df
+        
     except Exception as e:
         print(f"合并数据时出错：{str(e)}")
         import traceback
@@ -400,88 +466,96 @@ def process_platform_data(platforms, keyword):
 # def main_nlp(keyword, precision,platform):
 
 def main_nlp(keyword, precision, platform):
-    print(f"执行 main_nlp: keyword={keyword}, precision={precision}, platform={platform}")
-    
-    if precision == '低':
-        max_page = 5
-    elif precision == '中':
-        max_page = 10
-    else:
-        max_page = 15
-
+    """
+    主函数
+    :param keyword: 关键词
+    :param precision: 精确度
+    :param platform: 平台
+    :return:
+    """
     try:
-        platforms = ast.literal_eval(platform)
-        if isinstance(platforms, str):
-            platforms = [platforms]
-    except:
-        platforms = [platform] if isinstance(platform, str) else platform
+        # 设置最大页数
+        if precision == '低':
+            max_page = 5
+        elif precision == '中':
+            max_page = 10
+        else:
+            max_page = 15
 
-    print(f"处理的平台: {platforms}")
-    weibo_is = 0
-    douyin_is = 0
-    for p in platforms:
-        if p == '微博':
-            main_weibo(keyword, max_page)
-            weibo_is = 1
-        elif p == '抖音':
-            main_douyin(keyword, max_page)
-            douyin_is = 1
+        # 确保platform是列表格式
+        if isinstance(platform, str):
+            try:
+                platforms = ast.literal_eval(platform)
+            except (ValueError, SyntaxError):
+                platforms = [platform]  # 如果解析失败，将其作为单个平台处理
+        else:
+            platforms = platform
 
-    try:
-        if weibo_is == 1:
-            print("微博数据处理完成")
-            read_file = get_persistent_file_path('微博', keyword)
-            df = pd.read_csv(read_file)
-            infos2_data = df.to_dict(orient='records')
-            share_num = int(df['分享数'].sum())
-            comment_num = int(df['评论数'].sum())
-            like_num = int(df['点赞数'].sum())
-            sentiment_counts = df['情感倾向'].value_counts().to_dict()
-        elif douyin_is == 1:
-            read_file = get_persistent_file_path('抖音', keyword)
-            df = pd.read_csv(read_file)
-            infos2_data = df.to_dict(orient='records')
-            share_num = int(df['分享数'].sum())
-            comment_num = int(df['评论数'].sum())
-            like_num = int(df['点赞数'].sum())
-            sentiment_counts = df['情感倾向'].value_counts().to_dict()
-        
-        print(f"处理后的数据类型: infos2_data: {type(infos2_data)}, 长度: {len(infos2_data)}")
-        print(f"share_num: {type(share_num)}, 值: {share_num}")
-        print(f"comment_num: {type(comment_num)}, 值: {comment_num}")
-        print(f"like_num: {type(like_num)}, 值: {like_num}")
-        print(f"sentiment_counts: {type(sentiment_counts)}, 值: {sentiment_counts}")
-        
+        # 初始化计数器
+        share_num = 0
+        comment_num = 0
+        like_num = 0
+        sentiment_counts = {'positive': 0, 'neutral': 0, 'negative': 0}
+        infos2_data = []
+
+        # 遍历平台列表
+        for p in platforms:
+            if p == '微博':
+                try:
+                    main_weibo(keyword, max_page)
+                except Exception as e:
+                    print(f"微博爬取出错: {str(e)}")
+                    continue
+
+        # 读取并处理数据
+        if os.path.exists(ready_path):
+            try:
+                df = pd.read_csv(ready_path, encoding='utf-8')
+                
+                # 确保所需列存在
+                required_columns = ['微博id', '微博bid', '微博作者', '微博内容', '发布时间', '转发数', '评论数', '点赞数', 'url']
+                for col in required_columns:
+                    if col not in df.columns:
+                        if col == '微博id':
+                            df['微博id'] = df['微博bid'] if '微博bid' in df.columns else range(len(df))
+                        else:
+                            df[col] = 'N/A'
+                
+                # 处理数据
+                for _, row in df.iterrows():
+                    try:
+                        info = {
+                            '微博id': str(row['微博id']),
+                            '用户名': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
+                            '内容': str(row['微博内容']).strip() if pd.notna(row['微博内容']) else "无内容",
+                            '发布时间': str(row['发布时间']).strip() if pd.notna(row['发布时间']) else "未知时间",
+                            '分享数': int(row['转发数']) if pd.notna(row['转发数']) and str(row['转发数']).isdigit() else 0,
+                            '评论数': int(row['评论数']) if pd.notna(row['评论数']) and str(row['评论数']).isdigit() else 0,
+                            '点赞数': int(row['点赞数']) if pd.notna(row['点赞数']) and str(row['点赞数']).isdigit() else 0,
+                            'url': str(row['url']) if pd.notna(row['url']) else ""
+                        }
+                        
+                        # 更新计数
+                        share_num += info['分享数']
+                        comment_num += info['评论数']
+                        like_num += info['点赞数']
+                        
+                        # 情感分析
+                        sentiment = analyze_sentiment(info['内容'])
+                        info['sentiment_result'] = sentiment
+                        sentiment_counts[sentiment] += 1
+                        
+                        infos2_data.append(info)
+                    except Exception as e:
+                        print(f"处理数据行时出错: {str(e)}")
+                        continue
+            except Exception as e:
+                print(f"读取CSV文件时出错: {str(e)}")
+                
         return infos2_data, share_num, comment_num, like_num, sentiment_counts
     except Exception as e:
-        print(f"处理平台数据时出错: {str(e)}")
-        print(traceback.format_exc())
-    try:
-        platforms = ast.literal_eval(platform)
-        if isinstance(platforms, str):
-            print(4)
-            platforms = [platforms]
-            # 对每个平台执行相应的函数
-            for p in platforms:
-                if p == '微博':
-                    main_weibo(keyword, max_page)
-                elif p == '抖音':
-                    main_douyin(keyword, max_page)
-
-    except:
-        print(platform[0])
-        if platform[0] == '微博':
-            print('微博p')
-            main_weibo(keyword, max_page)
-        elif platform[0] == '抖音':
-            print('抖音1')
-            main_douyin(keyword, max_page)
-        else:
-            print('不满足')
-
-    process_platform_data(platforms,keyword)
-    infos2_data, share_num, comment_num, like_num,sentiment_counts = get_info2(f'merged_{keyword}.csv')
-    return infos2_data, share_num, comment_num,like_num,sentiment_counts
+        print(f"执行main_nlp时出错: {str(e)}")
+        raise
 
 if __name__ == '__main__':
     # main_nlp('山东大学','low')

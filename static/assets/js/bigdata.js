@@ -1,4 +1,3 @@
-
         // 全局变量，用于存储图表实例
         let chinaHeatmap, sentimentPie, genderPie;
 
@@ -33,6 +32,8 @@
         }
 
         function getChartOption(type) {
+            const isMobile = window.innerWidth <= 768;
+            
             switch(type) {
                 case 'china':
                     return {
@@ -42,10 +43,11 @@
                         visualMap: {
                             min: 0,
                             max: 1000,
-                            left: 'left',
-                            top: 'bottom',
+                            left: isMobile ? 'center' : 'left',
+                            bottom: isMobile ? 10 : 'bottom',
                             text: ['高', '低'],
                             calculable: true,
+                            orient: isMobile ? 'horizontal' : 'vertical',
                             inRange: {
                                 color: ['#e6f7ff', '#1890ff']
                             }
@@ -56,6 +58,16 @@
                                 type: 'map',
                                 map: 'china',
                                 roam: true,
+                                label: {
+                                    show: !isMobile,
+                                    fontSize: isMobile ? 8 : 12
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: isMobile ? 10 : 14
+                                    }
+                                },
                                 data: []
                             }
                         ]
@@ -70,21 +82,22 @@
                             {
                                 name: '情感分析',
                                 type: 'pie',
-                                radius: ['40%', '70%'],
-                                avoidLabelOverlap: false,
+                                radius: isMobile ? ['30%', '60%'] : ['40%', '70%'],
+                                avoidLabelOverlap: true,
                                 label: {
                                     show: true,
-                                    position: 'outside'
+                                    position: isMobile ? 'inner' : 'outside',
+                                    fontSize: isMobile ? 10 : 14
                                 },
                                 emphasis: {
                                     label: {
                                         show: true,
-                                        fontSize: '18',
+                                        fontSize: isMobile ? 12 : 18,
                                         fontWeight: 'bold'
                                     }
                                 },
                                 labelLine: {
-                                    show: true
+                                    show: !isMobile
                                 },
                                 data: []
                             }
@@ -100,13 +113,22 @@
                             {
                                 name: '性别分布',
                                 type: 'pie',
-                                radius: '70%',
+                                radius: isMobile ? '60%' : '70%',
+                                label: {
+                                    show: true,
+                                    position: isMobile ? 'inner' : 'outside',
+                                    fontSize: isMobile ? 10 : 14
+                                },
                                 data: [],
                                 emphasis: {
                                     itemStyle: {
                                         shadowBlur: 10,
                                         shadowOffsetX: 0,
                                         shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    },
+                                    label: {
+                                        show: true,
+                                        fontSize: isMobile ? 12 : 16
                                     }
                                 }
                             }
@@ -282,14 +304,76 @@
 // 在 DOMContentLoaded 事件监听器中添加：
 setInterval(updateClock, 1000);
 
+        // 添加移动端触摸事件支持
+        function addTouchSupport() {
+            const chartElements = [chinaHeatmap, sentimentPie, genderPie];
+            
+            chartElements.forEach(chart => {
+                if (chart) {
+                    const mc = new Hammer(chart.getDom());
+                    
+                    // 支持双指缩放
+                    mc.get('pinch').set({ enable: true });
+                    
+                    // 支持拖动
+                    mc.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+                    
+                    // 处理缩放
+                    mc.on('pinchstart', function() {
+                        const option = chart.getOption();
+                        if (option.series[0].type === 'map') {
+                            chart._lastScale = option.series[0].zoom || 1;
+                        }
+                    });
+                    
+                    mc.on('pinch', function(e) {
+                        const option = chart.getOption();
+                        if (option.series[0].type === 'map') {
+                            option.series[0].zoom = chart._lastScale * e.scale;
+                            chart.setOption(option);
+                        }
+                    });
+                    
+                    // 处理拖动
+                    mc.on('panmove', function(e) {
+                        const option = chart.getOption();
+                        if (option.series[0].type === 'map') {
+                            chart.setOption({
+                                series: [{
+                                    center: [
+                                        e.center.x,
+                                        e.center.y
+                                    ]
+                                }]
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
     initAllCharts();
     updateHotTopics(); // 立即执行一次
     updateRealtimeMonitoring(); // 立即执行一次
 
+    // 添加移动端触摸支持
+    if ('ontouchstart' in window) {
+        addTouchSupport();
+    }
+    
     // 定期更新数据
     setInterval(updateCharts, 5000);
     setInterval(updateHotTopics, 1800000); // 每1分钟更新一次热点话题
     setInterval(updateRealtimeMonitoring, 30000); // 每30秒更新一次
     setInterval(updateClock, 1000); // 每秒更新时钟
+
+    // 监听屏幕旋转事件
+    window.addEventListener('orientationchange', function() {
+        setTimeout(function() {
+            chinaHeatmap && chinaHeatmap.resize();
+            sentimentPie && sentimentPie.resize();
+            genderPie && genderPie.resize();
+        }, 300);
+    });
 });

@@ -325,3 +325,122 @@ body {
 #realtime-list::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* 移动端适配样式 */
+@media screen and (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 15px;
+        height: auto;
+    }
+
+    #china-heatmap,
+    #sentiment-analysis,
+    #gender-distribution,
+    #alert,
+    #realtime-monitoring,
+    #hot-topics {
+        grid-column: span 1;
+    }
+
+    .card {
+        min-height: 300px;
+        height: auto;
+    }
+
+    #header h1 {
+        font-size: 1.5rem;
+        padding: 0 50px;
+    }
+
+    .return-button {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        top: 15px;
+        left: 15px;
+    }
+
+    #real-time-clock {
+        font-size: 0.9rem;
+        top: 15px;
+        right: 15px;
+    }
+
+    .hot-topics-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .hot-topic-item {
+        padding: 10px;
+    }
+
+    .hot-topic-item a {
+        font-size: 13px;
+    }
+
+    #realtime-list li {
+        padding: 12px;
+    }
+
+    #realtime-list .author {
+        font-size: 13px;
+    }
+
+    #realtime-list .content {
+        font-size: 13px;
+    }
+
+    .warning-box {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+/* 平板设备适配 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 15px;
+        gap: 15px;
+    }
+
+    #china-heatmap {
+        grid-column: span 2;
+    }
+
+    #sentiment-analysis,
+    #gender-distribution {
+        grid-column: span 1;
+    }
+
+    #alert,
+    #realtime-monitoring,
+    #hot-topics {
+        grid-column: span 2;
+    }
+}
+
+/* 横屏模式优化 */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #china-heatmap {
+        grid-column: span 2;
+    }
+
+    .card {
+        min-height: 250px;
+    }
+}
+
+/* 确保图表容器在移动端也能正常显示 */
+.chart-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 250px;
+}

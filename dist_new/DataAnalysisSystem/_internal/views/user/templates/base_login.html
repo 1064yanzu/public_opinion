@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="/static/assets/images/favicon.png" type="image/png">
+  <title></title>
+   <link href="{{ url_for('static',filename = 'assets/css/icons.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static',filename = 'assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static',filename = 'assets/css/style.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static',filename = 'assets/css/responsive.css') }}" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+          <script src="{{ url_for('static',filename = 'js/html5shiv.min.js') }}" ></script>
+          <script src="{{ url_for('static',filename = 'js/respond.min.js') }}" ></script>
+
+
+
+    <![endif]-->
+
+</head>
+
+<body class="sticky-header">
+
+
+ <!--Start login Section-->
+  <section class="login-section">
+       <div class="container">
+           <div class="row">
+               <div class="login-wrapper">
+                   <div class="login-inner">
+
+                       <div class="logo">
+                         <img src="/static/assets/images/舆情-舆情搜索.png" style="width: 50px; height: 50px;"  alt="logo"/>
+                       </div>
+
+                   		<h2 class="header-title text-center">登录</h2>
+
+                       <form>
+                           <div class="form-group">
+                               <input type="text" class="form-control"  placeholder="用户名" >
+                           </div>
+
+                           <div class="form-group">
+                               <input type="password" class="form-control"  placeholder="密码" >
+                           </div>
+
+						<div class="form-group">
+                           <div class="pull-left">
+                            <div class="checkbox primary">
+                              <input  id="checkbox-2" type="checkbox">
+                              <label for="checkbox-2">记住我</label>
+                            </div>
+                           </div>
+
+                           <div class="pull-right">
+                           	   <a href="/static/reset-password.html" class="a-link">
+                               <i class="fa fa-unlock-alt"></i> 忘记密码?
+                               </a>
+                           </div>
+                         </div>
+
+                           <div class="form-group">
+                               <input type="submit" value="登录" class="btn btn-primary btn-block" >
+                           </div>
+
+                           <div class="form-group text-center">
+                            还没有账号?  <a href={{ url_for('user.register') }}>注册 </a>
+                           </div>
+
+                       </form>
+
+
+
+                   </div>
+               </div>
+
+           </div>
+       </div>
+  </section>
+ <!--End login Section-->
+
+
+
+
+    <!--Begin core plugin -->
+    <script src="{{ url_for('static',filename = 'assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static',filename = 'assets/js/bootstrap.min.js') }}"></script>
+    <!-- End core plugin -->
+
+
+
+
+</body>
+
+</html>

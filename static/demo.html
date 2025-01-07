@@ -3,357 +3,754 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="keywords" content="舆情分析,数据分析,社交媒体分析">
     <meta name="description" content="舆情分析系统 - 实时监控与分析社交媒体动态">
-    <meta name="author" content="">
     <title>舆情分析系统</title>
 
     <!-- CDN资源 -->
-    <link href="https://lib.baomitu.com/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://lib.baomitu.com/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://lib.baomitu.com/datatables/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.staticfile.org/datatables/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet">
     
     <!-- 本地样式 -->
-    <link rel="stylesheet" href="assets/plugins/cropper-master/cropper.min.css">
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --success-color: #4cc9f0;
-            --warning-color: #f72585;
-            --info-color: #4895ef;
-            --dark-color: #1e1e2c;
-            --light-color: #f8f9fa;
-            --text-primary: #2b2d42;
-            --text-secondary: #8d99ae;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --transition-speed: 0.3s;
-            --border-radius: 12px;
+            /* 明亮模式渐变 */
+            --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            --secondary-gradient: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+            --success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --bg-gradient: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+            --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            
+            /* 明亮模式基础颜色 */
+            --primary: #4F46E5;
+            --secondary: #F43F5E;
+            --success: #059669;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F3F4F6;
+            
+            /* 特效 */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 16px;
             --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.18);
+            --blur: blur(12px);
         }
 
         [data-theme="dark"] {
-            --primary-color: #4cc9f0;
-            --secondary-color: #4895ef;
-            --text-primary: #e9ecef;
-            --text-secondary: #ced4da;
-            --bg-primary: #1e1e2c;
-            --bg-secondary: #2d2d3f;
+            /* 暗色模式渐变 */
+            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            --secondary-gradient: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+            --success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --bg-gradient: linear-gradient(135deg, #111827 0%, #1F2937 100%);
+            --card-gradient: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
+            
+            /* 暗色模式基础颜色 */
+            --text-primary: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --glass-bg: rgba(31, 41, 55, 0.8);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background-color: var(--bg-secondary);
+            background: var(--bg-gradient);
             color: var(--text-primary);
-            transition: background-color var(--transition-speed), color var(--transition-speed);
-            margin: 0;
-            padding: 0;
+            transition: var(--transition);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: var(--glass-border);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* 侧边栏样式 */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             height: 100vh;
             width: 260px;
-            background: var(--bg-primary);
-            box-shadow: var(--box-shadow);
-            transition: all var(--transition-speed);
             z-index: 1000;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar.collapsed {
-            width: 70px;
+            width: 80px;
         }
 
-        .sidebar-header {
-            padding: 1.5rem;
+        .sidebar.collapsed .logo span,
+        .sidebar.collapsed .menu-item span {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .sidebar.collapsed .toggle-btn {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        /* 移除悬停展开效果 */
+        .sidebar.collapsed:hover {
+            width: 80px;
+        }
+
+        .sidebar.collapsed:hover .logo span,
+        .sidebar.collapsed:hover .menu-item span {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .sidebar-inner {
+            height: 100%;
+            background: var(--card-gradient);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-right: var(--glass-border);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--bg-secondary);
+            flex-direction: column;
+            padding: 2rem;
+            gap: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-inner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                var(--primary-gradient) 0%,
+                transparent 100%);
+            opacity: 0.05;
+            pointer-events: none;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            color: var(--primary-color);
-            font-size: 1.25rem;
-            font-weight: 600;
+            gap: 1rem;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--primary-gradient);
+            opacity: 0.2;
+        }
+
+        .logo:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
         }
 
         .logo i {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
-        .sidebar-menu {
-            padding: 1rem 0;
+        .menu {
             list-style: none;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            padding-top: 1rem;
         }
 
-        .sidebar-menu li a {
+        .menu-item a {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1rem;
             color: var(--text-secondary);
             text-decoration: none;
-            transition: all var(--transition-speed);
-            gap: 0.75rem;
+            border-radius: 12px;
+            transition: var(--transition);
+            gap: 1rem;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
         }
 
-        .sidebar-menu li a:hover,
-        .sidebar-menu li a.active {
-            color: var(--primary-color);
-            background: var(--bg-secondary);
-        }
-
-        .sidebar-menu li a i {
+        .menu-item a i {
             font-size: 1.25rem;
-            min-width: 1.5rem;
+            transition: var(--transition);
+            min-width: 1.25rem;
             text-align: center;
         }
 
-        .main-content {
+        .menu-item span {
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        /* 折叠状态下的菜单文字 */
+        .menu-item a::after {
+            content: '菜\A单\A栏';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            writing-mode: vertical-lr;
+            text-orientation: upright;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5rem;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            text-align: center;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        /* 折叠状态下显示菜单文字 */
+        .sidebar.collapsed .menu-item:first-child a::after {
+            opacity: 1;
+            animation: menuTextFloat 3s ease-in-out infinite;
+        }
+
+        /* 更新动画效果 */
+        @keyframes menuTextFloat {
+            0% {
+                transform: translateX(-50%) translateY(-50%);
+            }
+            50% {
+                transform: translateX(-50%) translateY(calc(-50% - 5px));
+            }
+            100% {
+                transform: translateX(-50%) translateY(-50%);
+            }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .menu-item a::after {
+                font-size: 1.2rem;
+                letter-spacing: 0.3rem;
+            }
+        }
+
+        /* 暗色模式适配 */
+        [data-theme="dark"] .menu-item a::after {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* 保持原有的交互效果 */
+        .menu-item a:hover {
+            color: var(--primary);
+            background: var(--glass-bg);
+            transform: translateX(5px);
+        }
+
+        .menu-item a.active {
+            color: var(--primary);
+            background: var(--glass-bg);
+        }
+
+        /* 折叠状态下的菜单项样式 */
+        .sidebar.collapsed .menu-item:not(:first-child) {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-item:first-child {
+            margin-top: 5rem;
+        }
+
+        .sidebar.collapsed .menu-item:first-child a {
+            pointer-events: none;
+        }
+
+        .sidebar.collapsed .menu-item:first-child i {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* 更新菜单项间距 */
+        .menu {
+            gap: 0.75rem;
+            padding-top: 1rem;
+        }
+
+        /* 更新侧边栏交互效果 */
+        .sidebar {
+            width: 260px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar.collapsed .logo span,
+        .sidebar.collapsed .menu-item span {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .sidebar.collapsed .toggle-btn {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        /* 移除悬停展开效果 */
+        .sidebar.collapsed:hover {
+            width: 80px;
+        }
+
+        .sidebar.collapsed:hover .logo span,
+        .sidebar.collapsed:hover .menu-item span {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: -1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .toggle-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* 主内容区域 */
+        .main {
             margin-left: 260px;
             padding: 2rem;
-            transition: margin var(--transition-speed);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .main-content.expanded {
-            margin-left: 70px;
+        .main.expanded {
+            margin-left: 60px;
         }
 
+        /* 顶部栏 */
         .top-bar {
-            background: var(--bg-primary);
-            padding: 1rem 2rem;
-            margin-bottom: 2rem;
+            background: var(--card-gradient);
+            padding: 1.5rem;
             border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-        }
-
-        .top-bar-content {
+            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .top-bar h1 {
-            margin: 0;
+        .page-title {
             font-size: 1.5rem;
-            color: var(--text-primary);
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
         }
 
-        .top-bar-actions {
+        .top-actions {
             display: flex;
             gap: 1rem;
             align-items: center;
         }
 
-        .btn-mode {
-            background: var(--bg-secondary);
-            border: none;
-            padding: 0.5rem 1rem;
+        .btn {
+            padding: 0.75rem 1.5rem;
             border-radius: var(--border-radius);
+            border: var(--glass-border);
+            background: var(--glass-bg);
             color: var(--text-primary);
             cursor: pointer;
-            transition: all var(--transition-speed);
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 500;
         }
 
-        .btn-mode:hover {
-            background: var(--primary-color);
+        .btn:hover {
+            transform: translateY(-2px);
+            background: var(--primary-gradient);
             color: white;
         }
 
-        .language-selector {
-            background: var(--bg-secondary);
-            border: none;
-            padding: 0.5rem 1rem;
+        /* 卡片样式 */
+        .card {
+            background: var(--card-gradient);
             border-radius: var(--border-radius);
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all var(--transition-speed);
+            border: var(--glass-border);
+            overflow: hidden;
+            transition: var(--transition);
         }
 
-        .info-box {
-            background: var(--bg-primary);
-            border-radius: var(--border-radius);
+        .card:hover {
+            transform: translateY(-5px) translateZ(0);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .card-header {
             padding: 1.5rem;
-            box-shadow: var(--box-shadow);
-            transition: all var(--transition-speed);
+            border-bottom: var(--glass-border);
+            background: transparent;
         }
 
-        .info-box:hover {
-            transform: translateY(-5px);
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .info-box-content {
+        /* 统计卡片 */
+        .stat-card {
+            padding: 1.5rem;
             text-align: center;
+            height: 100%;
         }
 
-        .info-box-content i {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .info-box-content p {
+        .stat-icon {
             font-size: 2rem;
-            font-weight: 600;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
             margin: 0.5rem 0;
             color: var(--text-primary);
         }
 
-        .info-box-content span {
+        .stat-label {
             color: var(--text-secondary);
             font-size: 0.875rem;
         }
 
-        .card {
-            background: var(--bg-primary);
+        /* 表格样式 */
+        .table-container {
+            background: var(--glass-bg);
             border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            border: none;
-            transition: all var(--transition-speed);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid var(--bg-secondary);
-            padding: 1.5rem;
-        }
-
-        .header-title {
-            margin: 0;
-            font-size: 1.25rem;
-            color: var(--text-primary);
-        }
-
-        .wordcloud-card,
-        .preview-card {
-            height: 500px;
-        }
-
-        .image-crop,
-        .img-preview {
-            height: calc(100% - 60px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
+            margin: 1.5rem;
+            box-shadow: var(--box-shadow);
+            position: relative;
         }
 
-        .button-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
         }
 
+        .table-container:hover::before {
+            opacity: 1;
+        }
+
+        /* 更新表格基础样式 */
         .table {
             width: 100%;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+        }
+
+        /* 表头样式优化 */
+        .table thead {
+            position: relative;
+        }
+
+        .table thead::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            opacity: 0.2;
         }
 
         .table th {
-            background: var(--bg-secondary);
-            padding: 1rem;
+            background: var(--glass-bg);
+            color: var(--text-primary);
             font-weight: 600;
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: var(--transition);
+            position: relative;
         }
 
+        .table th:hover {
+            background: var(--bg-secondary);
+        }
+
+        .table th::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .table th:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* 表格内容样式优化 */
         .table td {
-            padding: 1rem;
+            padding: 1.25rem 1.5rem;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(var(--text-secondary-rgb), 0.08);
+            transition: var(--transition);
+            background: transparent;
             vertical-align: middle;
         }
 
+        /* 表格行样式优化 */
         .table tbody tr {
-            transition: all var(--transition-speed);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .table tbody tr::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+            pointer-events: none;
         }
 
         .table tbody tr:hover {
-            background: var(--bg-secondary);
+            transform: translateX(0.5rem) scale(1.01);
+            background: var(--glass-bg);
         }
 
-        .news-card {
-            height: 100%;
+        .table tbody tr:hover::before {
+            opacity: 0.05;
+        }
+
+        /* 表格单元格内容样式 */
+        .table td:nth-child(1) {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .table td:nth-child(2) {
+            max-width: 300px;
+            position: relative;
+        }
+
+        .table td:nth-child(2) .content-preview {
+            white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            padding-right: 24px;
         }
 
-        .news-image {
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            transition: all var(--transition-speed);
+        .table td:nth-child(2) .content-preview::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0;
+            transition: var(--transition);
         }
 
-        .news-card:hover .news-image {
-            transform: scale(1.05);
+        .table td:nth-child(2):hover .content-preview::after {
+            opacity: 1;
         }
 
-        .news-card .card-title {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .news-card .card-text {
-            font-size: 0.875rem;
+        .table td:nth-child(3) {
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
             color: var(--text-secondary);
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
+        .table td:nth-child(4),
+        .table td:nth-child(5),
+        .table td:nth-child(6) {
+            text-align: right;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* 数字增长动画 */
+        @keyframes countUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
             }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-            
-            .main-content.expanded {
-                margin-left: 0;
-            }
-            
-            .top-bar {
-                padding: 1rem;
-            }
-            
-            .info-box {
-                margin-bottom: 1rem;
-            }
-            
-            .wordcloud-card,
-            .preview-card {
-                height: 400px;
-            }
-            
-            .button-group {
-                justify-content: center;
+            to {
+                transform: translateY(0);
+                opacity: 1;
             }
         }
 
-        @keyframes fadeIn {
+        .table td[data-value] {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .table td[data-value]::before {
+            content: attr(data-value);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            animation: countUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* 徽章样式优化 */
+        .badge {
+            padding: 0.4rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .badge:hover {
+            transform: translateY(-2px);
+        }
+
+        .badge:hover::before {
+            opacity: 0.2;
+        }
+
+        .badge i {
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .badge:hover i {
+            transform: rotate(360deg);
+        }
+
+        /* 表格展开内容样式优化 */
+        .details-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 0 0 12px 12px;
+            margin-top: -1px;
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(-10px);
             }
             to {
                 opacity: 1;
@@ -361,29 +758,287 @@
             }
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+        .details-item {
+            background: var(--glass-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0.5rem 1rem;
-            margin: 0 0.25rem;
+        .details-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .details-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .details-item:hover::before {
+            opacity: 0.05;
+        }
+
+        .details-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .details-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 1rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        /* 表格工具栏样式优化 */
+        .dataTables_wrapper {
+            padding: 1.5rem;
+        }
+
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .dataTables_length select,
+        .dataTables_filter input {
+            padding: 0.75rem 1rem;
             border-radius: var(--border-radius);
-            background: var(--bg-secondary);
-            border: none;
+            border: 2px solid transparent;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .dataTables_length select:hover,
+        .dataTables_filter input:hover {
+            border-color: rgba(var(--primary-rgb), 0.1);
+        }
+
+        .dataTables_length select:focus,
+        .dataTables_filter input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+        }
+
+        .dataTables_filter input {
+            padding-left: 2.75rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 1rem center;
+            background-size: 1rem;
+        }
+
+        /* 分页按钮样式优化 */
+        .dataTables_paginate {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .dataTables_paginate .paginate_button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            background: var(--glass-bg);
             color: var(--text-primary) !important;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: var(--primary-color);
+        .dataTables_paginate .paginate_button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+            opacity: 0;
+        }
+
+        .dataTables_paginate .paginate_button:hover::before {
+            width: 200%;
+            height: 200%;
+            opacity: 0.1;
+        }
+
+        .dataTables_paginate .paginate_button.current {
+            background: var(--primary-gradient) !important;
             color: white !important;
+            border: none;
+            font-weight: 600;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: var(--primary-color);
-            color: white !important;
+        .dataTables_paginate .paginate_button:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
         }
 
+        /* 空状态样式优化 */
+        .dataTables_empty {
+            padding: 4rem 2rem !important;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            background: var(--bg-secondary) !important;
+            position: relative;
+        }
+
+        .dataTables_empty::before {
+            content: '📊';
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dataTables_empty::after {
+            content: '暂无数据';
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-top: 0.5rem;
+        }
+
+        /* 添加表格行展开/收起动画 */
+        .table tbody tr.shown {
+            background: var(--bg-secondary);
+        }
+
+        .table tbody tr.shown td {
+            border-bottom: none;
+        }
+
+        .details-row {
+            background: var(--bg-secondary);
+            transform-origin: top;
+            animation: expandRow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes expandRow {
+            from {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+
+        /* 添加表格行悬停光效 */
+        .table tbody tr::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(var(--primary-rgb), 0.1) 50%,
+                transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .table tbody tr:hover::after {
+            transform: translateX(100%);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .main {
+                margin-left: 240px;
+            }
+            
+            .main.expanded {
+                margin-left: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+            
+            .main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .main.expanded {
+                margin-left: 0;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .stat-card {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        /* 自定义滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -391,369 +1046,1283 @@
 
         ::-webkit-scrollbar-track {
             background: var(--bg-secondary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
             border-radius: 4px;
         }
 
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 4px;
+            border: 2px solid var(--bg-secondary);
+        }
+
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
+            background: var(--secondary-gradient);
+        }
+
+        /* 添加新的动画效果 */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 更新卡片悬停效果 */
+        .card {
+            transition: var(--transition);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) translateZ(0);
+            box-shadow: var(--hover-shadow);
+        }
+
+        /* 更新统计卡片样式 */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* 更新按钮样式 */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: var(--primary-gradient);
+            transition: var(--transition);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            border-radius: 50%;
+        }
+
+        .btn:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.1;
+        }
+
+        /* 更新菜单项样式 */
+        .menu-item a {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-item a:hover::after,
+        .menu-item a.active::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* 更新表格样式 */
+        .table th {
+            background: var(--primary-gradient);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .table tr {
+            transition: var(--transition);
+        }
+
+        .table tr:hover {
+            background: var(--glass-bg);
+            transform: scale(1.01);
+        }
+
+        /* 更新新闻卡片样式 */
+        .news-card .news-image {
+            transition: var(--transition);
+        }
+
+        .news-card:hover .news-image {
+            transform: scale(1.1);
+        }
+
+        .news-card .news-content {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+        }
+
+        /* 添加加载动画 */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--glass-bg), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* DataTables 自定义样式 */
+        .dataTables_wrapper {
+            padding: 1.5rem;
+            background: transparent;
+        }
+
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 1.5rem;
+        }
+
+        .dataTables_length select,
+        .dataTables_filter input {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            border: var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .dataTables_length select:focus,
+        .dataTables_filter input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+        }
+
+        .dataTables_filter input {
+            min-width: 250px;
+            padding-left: 2.5rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.75rem center;
+            background-size: 1rem;
+        }
+
+        .dataTables_paginate {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .dataTables_paginate .paginate_button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            background: var(--glass-bg);
+            color: var(--text-primary) !important;
+            border: var(--glass-border);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .dataTables_paginate .paginate_button:hover,
+        .dataTables_paginate .paginate_button.current {
+            background: var(--primary-gradient) !important;
+            color: white !important;
+            border: none;
+            transform: translateY(-2px);
+        }
+
+        /* 添加更多交互动画 */
+        @keyframes ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .menu-item a::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: 0s;
+        }
+
+        .menu-item a:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        /* 更新表格行动画 */
+        .table tr {
+            opacity: 0;
+            transform: translateY(1rem);
+        }
+
+        .table tr.show {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.3s ease-out;
+        }
+
+        /* 添加表格行展开效果 */
+        .table td.details-control {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .table td.details-control::before {
+            content: '\f054';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .table tr.shown td.details-control::before {
+            transform: rotate(90deg);
+            color: var(--primary);
+        }
+
+        .details-row {
+            background: var(--glass-bg);
+            padding: 1.5rem;
+        }
+
+        .details-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 0 0 12px 12px;
+            margin-top: -1px;
+        }
+
+        .details-item {
+            background: var(--glass-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .details-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .details-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .details-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* 表格空状态样式 */
+        .dataTables_empty {
+            padding: 3rem !important;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            background: var(--bg-secondary) !important;
+        }
+
+        .dataTables_empty::before {
+            content: '📊';
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* 更新按钮悬停效果 */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .btn:hover::before {
+            opacity: 0.1;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 主题切换按钮样式 */
+        #themeToggle {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #themeToggle i {
+            transition: transform 0.3s ease;
+        }
+
+        #themeToggle:hover i {
+            transform: rotate(360deg);
+        }
+
+        /* 确保过渡动画平滑 */
+        .sidebar,
+        .main,
+        .card,
+        .table,
+        .btn,
+        .badge {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+            
+            .main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .main.expanded {
+                margin-left: 0;
+            }
+        }
+
+        /* 添加菜单提示文字样式 */
+        .sidebar::after {
+            display: none;
+        }
+
+        /* 更新菜单文字样式 */
+        .sidebar.collapsed .menu {
+            position: relative;
+        }
+
+        .sidebar.collapsed .menu::after {
+            content: '菜单栏';
+            position: absolute;
+            left: 50%;
+            top: 2rem;
+            transform: translateX(-50%);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            text-align: center;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .menu::after {
+            opacity: 1;
+            animation: menuTextFloat 3s ease-in-out infinite;
+        }
+
+        /* 更新动画效果 */
+        @keyframes menuTextFloat {
+            0% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-5px);
+            }
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .sidebar.collapsed .menu::after {
+                font-size: 1rem;
+                top: 1.5rem;
+            }
+        }
+
+        /* 暗色模式适配 */
+        [data-theme="dark"] .sidebar.collapsed .menu::after {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* 隐藏原有菜单项 */
+        .sidebar.collapsed .menu-item:not(:first-child) {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-item:first-child {
+            margin-top: 5rem;
+        }
+
+        .sidebar.collapsed .menu-item:first-child a {
+            pointer-events: none;
+        }
+
+        /* 更新菜单项间距 */
+        .menu {
+            gap: 0.75rem;
+            padding-top: 1rem;
+        }
+
+        /* 移动端适配样式 */
+        @media (max-width: 768px) {
+            /* 侧边栏适配 */
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1050;
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(280px);
+            }
+
+            .sidebar .toggle-btn {
+                transform: translateX(280px);
+            }
+
+            /* 主内容区适配 */
+            .main {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            /* 顶部栏适配 */
+            .top-bar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .top-actions {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .select2-container {
+                width: 100% !important;
+            }
+
+            /* 统计卡片适配 */
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .stat-icon {
+                margin-bottom: 0.5rem;
+            }
+
+            /* 表格适配 */
+            .table-responsive {
+                margin: 0 -1rem;
+            }
+
+            .table td, .table th {
+                white-space: nowrap;
+                padding: 0.5rem;
+            }
+
+            /* 按钮和输入框适配 */
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .form-control {
+                width: 100%;
+            }
+
+            /* 卡片内容适配 */
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            /* 模态框适配 */
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-content {
+                border-radius: 1rem;
+            }
+
+            /* 下拉菜单适配 */
+            .dropdown-menu {
+                width: 100%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* 平板设备适配 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+
+            .main {
+                margin-left: 220px;
+            }
+
+            .stat-card {
+                padding: 1.25rem;
+            }
+        }
+
+        /* 触摸设备交互优化 */
+        @media (hover: none) {
+            .btn:hover {
+                transform: none !important;
+            }
+
+            .card:hover {
+                transform: none !important;
+            }
+
+            .menu-item a:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* 深色模式优化 */
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg-color: #1a1a1a;
+                --text-color: #e0e0e0;
+                --card-bg: #2d2d2d;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- 侧边栏导航 -->
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+            <a href="#" class="logo">
                 <i class="fas fa-chart-line"></i>
                 <span>舆情分析</span>
-            </div>
+            </a>
+            <nav>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <a href="#" class="active">
+                            <i class="fas fa-home"></i>
+                            <span>主页面</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>舆情看板</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <i class="fas fa-spider"></i>
+                            <span>爬取设置</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <i class="fas fa-book"></i>
+                            <span>舆情案例</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <i class="fas fa-file-alt"></i>
+                            <span>舆情报告</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>退出登录</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="#" class="active" data-title="主页面">
-                    <i class="fas fa-home"></i>
-                    <span>主页面</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" data-title="舆情看板">
-                    <i class="fas fa-table"></i>
-                    <span>舆情看板</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" data-title="爬取设置">
-                    <i class="fas fa-spider"></i>
-                    <span>爬取设置</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" data-title="舆情案例">
-                    <i class="fas fa-book-open"></i>
-                    <span>舆情案例</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" data-title="舆情报告及应对方案">
-                    <i class="fas fa-file-alt"></i>
-                    <span>舆情报告及应对方案</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" data-title="退出登录">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>退出登录</span>
-                </a>
-            </li>
-        </ul>
-        <button class="sidebar-toggle" id="sidebarToggle">
+        <button class="toggle-btn" id="sidebarToggle">
             <i class="fas fa-chevron-left"></i>
         </button>
-    </nav>
+    </aside>
 
     <!-- 主要内容区域 -->
-    <div class="main-content" id="mainContent">
-        <!-- 顶部导航栏 -->
-        <header class="top-bar">
-            <div class="top-bar-content">
-                <h1>舆情分析系统</h1>
-                <div class="top-bar-actions">
-                    <button class="btn-mode" id="toggleMode">
-                        <i class="fas fa-moon"></i> 夜间模式
-                    </button>
-                    <select class="language-selector" id="languageSelect">
-                        <option value="zh">中文</option>
-                        <option value="en">English</option>
-                        <option value="ja">日本語</option>
-                    </select>
-                </div>
+    <main class="main" id="main">
+        <!-- 顶部栏 -->
+        <div class="top-bar glass">
+            <h1 class="page-title">舆情分析系统</h1>
+            <div class="top-actions">
+                <button class="btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>夜间模式</span>
+                </button>
+                <select class="select2-multiple" name="platforms" multiple="multiple">
+                    <option value="weibo">新浪微博</option>
+                    <option value="douyin">抖音短视频</option>
+                </select>
             </div>
-        </header>
+        </div>
 
-        <!-- 主要内容容器 -->
-        <div class="wrapper">
-            <!-- 信息概览卡片 -->
-            <div class="row g-4 animate-fade-in">
-                <div class="col-md-3 col-sm-6">
-                    <div class="info-box">
-                        <div class="info-box-content">
-                            <i class="fas fa-comments"></i>
-                            <p>1234</p>
-                            <span>总信息数量</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="info-box">
-                        <div class="info-box-content">
-                            <i class="fas fa-users"></i>
-                            <p>567</p>
-                            <span>评论者数量</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="info-box">
-                        <div class="info-box-content">
-                            <i class="fas fa-network-wired"></i>
-                            <p>89</p>
-                            <span>评论IP地址数</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="info-box">
-                        <div class="info-box-content">
-                            <i class="fas fa-fire-alt"></i>
-                            <p>9999</p>
-                            <span>热度值</span>
-                        </div>
+        <!-- 统计卡片 -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate">
+                    <div class="stat-card">
+                        <i class="fas fa-comments stat-icon"></i>
+                        <div class="stat-value">1,234</div>
+                        <div class="stat-label">总信息数量</div>
                     </div>
                 </div>
             </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.1s">
+                    <div class="stat-card">
+                        <i class="fas fa-users stat-icon"></i>
+                        <div class="stat-value">567</div>
+                        <div class="stat-label">评论者数量</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.2s">
+                    <div class="stat-card">
+                        <i class="fas fa-network-wired stat-icon"></i>
+                        <div class="stat-value">89</div>
+                        <div class="stat-label">评论IP地址数</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.3s">
+                    <div class="stat-card">
+                        <i class="fas fa-fire stat-icon"></i>
+                        <div class="stat-value">9,999</div>
+                        <div class="stat-label">热度值</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <!-- 词云图和预览区域 -->
-            <div class="row g-4 mt-4 animate-fade-in">
-                <div class="col-md-6">
-                    <div class="card wordcloud-card">
-                        <div class="card-header">
-                            <h2 class="header-title">词云图</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="image-crop">
-                                <img src="assets/images/wordcloud.png" alt="词云图" id="image">
+        <!-- 词云图 -->
+        <div class="card mb-4 animate" style="animation-delay: 0.4s">
+            <div class="card-header">
+                <h2 class="card-title">词云分析</h2>
+            </div>
+            <div class="card-body p-4">
+                <img src="https://via.placeholder.com/800x400?text=词云分析" alt="词云图" style="width: 100%; height: auto; max-height: 400px; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card mb-4 animate" style="animation-delay: 0.5s">
+            <div class="card-header">
+                <h2 class="card-title">爬取结果展示</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="dataTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>发文者</th>
+                                <th>内容</th>
+                                <th>发布时间</th>
+                                <th>转发数</th>
+                                <th>评论数</th>
+                                <th>点赞数</th>
+                                <th>ip地址</th>
+                                <th>情感态度</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>用户A</td>
+                                <td>这是一条示例内容，展示了一些基本的信息和数据分析结果。</td>
+                                <td>2024-01-08 12:34:56</td>
+                                <td>100</td>
+                                <td>50</td>
+                                <td>200</td>
+                                <td>北京</td>
+                                <td><span class="badge badge-success">正面</span></td>
+                            </tr>
+                            <tr>
+                                <td>用户B</td>
+                                <td>另一条示例内容，用于展示不同的情感倾向和数据分布。</td>
+                                <td>2024-01-08 11:22:33</td>
+                                <td>80</td>
+                                <td>30</td>
+                                <td>150</td>
+                                <td>上海</td>
+                                <td><span class="badge badge-warning">中性</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新闻卡片 -->
+        <div class="card animate" style="animation-delay: 0.6s">
+            <div class="card-header">
+                <h2 class="card-title">每日热点</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card news-card">
+                            <div class="news-image" style="background-image: url('https://via.placeholder.com/400x200?text=新闻1')"></div>
+                            <div class="news-content">
+                                <h3 class="news-title">热点新闻标题1：关于某重要事件的深度分析</h3>
+                                <div class="news-source">
+                                    <i class="fas fa-newspaper"></i>
+                                    <span>来源: 新闻网</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card preview-card">
-                        <div class="card-header">
-                            <h2 class="header-title">放大图预览</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="img-preview"></div>
-                            <div class="button-group">
-                                <button class="btn btn-primary" id="zoomIn"><i class="fas fa-search-plus"></i> 放大</button>
-                                <button class="btn btn-primary" id="zoomOut"><i class="fas fa-search-minus"></i> 缩小</button>
-                                <button class="btn btn-primary" id="rotateLeft"><i class="fas fa-undo"></i> 向左旋转</button>
-                                <button class="btn btn-primary" id="rotateRight"><i class="fas fa-redo"></i> 向右旋转</button>
-                                <button class="btn btn-danger" id="reset"><i class="fas fa-sync"></i> 重置</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 爬取结果展示 -->
-            <div class="card mt-4 animate-fade-in">
-                <div class="card-header">
-                    <h2 class="header-title">爬取结果展示</h2>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="example" class="display table">
-                            <thead>
-                                <tr>
-                                    <th>发文者</th>
-                                    <th>内容</th>
-                                    <th>发布时间</th>
-                                    <th>转发数</th>
-                                    <th>评论数</th>
-                                    <th>点赞数</th>
-                                    <th>ip地址</th>
-                                    <th>情感态度</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>用户A</td>
-                                    <td>这是一条示例内容</td>
-                                    <td>2024-01-08 12:34:56</td>
-                                    <td>100</td>
-                                    <td>50</td>
-                                    <td>200</td>
-                                    <td>北京</td>
-                                    <td><span class="badge bg-success">正面</span></td>
-                                </tr>
-                                <tr>
-                                    <td>用户B</td>
-                                    <td>另一条示例内容</td>
-                                    <td>2024-01-08 11:22:33</td>
-                                    <td>80</td>
-                                    <td>30</td>
-                                    <td>150</td>
-                                    <td>上海</td>
-                                    <td><span class="badge bg-warning">中性</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 每日热点 -->
-            <div class="card mt-4 animate-fade-in">
-                <div class="card-header">
-                    <h2 class="header-title">每日热点</h2>
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-3 col-sm-6">
-                            <div class="card news-card h-100">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="news-image" style="background-image: url(assets/images/news1.jpg)"></div>
-                                    <div class="card-body">
-                                        <h5 class="card-title">示例新闻标题1</h5>
-                                        <p class="card-text text-muted">
-                                            <i class="fas fa-newspaper"></i> 来源: 新闻网
-                                        </p>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="card news-card h-100">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="news-image" style="background-image: url(assets/images/news2.jpg)"></div>
-                                    <div class="card-body">
-                                        <h5 class="card-title">示例新闻标题2</h5>
-                                        <p class="card-text text-muted">
-                                            <i class="fas fa-newspaper"></i> 来源: 新闻网
-                                        </p>
-                                    </div>
-                                </a>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card news-card">
+                            <div class="news-image" style="background-image: url('https://via.placeholder.com/400x200?text=news')"></div>
+                            <div class="news-content">
+                                <h3 class="news-title">热点新闻标题2：最新社会热点话题追踪</h3>
+                                <div class="news-source">
+                                    <i class="fas fa-newspaper"></i>
+                                    <span>来源: 新闻网</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- JS资源 -->
-    <script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://lib.baomitu.com/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <script src="https://lib.baomitu.com/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
-    <script src="https://lib.baomitu.com/moment.js/2.29.1/moment.min.js"></script>
-    <script src="assets/plugins/cropper-master/cropper.min.js"></script>
+    <script src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.staticfile.org/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
     
     <script>
-        // 初始化DataTable
-        $(document).ready(function() {
-            $('#example').DataTable({
-                language: {
-                    url: 'https://lib.baomitu.com/datatables/1.10.21/i18n/zh.json'
-                },
-                responsive: true,
-                pageLength: 10,
-                order: [[2, 'desc']],
-                columnDefs: [{
-                    targets: 1,
-                    render: function(data, type, row) {
-                        return type === 'display' && data.length > 100 ?
-                            data.substr(0, 100) + '...' : data;
-                    }
-                }]
-            });
-        });
-
-        // 词云图相关功能
-        $(function () {
-            var $image = $('#image');
-            var options = {
-                aspectRatio: NaN,
-                preview: '.img-preview',
-                viewMode: 1,
-                dragMode: 'move',
-                autoCropArea: 1,
-                restore: false,
-                guides: false,
-                highlight: false,
-                cropBoxMovable: false,
-                cropBoxResizable: false,
-                toggleDragModeOnDblclick: false,
-            };
-
-            $image.cropper(options);
-
-            $('#zoomIn').click(() => $image.cropper('zoom', 0.1));
-            $('#zoomOut').click(() => $image.cropper('zoom', -0.1));
-            $('#rotateLeft').click(() => $image.cropper('rotate', -45));
-            $('#rotateRight').click(() => $image.cropper('rotate', 45));
-            $('#reset').click(() => $image.cropper('reset'));
-        });
-
-        // 侧边栏切换
         document.addEventListener('DOMContentLoaded', function() {
-            const sidebarToggle = document.getElementById('sidebarToggle');
+            // 初始化DataTable
+            try {
+                const table = $('#dataTable').DataTable({
+                    language: {
+                        "sProcessing": "处理中...",
+                        "sLengthMenu": "显示 _MENU_ 项结果",
+                        "sZeroRecords": "没有匹配结果",
+                        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                        "sInfoPostFix": "",
+                        "sSearch": "搜索:",
+                        "sUrl": "",
+                        "sEmptyTable": "暂无数据",
+                        "sLoadingRecords": "载入中...",
+                        "sInfoThousands": ",",
+                        "oPaginate": {
+                            "sFirst": "首页",
+                            "sPrevious": "上页",
+                            "sNext": "下页",
+                            "sLast": "末页"
+                        }
+                    },
+                    responsive: true,
+                    pageLength: 10,
+                    order: [[2, 'desc']],
+                    dom: '<"top"lf>rt<"bottom"ip>',
+                    columnDefs: [
+                        {
+                            targets: 0,
+                            className: 'details-control',
+                            orderable: false,
+                            data: null,
+                            defaultContent: ''
+                        },
+                        {
+                            targets: 1,
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return `<div class="content-preview">${data}</div>`;
+                                }
+                                return data;
+                            }
+                        },
+                        {
+                            targets: [3, 4, 5],
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return `<span data-value="${data}">${data}</span>`;
+                                }
+                                return data;
+                            }
+                        }
+                    ],
+                    drawCallback: function() {
+                        // 添加表格行动画
+                        const rows = document.querySelectorAll('#dataTable tbody tr');
+                        rows.forEach((row, index) => {
+                            setTimeout(() => {
+                                row.classList.add('show');
+                            }, index * 100);
+                        });
+
+                        // 添加数字增长动画
+                        document.querySelectorAll('td [data-value]').forEach(el => {
+                            const value = parseInt(el.getAttribute('data-value'));
+                            if (!isNaN(value)) {
+                                el.style.opacity = '0';
+                                setTimeout(() => {
+                                    el.style.opacity = '1';
+                                    animateValue(el, 0, value, 1000);
+                                }, 100);
+                            }
+                        });
+                    }
+                });
+
+                // 数字增长动画函数
+                function animateValue(element, start, end, duration) {
+                    const range = end - start;
+                    const increment = range / (duration / 16);
+                    let current = start;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        element.textContent = Math.floor(current).toLocaleString();
+                        if (current >= end) {
+                            element.textContent = end.toLocaleString();
+                            clearInterval(timer);
+                        }
+                    }, 16);
+                }
+
+                // 表格行展开/收起功能
+                $('#dataTable tbody').on('click', 'tr', function(e) {
+                    if (e.target.closest('.details-control')) {
+                        const tr = $(this);
+                    const row = table.row(tr);
+
+                    if (row.child.isShown()) {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    } else {
+                            if (table.row('.shown').length) {
+                                $('.details-control', table.row('.shown').node()).trigger('click');
+                            }
+                        const rowData = row.data();
+                        const detailsContent = `
+                            <div class="details-content">
+                                <div class="details-item">
+                                    <div class="details-label">发文者ID</div>
+                                    <div class="details-value">${rowData[0]}</div>
+                                </div>
+                                <div class="details-item">
+                                    <div class="details-label">完整内容</div>
+                                    <div class="details-value">${rowData[1]}</div>
+                                </div>
+                                <div class="details-item">
+                                    <div class="details-label">设备信息</div>
+                                    <div class="details-value">iPhone客户端</div>
+                                </div>
+                                <div class="details-item">
+                                    <div class="details-label">地理位置</div>
+                                    <div class="details-value">${rowData[6]}</div>
+                                </div>
+                            </div>
+                        `;
+                            row.child(detailsContent, 'details-row').show();
+                        tr.addClass('shown');
+
+                            // 添加展开行动画
+                            const detailsRow = row.child().node();
+                            requestAnimationFrame(() => {
+                                detailsRow.style.opacity = '1';
+                                detailsRow.style.transform = 'scaleY(1)';
+                            });
+                        }
+                    }
+                });
+
+                // 添加表格搜索动画
+                const searchInput = document.querySelector('.dataTables_filter input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const rows = document.querySelectorAll('#dataTable tbody tr');
+                        rows.forEach(row => {
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateY(10px)';
+                        });
+                    
+                    setTimeout(() => {
+                            rows.forEach((row, index) => {
+                                if (row.style.display !== 'none') {
+                                    setTimeout(() => {
+                                        row.style.opacity = '1';
+                                        row.style.transform = 'translateY(0)';
+                                    }, index * 50);
+                                }
+                            });
+                        }, 300);
+                    });
+                }
+
+                // 添加表格排序动画
+                table.on('order.dt', function() {
+                    const rows = document.querySelectorAll('#dataTable tbody tr');
+                    rows.forEach(row => {
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateY(10px)';
+                    });
+                    
+                    setTimeout(() => {
+                        rows.forEach((row, index) => {
+                            setTimeout(() => {
+                                row.style.opacity = '1';
+                                row.style.transform = 'translateY(0)';
+                            }, index * 50);
+                        });
+                    }, 150);
+                });
+
+                // 添加分页切换动画
+                table.on('page.dt', function() {
+                    const rows = document.querySelectorAll('#dataTable tbody tr');
+                    rows.forEach(row => {
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                });
+            });
+
+                // 添加表格悬停效果
+                document.querySelector('#dataTable tbody').addEventListener('mousemove', function(e) {
+                    if (e.target.closest('tr')) {
+                        const tr = e.target.closest('tr');
+                        const rect = tr.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        
+                        tr.style.setProperty('--mouse-x', `${x}px`);
+                        tr.style.setProperty('--mouse-y', `${y}px`);
+                    }
+                });
+
+            } catch (error) {
+                console.error('DataTable initialization error:', error);
+            }
+
+            // 添加徽章动画
+            document.querySelectorAll('.badge').forEach(badge => {
+                badge.addEventListener('mousemove', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    this.style.setProperty('--mouse-x', `${x}px`);
+                    this.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+
+            // 添加表格工具栏动画
+            document.querySelectorAll('.dataTables_length select, .dataTables_filter input').forEach(el => {
+                el.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                el.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('focused');
+                });
+            });
+
+            // 添加页面载入动画
+            window.addEventListener('load', function() {
+                document.body.classList.add('loaded');
+                
+                const elements = document.querySelectorAll('.animate');
+                elements.forEach((element, index) => {
+                    setTimeout(() => {
+                        element.classList.add('show');
+                    }, index * 100);
+                });
+            });
+
+            // 语言切换
+            const langSelect = document.getElementById('langSelect');
+            
+            langSelect.addEventListener('change', function() {
+                localStorage.setItem('lang', this.value);
+                location.reload();
+            });
+
+            // 恢复语言设置
+            const savedLang = localStorage.getItem('lang');
+            if (savedLang) {
+                langSelect.value = savedLang;
+            }
+
+            // 移动端适配
+            function checkMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    main.classList.add('expanded');
+                }
+            }
+
+            window.addEventListener('resize', checkMobile);
+            checkMobile();
+
+            // 添加移动端菜单触发器
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (e.target.closest('.toggle-btn')) {
+                        sidebar.classList.toggle('show');
+                    } else if (!e.target.closest('.sidebar') && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                }
+            });
+
+            // 添加滚动动画
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            document.querySelectorAll('.card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // 添加加载状态
+            function showLoading(element) {
+                element.classList.add('loading');
+            }
+
+            function hideLoading(element) {
+                element.classList.remove('loading');
+            }
+
+            // 添加触摸反馈
+            document.querySelectorAll('.btn, .menu-item a').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+
+                element.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+
+            // 侧边栏切换功能
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
+            const main = document.getElementById('main');
+            const toggleBtn = document.getElementById('sidebarToggle');
 
             function toggleSidebar() {
+                // 移动端特殊处理
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.toggle('show');
+                    return;
+                }
+                
+                // PC端折叠/展开逻辑
                 sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                sidebarToggle.innerHTML = sidebar.classList.contains('collapsed') ? 
+                main.classList.toggle('expanded');
+                
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                toggleBtn.innerHTML = isCollapsed ? 
                     '<i class="fas fa-chevron-right"></i>' : 
                     '<i class="fas fa-chevron-left"></i>';
-                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                    
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
             }
 
-            sidebarToggle.addEventListener('click', toggleSidebar);
-
-            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            // 点击切换按钮时触发折叠
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止事件冒泡
                 toggleSidebar();
-            }
-
-            if (window.innerWidth <= 768) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-            }
-        });
-
-        // 夜间模式切换
-        const toggleModeBtn = document.getElementById('toggleMode');
-        const body = document.body;
-
-        function setDarkMode(isDark) {
-            body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            toggleModeBtn.innerHTML = isDark ? 
-                '<i class="fas fa-sun"></i> 日间模式' : 
-                '<i class="fas fa-moon"></i> 夜间模式';
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-        }
-
-        toggleModeBtn.addEventListener('click', () => {
-            setDarkMode(body.getAttribute('data-theme') !== 'dark');
-        });
-
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            setDarkMode(true);
-        }
-
-        // 语言切换
-        const languageSelect = document.getElementById('languageSelect');
-        
-        languageSelect.addEventListener('change', function() {
-            localStorage.setItem('selectedLanguage', this.value);
-            location.reload();
-        });
-
-        const savedLanguage = localStorage.getItem('selectedLanguage');
-        if (savedLanguage) {
-            languageSelect.value = savedLanguage;
-        }
-
-        // 页面加载动画
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.animate-fade-in').forEach((element, index) => {
-                element.style.animationDelay = `${index * 0.1}s`;
             });
+
+            // 移动端点击遮罩关闭侧边栏
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && 
+                    !e.target.closest('.sidebar') && 
+                    !e.target.closest('.toggle-btn') && 
+                    sidebar.classList.contains('show')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+
+            // 窗口大小改变时处理
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('collapsed');
+                    main.classList.remove('expanded');
+                    if (!sidebar.classList.contains('show')) {
+                        sidebar.style.transform = 'translateX(-100%)';
+                    }
+                } else {
+                    sidebar.style.transform = '';
+                    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                        sidebar.classList.add('collapsed');
+                        main.classList.add('expanded');
+                    }
+                }
+            });
+
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
+                sidebar.classList.add('collapsed');
+                main.classList.add('expanded');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+
+            // 主题切换功能
+            const themeToggle = document.getElementById('themeToggle');
+
+            function setTheme(isDark) {
+                const root = document.documentElement;
+                root.style.setProperty('--theme-transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)');
+                document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                
+                setTimeout(() => {
+                    root.style.removeProperty('--theme-transition');
+                }, 300);
+
+                themeToggle.innerHTML = isDark ? 
+                    '<i class="fas fa-sun"></i><span>日间模式</span>' : 
+                    '<i class="fas fa-moon"></i><span>夜间模式</span>';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                const isDark = document.body.getAttribute('data-theme') !== 'dark';
+                setTheme(isDark);
+            });
+
+            // 恢复主题设置
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme === 'dark');
+            }
         });
     </script>
 </body>

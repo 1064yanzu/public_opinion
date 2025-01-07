@@ -92,20 +92,34 @@ def analysis_data(v_data):
     minutes = v_data['aweme_info']['video']['duration']//1000//60
     seconds = v_data['aweme_info']['video']['duration']//1000%60
     aweme_id = v_data['aweme_info']['aweme_id']
+    author = v_data['aweme_info']['author']
+    
+    # 获取性别信息
+    gender = author.get('gender', 0)
+    if gender == 1:
+        gender = '男'
+    elif gender == 2:
+        gender = '女'
+    else:
+        gender = '未知'
+    
     data_dict = {
-        '用户名':v_data['aweme_info']['author']['nickname'].strip(),
-        '粉丝数':v_data['aweme_info']['author']['follower_count'],
-        '发布时间':trans_time(v_data['aweme_info']['create_time']),
-        '视频描述':v_data['aweme_info']['desc'].strip().replace('\n', ''),
-        '视频时长':f'{minutes}分:{seconds}秒',
-        '点赞数':v_data['aweme_info']['statistics']['digg_count'],
-        '收藏数':v_data['aweme_info']['statistics']['collect_count'],
-        '评论数':v_data['aweme_info']['statistics']['comment_count'],
-        '下载量':v_data['aweme_info']['statistics']['download_count'],
-        '分享数':v_data['aweme_info']['statistics']['share_count'],
-        'uni_id':aweme_id,
-        '认证':v_data['aweme_info']['author']['enterprise_verify_reason'],
-        'url':f'https://www.douyin.com/discover?modal_id={aweme_id}'
+        '用户名': author['nickname'].strip(),
+        '粉丝数': author['follower_count'],
+        '发布时间': trans_time(v_data['aweme_info']['create_time']),
+        '视频描述': v_data['aweme_info']['desc'].strip().replace('\n', ''),
+        '视频时长': f'{minutes}分:{seconds}秒',
+        '点赞数': v_data['aweme_info']['statistics']['digg_count'],
+        '收藏数': v_data['aweme_info']['statistics']['collect_count'],
+        '评论数': v_data['aweme_info']['statistics']['comment_count'],
+        '下载量': v_data['aweme_info']['statistics']['download_count'],
+        '分享数': v_data['aweme_info']['statistics']['share_count'],
+        'uni_id': aweme_id,
+        '认证': author['enterprise_verify_reason'],
+        '性别': gender,
+        '省份': author.get('province', 'N/A'),
+        '城市': author.get('city', 'N/A'),
+        'url': f'https://www.douyin.com/discover?modal_id={aweme_id}'
     }
     return data_dict
 

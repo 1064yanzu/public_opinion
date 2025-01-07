@@ -6,86 +6,9 @@ from PIL import Image
 import csv
 import os
 import pandas as pd
-import pymysql
-def get_wordcloud():
-    # 加载中文停用词表
-    stopwords = set()
-    with open("E:\\python\\venv\\ciyuntu\\stopwords.txt", 'r', encoding='utf-8') as f:
-        for line in f.readlines():
-            stopwords.add(line.strip())
 
-    conn = pymysql.connect(
-          host="localhost",
-          user="root",
-          password="123456",
-          database='weiboarticles',
-          charset='utf8mb4',
-        )
-
-    def remove_stopwords(text):
-        # 分词
-        words = jieba.lcut(text)
-        # 去除停用词
-        filtered_text = [word for word in words if word.casefold() not in stopwords]
-        return ' '.join(filtered_text)
-
-    # 使用Pandas执行SQL查询
-    sql_query = "SELECT 微博内容 FROM weibo_spider"
-    df = pd.read_sql(sql_query, conn)
-    content_list = df['微博内容'].tolist()
-
-    filtered_contents = []
-    for row in content_list:
-        cleaned_text = remove_stopwords(row)
-        filtered_contents.append(cleaned_text)
-    combined_text = ' '.join(filtered_contents)
-    img = Image.open("E:\\python\\venv\\ciyuntu\\xuexi.jpg")
-    img = img.convert('RGBA')
-    r, g, b, a = img.split()
-    img = Image.merge('RGB', (r, g, b))
-    img = img.resize((1000, 1000), Image.LANCZOS)
-    # img = img.resize((1000, 1000), Image.ANTIALIAS)
-    background_image = np.array(img)
-    # 构建并配置词云对象w，注意要加scale参数，提高清晰度
-    mk = background_image
-    # if int(input("您是否需要调整词云图的参数，需要请输入1")) !=1 :
-    w = wordcloud.WordCloud(width=1500,
-                        height=3000,
-                        max_words=400,
-       #                 max_font_size = 130,
-                        background_color='white',
-                        font_path="E:\\python\\venv\\ciyuntu\\三极泼墨体.ttf",
-                        mask=mk,
-                        scale=1,
-                        collocations= False,
-    #                     contour_width=0.05,
-                        stopwords=stopwords)
-
-    print('正在分词')
-
-    # 对mask中每个像素的颜色进行记录
-    mk_colors = np.array(mk)
-
-    print('正在记录颜色')
-
-    # 生成词云图
-    w.generate(combined_text or '')
-
-    print('正在生成词云图')
-
-    # 将词云图中与mask中每个像素点颜色一致的词语的颜色也设置为相应的颜色
-    mask_colors = wordcloud.ImageColorGenerator(mk_colors)
-    w.recolor(color_func=mask_colors)
-
-    print('正在调整颜色')
-
-    f.close()
-
-    # 输出词云图
-    w.to_file('E:\\python\\flaskProject\\static\\assets\\images\wordcloud.png')
-# 加载中文停用词表
 stopwords = set()
-with open("E:\\python\\venv\\ciyuntu\\stopwords.txt", 'r', encoding='utf-8') as f:
+with open("stopwords.txt", 'r', encoding='utf-8') as f:
     for line in f.readlines():
         stopwords.add(line.strip())
 def remove_stopwords(text):
@@ -95,16 +18,22 @@ def remove_stopwords(text):
     filtered_text = [word for word in words if word.casefold() not in stopwords]
     return ' '.join(filtered_text)
 def read_weibo_content(csv_path):
-
     df = pd.read_csv(csv_path)
     weibo_content_list = []
-    # 检查是否存在‘微博内容’这一列
-    if '微博内容' in df.columns:
-        # 提取‘微博内容’列的内容
-        weibo_content_list = df['微博内容'].tolist()
-
-    elif '视频描述' in df.columns:
-        weibo_content_list = df['视频描述'].tolist()
+    
+    # 检查可能的内容列名
+    content_columns = ['内容', '微博内容', '视频描述']
+    for col in content_columns:
+        if col in df.columns:
+            content_list = df[col].dropna().tolist()
+            if content_list:  # 如果找到非空内容
+                weibo_content_list.extend(content_list)
+                break
+    
+    # 如果没有找到任何内容，打印警告
+    if not weibo_content_list:
+        print(f"警告：在CSV文件中未找到有效的内容列。可用列名：{df.columns.tolist()}")
+        
     return weibo_content_list
 
 def get_wordcloud_csv(csv_path):
@@ -116,58 +45,64 @@ def get_wordcloud_csv(csv_path):
 
     # 拼接 CSV 文件的完整路径
     csv_path = os.path.join(project_root, csv_path)
-    print(csv_path)
-    global weibo_content_list
-    weibo_content_list = read_weibo_content(csv_path)
-    filtered_contents = []
-    for row in weibo_content_list:
-        cleaned_text = remove_stopwords(str(row))
-        filtered_contents.append(cleaned_text)
-    combined_text = ' '.join(filtered_contents)
-    img = Image.open("E:\\python\\venv\\ciyuntu\\xuexi.jpg")
-    img = img.convert('RGBA')
-    r, g, b, a = img.split()
-    img = Image.merge('RGB', (r, g, b))
-    img = img.resize((1000, 1000), Image.LANCZOS)
-    # img = img.resize((1000, 1000), Image.ANTIALIAS)
-    background_image = np.array(img)
-    # 构建并配置词云对象w，注意要加scale参数，提高清晰度
-    mk = background_image
-    # if int(input("您是否需要调整词云图的参数，需要请输入1")) !=1 :
-    w = wordcloud.WordCloud(width=1500,
-                        height=3000,
-                        max_words=400,
-       #                 max_font_size = 130,
-                        background_color='white',
-                        font_path="E:\\python\\venv\\ciyuntu\\三极泼墨体.ttf",
-                        mask=mk,
-                        scale=1,
-                        collocations= False,
-    #                     contour_width=0.05,
-                        stopwords=stopwords)
-
-    print('正在分词')
-
-    # 对mask中每个像素的颜色进行记录
-    mk_colors = np.array(mk)
-
-    print('正在记录颜色')
-
-    # 生成词云图
-    w.generate(combined_text or '')
-
-    print('正在生成词云图')
-
-    # 将词云图中与mask中每个像素点颜色一致的词语的颜色也设置为相应的颜色
-    mask_colors = wordcloud.ImageColorGenerator(mk_colors)
-    w.recolor(color_func=mask_colors)
-
-    print('正在调整颜色')
-
-    f.close()
-
-    # 输出词云图
-    w.to_file('E:\\python\\flaskProject\\static\\assets\\images\wordcloud.png')
+    print(f"正在处理文件：{csv_path}")
+    
+    try:
+        # 读取内容
+        weibo_content_list = read_weibo_content(csv_path)
+        if not weibo_content_list:
+            raise ValueError("没有找到有效的内容数据")
+            
+        # 过滤和清理内容
+        filtered_contents = []
+        for row in weibo_content_list:
+            if pd.notna(row) and str(row).strip():  # 确保内容非空且非空白
+                cleaned_text = remove_stopwords(str(row))
+                if cleaned_text.strip():  # 确保清理后的文本非空
+                    filtered_contents.append(cleaned_text)
+        
+        if not filtered_contents:
+            raise ValueError("清理后没有有效的内容数据")
+            
+        # 合并文本
+        combined_text = ' '.join(filtered_contents)
+        
+        # 加载背景图片
+        img = Image.open("xuexi.jpg")
+        img = img.convert('RGBA')
+        r, g, b, a = img.split()
+        img = Image.merge('RGB', (r, g, b))
+        img = img.resize((1000, 1000), Image.LANCZOS)
+        background_image = np.array(img)
+        
+        # 构建词云对象
+        w = wordcloud.WordCloud(
+            width=1500,
+            height=3000,
+            max_words=400,
+            background_color='white',
+            font_path="三极泼墨体.ttf",
+            mask=background_image,
+            scale=1,
+            collocations=False,
+            stopwords=stopwords
+        )
+        
+        print('正在生成词云图...')
+        w.generate(combined_text)
+        
+        print('正在调整颜色...')
+        mask_colors = wordcloud.ImageColorGenerator(background_image)
+        w.recolor(color_func=mask_colors)
+        
+        # 保存词云图
+        output_path = os.path.join('static', 'assets', 'images', 'wordcloud.png')
+        w.to_file(output_path)
+        print(f'词云图已保存到：{output_path}')
+        
+    except Exception as e:
+        print(f"生成词云图时出错：{str(e)}")
+        raise
 
 if __name__ == '__main__':
     get_wordcloud_csv('软件.csv')
