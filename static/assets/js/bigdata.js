@@ -200,8 +200,8 @@
             dataList.forEach((data, index) => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <span class="author"> <a href="${data.authorLink}" target="_blank">${data.author}</a></span>
-                    <span class="content">${data.content}</span>
+                    <span class="author"> ${data.author}</span>
+                    <span class="content"> <a href="${data.Link}" target="_blank">${data.content}</a></span>
                 `;
                 li.style.opacity = '0';
                 li.style.transform = 'translateY(-20px)';
@@ -217,7 +217,7 @@
             });
 
             // 保持列表在一个合理的长度，例如最多显示50条
-            const maxItems = 50;
+            const maxItems = 100;
             while (realtimeList.children.length > maxItems) {
                 const itemToRemove = realtimeList.lastChild;
                 itemToRemove.style.opacity = '0';

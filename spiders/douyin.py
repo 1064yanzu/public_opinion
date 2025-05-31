@@ -61,7 +61,7 @@ def get_douyin_list(v_keyword, v_max_page):
     
     # 使用新的文件路径函数
     persistent_file = get_persistent_file_path('douyin', v_keyword)
-    temp_file = get_temp_file_path('douyin')
+    temp_file = get_temp_file_path('douyin', v_keyword)
     
     # 保存数据到临时文件
     df.to_csv(temp_file, index=False, encoding='utf-8-sig')

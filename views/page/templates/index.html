@@ -11,11 +11,9 @@
     <!-- CDN资源 -->
     <link href="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    
+
     <!-- 本地样式 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/modern.css') }}">
-    <link href="{{ url_for('static', filename='assets/css/cropper.min.css') }}" rel="stylesheet" type="text/css"/>
-
     <style>
         /* 主题变量 */
         :root {
@@ -491,7 +489,8 @@
             transform: translateY(-50%) translateX(-0.25rem);
         }
     </style>
-</head>
+
+    </head>
 
 <body>
     <!-- 侧边栏 -->
@@ -522,6 +521,12 @@
                         </a>
                     </li>
                     <li class="menu-item">
+                        <a href="{{ url_for('page.manual') }}">
+                            <i class="fas fa-book-open"></i>
+                            <span>舆情应对手册</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
                         <a href="{{ url_for('page.case_study') }}">
                             <i class="fas fa-book"></i>
                             <span>舆情案例</span>
@@ -534,7 +539,7 @@
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="{{ url_for('user.login') }}">
+                        <a href="{{ url_for('user.logout') }}">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>退出登录</span>
                         </a>
@@ -639,7 +644,7 @@
                             <input type="search" id="searchInput" class="form-control" placeholder="输入关键词...">
                         </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="data-table" id="crawlTable">
                             <thead>
@@ -739,17 +744,19 @@
     <script src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='assets/js/cropper.min.js') }}"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 主题切换功能
+            // 1. 主题切换功能
             const themeToggle = document.getElementById('themeToggle');
             const body = document.body;
-            const icon = themeToggle.querySelector('i');
-            const text = themeToggle.querySelector('span');
 
-            function setTheme(isDark) {
-                if (isDark) {
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                const icon = themeToggle.querySelector('i');
+                const text = themeToggle.querySelector('span');
+
+                if (savedTheme === 'dark') {
                     body.setAttribute('data-theme', 'dark');
                     icon.classList.replace('fa-moon', 'fa-sun');
                     text.textContent = '日间模式';
@@ -758,24 +765,122 @@
                     icon.classList.replace('fa-sun', 'fa-moon');
                     text.textContent = '夜间模式';
                 }
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
             }
 
-            // 初始化主题
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                setTheme(savedTheme === 'dark');
-            }
+            themeToggle.addEventListener('click', function() {
+                const isDark = body.hasAttribute('data-theme');
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
 
-            themeToggle.addEventListener('click', () => {
-                const isDark = !body.hasAttribute('data-theme');
-                setTheme(isDark);
+                if (isDark) {
+                    body.removeAttribute('data-theme');
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    text.textContent = '夜间模式';
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    text.textContent = '日间模式';
+                    localStorage.setItem('theme', 'dark');
+                }
             });
 
-            // 表格功能
-            const table = document.getElementById('crawlTable');
-            const modalBackdrop = document.getElementById('modalBackdrop');
+            // 2. 侧边栏控制
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const main = document.getElementById('main');
+            const sidebarOverlay = document.createElement('div');
+            sidebarOverlay.className = 'sidebar-overlay';
+            document.body.appendChild(sidebarOverlay);
 
+            function toggleSidebar() {
+                const isMobile = window.innerWidth <= 768;
+
+                if (isMobile) {
+                    sidebar.classList.toggle('show');
+                    sidebarOverlay.classList.toggle('show');
+                    main.classList.toggle('pushed');
+                    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    main.classList.toggle('expanded');
+                }
+            }
+
+            sidebarToggle.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+
+            // 3. 语言切换功能
+            const langSelect = document.getElementById('langSelect');
+            const translations = {
+                zh: {
+                    pageTitle: '舆情分析系统',
+                    themeToggleText: '夜间模式',
+                    totalInfo: '总信息数量',
+                    commenters: '评论者数量',
+                    ipCount: '评论IP地址数',
+                    heatValue: '热度值',
+                    wordCloud: '词云分析',
+                    crawlResults: '爬取结果展示',
+                    dailyHot: '每日热点',
+                    showEntries: '显示条数',
+                    search: '搜索',
+                    noData: '暂无数据'
+                },
+                en: {
+                    pageTitle: 'Public Opinion Analysis',
+                    themeToggleText: 'Dark Mode',
+                    totalInfo: 'Total Information',
+                    commenters: 'Commenters',
+                    ipCount: 'IP Addresses',
+                    heatValue: 'Heat Value',
+                    wordCloud: 'Word Cloud',
+                    crawlResults: 'Crawl Results',
+                    dailyHot: 'Daily Hot',
+                    showEntries: 'Show Entries',
+                    search: 'Search',
+                    noData: 'No Data'
+                }
+            };
+
+            function updateLanguage(lang) {
+                const text = translations[lang];
+                if (!text) return;
+
+                // 更新页面文本
+                document.querySelector('.page-title').textContent = text.pageTitle;
+                document.title = text.pageTitle;
+
+                // 更新统计卡片
+                document.querySelectorAll('.stat-label').forEach((el, index) => {
+                    const keys = ['totalInfo', 'commenters', 'ipCount', 'heatValue'];
+                    if (text[keys[index]]) {
+                        el.textContent = text[keys[index]];
+                    }
+                });
+
+                // 更新卡片标题
+                document.querySelectorAll('.card-title').forEach(el => {
+                    if (el.textContent.includes('词云')) el.textContent = text.wordCloud;
+                    if (el.textContent.includes('爬取')) el.textContent = text.crawlResults;
+                    if (el.textContent.includes('热点')) el.textContent = text.dailyHot;
+                });
+
+                // 更新表格控件
+                const entriesLabel = document.querySelector('label[for="entriesPerPage"]');
+                const searchLabel = document.querySelector('label[for="searchInput"]');
+                if (entriesLabel) entriesLabel.textContent = text.showEntries + ':';
+                if (searchLabel) searchLabel.textContent = text.search + ':';
+            }
+
+            langSelect.addEventListener('change', function(e) {
+                const lang = e.target.value;
+                localStorage.setItem('selectedLang', lang);
+                updateLanguage(lang);
+            });
+
+            // 4. 表格功能
+            const table = document.getElementById('crawlTable');
             if (table) {
                 const tbody = table.querySelector('tbody');
                 const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -783,74 +888,28 @@
                 let entriesPerPage = 10;
                 let filteredRows = [...rows];
 
-                // 内容预览功能
-                function initContentPreviews() {
-                    const modalContainer = document.getElementById('modalContainer');
-                    const modalBackdrop = modalContainer.querySelector('.modal-backdrop');
-                    const modalContent = modalContainer.querySelector('.modal-content');
-                    const modalClose = modalContainer.querySelector('.modal-close');
-
-                    document.querySelectorAll('.content-preview').forEach(preview => {
-                        if (!preview.hasAttribute('href')) {
-                            preview.addEventListener('click', function(e) {
-                                const content = this.dataset.content;
-                                modalContent.textContent = content;
-                                modalContainer.classList.add('show');
-                                document.body.style.overflow = 'hidden';
-                            });
-                        }
-                    });
-
-                    // 点击关闭按钮
-                    modalClose.addEventListener('click', closeModal);
-
-                    // 点击遮罩层关闭
-                    modalBackdrop.addEventListener('click', closeModal);
-
-                    // ESC键关闭
-                    document.addEventListener('keydown', function(e) {
-                        if (e.key === 'Escape') {
-                            closeModal();
-                        }
-                    });
-
-                    function closeModal() {
-                        modalContainer.classList.remove('show');
-                        document.body.style.overflow = '';
-                    }
-                }
-
-                // 更新表格显示
                 function updateTable() {
-                    const startIndex = (currentPage - 1) * entriesPerPage;
-                    const endIndex = entriesPerPage === -1 ? filteredRows.length : Math.min(startIndex + entriesPerPage, filteredRows.length);
-                    
+                    const start = (currentPage - 1) * entriesPerPage;
+                    const end = entriesPerPage === -1 ? filteredRows.length : Math.min(start + entriesPerPage, filteredRows.length);
+
                     tbody.innerHTML = '';
-                    
-                    for (let i = startIndex; i < endIndex; i++) {
+                    for (let i = start; i < end; i++) {
                         tbody.appendChild(filteredRows[i].cloneNode(true));
                     }
-                    
-                    document.getElementById('startEntry').textContent = filteredRows.length === 0 ? 0 : startIndex + 1;
-                    document.getElementById('endEntry').textContent = endIndex;
-                    document.getElementById('totalEntries').textContent = filteredRows.length;
-                    
+
                     updatePagination();
-                    initContentPreviews();
+                    updateTableInfo(start, end);
                 }
 
-                // 更新分页
                 function updatePagination() {
                     const totalPages = entriesPerPage === -1 ? 1 : Math.ceil(filteredRows.length / entriesPerPage);
                     const pageNumbers = document.getElementById('pageNumbers');
+                    if (!pageNumbers) return;
+
                     pageNumbers.innerHTML = '';
-                    
-                    document.getElementById('prevPage').disabled = currentPage === 1;
-                    document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
-                    
                     for (let i = 1; i <= totalPages; i++) {
                         const button = document.createElement('button');
-                        button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
+                        button.className = `btn ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
                         button.textContent = i;
                         button.addEventListener('click', () => {
                             currentPage = i;
@@ -858,51 +917,92 @@
                         });
                         pageNumbers.appendChild(button);
                     }
+
+                    // 更新翻页按钮状态
+                    const prevBtn = document.getElementById('prevPage');
+                    const nextBtn = document.getElementById('nextPage');
+                    if (prevBtn) prevBtn.disabled = currentPage === 1;
+                    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+                }
+
+                function updateTableInfo(start, end) {
+                    const startEntry = document.getElementById('startEntry');
+                    const endEntry = document.getElementById('endEntry');
+                    const totalEntries = document.getElementById('totalEntries');
+
+                    if (startEntry) startEntry.textContent = filteredRows.length ? start + 1 : 0;
+                    if (endEntry) endEntry.textContent = end;
+                    if (totalEntries) totalEntries.textContent = filteredRows.length;
                 }
 
                 // 搜索功能
-                document.getElementById('searchInput').addEventListener('input', function(e) {
-                    const searchTerm = e.target.value.toLowerCase();
-                    filteredRows = rows.filter(row => {
-                        const text = row.textContent.toLowerCase();
-                        return text.includes(searchTerm);
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function(e) {
+                        const searchTerm = e.target.value.toLowerCase();
+                        filteredRows = rows.filter(row => {
+                            return row.textContent.toLowerCase().includes(searchTerm);
+                        });
+                        currentPage = 1;
+                        updateTable();
                     });
-                    currentPage = 1;
-                    updateTable();
-                });
+                }
 
                 // 每页显示条数
-                document.getElementById('entriesPerPage').addEventListener('change', function(e) {
-                    entriesPerPage = parseInt(e.target.value);
-                    currentPage = 1;
-                    updateTable();
-                });
+                const entriesSelect = document.getElementById('entriesPerPage');
+                if (entriesSelect) {
+                    entriesSelect.addEventListener('change', function(e) {
+                        entriesPerPage = parseInt(e.target.value);
+                        currentPage = 1;
+                        updateTable();
+                    });
+                }
 
                 // 翻页按钮
-                document.getElementById('prevPage').addEventListener('click', function() {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        updateTable();
-                    }
-                });
-
-                document.getElementById('nextPage').addEventListener('click', function() {
-                    const totalPages = entriesPerPage === -1 ? 1 : Math.ceil(filteredRows.length / entriesPerPage);
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        updateTable();
-                    }
-                });
+                const prevBtn = document.getElementById('prevPage');
+                const nextBtn = document.getElementById('nextPage');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            updateTable();
+                        }
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        const totalPages = Math.ceil(filteredRows.length / entriesPerPage);
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            updateTable();
+                        }
+                    });
+                }
 
                 // 初始化表格
                 updateTable();
             }
-        });
 
-        // 侧边栏切换
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('main').classList.toggle('expanded');
+            // 5. 初始化所有功能
+            initTheme();
+            const savedLang = localStorage.getItem('selectedLang') || 'zh';
+            langSelect.value = savedLang;
+            updateLanguage(savedLang);
+
+            // 6. 响应式处理
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    const isMobile = window.innerWidth <= 768;
+                    if (!isMobile && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        main.classList.remove('pushed');
+                        document.body.style.overflow = '';
+                    }
+                }, 250);
+            });
         });
     </script>
 

@@ -14,12 +14,17 @@ from utils.common import update_persistent_file,get_persistent_file_path,get_tem
 from utils.tools import dynamic_spider_task
 import pandas as pd
 import zhipuai
+import jieba
 import json
 import time
+import uuid
 from utils.report_generator import ReportGenerator
+from model.ai_assistant import get_chat_response, verify_access_password, save_chat_history, load_chat_history
 import os
 import traceback  # 添加这个用于详细错误追踪
+from utils.ai_assistant_logger import log_user_activity, log_system_event, get_client_ip
 from config.settings import ZHIPUAI_API_KEY, MODEL_CONFIG, REPORT_CONFIG
+from utils.auth_decorator import login_required
 
 # 全局变量
 scheduler = BackgroundScheduler()
@@ -34,6 +39,8 @@ pb = Blueprint('page',__name__,url_prefix='/page',template_folder='templates')
 ready_path = get_persistent_file_path('all','any')
 # 全局字典来存储每个任务的状态
 task_status = {}
+# 初始化realtime_csv_path全局变量
+realtime_csv_path = ready_path  # 设置默认值为ready_path
 
 def run_wordcloud_task(csv_path, task_id):
     try:
@@ -70,19 +77,19 @@ def get_data_file():
         if os.path.exists(ready_path):
             print(f"使用默认数据文件：{ready_path}")
             return ready_path
-            
+
         # 确保目录存在
         data_dir = os.path.dirname(ready_path)
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
             print(f"创建数据目录：{data_dir}")
-            
+
         # 创建空文件
         if not os.path.exists(ready_path):
             with open(ready_path, 'w', encoding='utf-8') as f:
                 f.write("微博作者,微博内容,发布时间,转发数,评论数,点赞数,省份,url\n")
             print(f"创建空数据文件：{ready_path}")
-            
+
         return ready_path
     except Exception as e:
         print(f"获取数据文件出错: {str(e)}")
@@ -90,6 +97,7 @@ def get_data_file():
 
 @pb.route('/')
 @pb.route('/home')
+@login_required
 def home():
     try:
         # 获取基础统计数据
@@ -105,7 +113,7 @@ def home():
             df = pd.read_csv(ready_path, encoding='utf-8')
             print(f"成功读取CSV文件，数据行数: {len(df)}")
             print(f"列名: {df.columns.tolist()}")
-            
+
             # 准备展示数据
             infos2_data = []
             for _, row in df.iterrows():
@@ -114,7 +122,7 @@ def home():
                     shares = pd.to_numeric(row['转发数'], errors='coerce')
                     comments = pd.to_numeric(row['评论数'], errors='coerce')
                     likes = pd.to_numeric(row['点赞数'], errors='coerce')
-                    
+
                     info = {
                         'author': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
                         'content': str(row['微博内容']).strip() if pd.notna(row['微博内容']) else "无内容",
@@ -147,7 +155,7 @@ def home():
         csv_file_name = f'{current_date}_pengpai.csv'
         target_dir = os.path.join(root_dir, 'static', 'content')
         images_dir = os.path.join(target_dir, csv_file_name)
-        
+
         if os.path.exists(images_dir):
             print(f"文件 {csv_file_name} 存在，正在读取...")
             daily_hotspots = []
@@ -178,6 +186,7 @@ def home():
                          )
 
 @pb.route('/case_study')
+@login_required
 def case_study():
     try:
         return render_template('case_study.html')
@@ -186,6 +195,7 @@ def case_study():
         return f"加载案例页面时发生错误: {str(e)}", 500
 
 @pb.route('/settle')
+@login_required
 def settle():
     try:
         return render_template('settle.html')
@@ -194,10 +204,12 @@ def settle():
         return f"加载页面时发生错误: {str(e)}", 500
 
 @pb.route('/case_manage')
+@login_required
 def case_manage():
     return render_template('case_manage.html')
 
 @pb.route('/setting_spider',methods=['GET','POST'])
+@login_required
 def setting_spider():
     if request.method == "GET":
         try:
@@ -235,7 +247,7 @@ def setting_spider():
                         # 处理情感倾向
                         sentiment = row.get('情感倾向', 0.5)
                         sentiment_text = convert_sentiment_to_text(sentiment)
-                            
+
                         info = {
                             '用户名': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
                             '内容': str(row['微博内容']).strip() if pd.notna(row['微博内容']) else "无内容",
@@ -294,12 +306,12 @@ def setting_spider():
             try:
                 memory_headers = ["时间", "平台", "关键词", "开始时间", "截止时间", "精度"]
                 file_exists = os.path.exists('memory.csv')
-                
+
                 with open('memory.csv', mode='a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     if not file_exists:
                         writer.writerow(memory_headers)
-                    
+
                     now = datetime.now()
                     formatted_now = now.strftime('%Y-%m-%d %H:%M')
                     writer.writerow([formatted_now, platforms, keyword, start_date, end_date, precision])
@@ -315,8 +327,16 @@ def setting_spider():
                 # 生成任务ID并添加词云生成任务
                 random_six_digit_number = random.randint(100000, 999999)
                 task_id = f"wordcloud_{keyword}_{random_six_digit_number}"
-                csv_path = f"{keyword}.csv"
-
+                try:
+                    for item in platforms:
+                        if item == '微博':
+                            csv_path = get_temp_file_path('weibo',keyword)
+                            break
+                        else:
+                            csv_path = get_temp_file_path('douyin',keyword)
+                except:
+                    csv_path = get_temp_file_path('weibo',keyword)
+                    print(f'平台读取有误，采用默认路径{csv_path}')
                 # 添加词云生成任务
                 scheduler.add_job(
                     run_wordcloud_task,
@@ -325,7 +345,8 @@ def setting_spider():
                     trigger='date',
                     run_date=datetime.now() + timedelta(seconds=5)
                 )
-                
+                global realtime_csv_path
+                realtime_csv_path = csv_path
                 task_status[task_id] = "running"
 
                 # 转换情感分析结果为文字描述
@@ -371,6 +392,7 @@ def setting_spider():
             }), 500
 
 @pb.route('/tableData')
+@login_required
 def tableData():
     users = session.get('username')
     return render_template('bigdata.html',
@@ -378,6 +400,7 @@ def tableData():
                            )
 
 @pb.route('/q_a')
+@login_required
 def q_a():
     users = session.get('username')
     return render_template('question_answer.html',
@@ -385,7 +408,10 @@ def q_a():
                            )
 
 
+
+
 @pb.route('/table')
+@login_required
 def table():
     users = session.get('username')
     comments_data = get_info()
@@ -400,10 +426,10 @@ def table():
 
 
 @pb.route('/api/chart-data')
+@login_required
 def get_chart_data():
     try:
-        df_sentiment = pd.read_csv(ready_path)
-        
+        df_sentiment = pd.read_csv(realtime_csv_path)
         # 检查必要的列是否存在
         required_columns = ['情感倾向', '省份']  # 性别列不是必需的
         missing_columns = [col for col in required_columns if col not in df_sentiment.columns]
@@ -437,7 +463,7 @@ def get_chart_data():
                 return '未知'
 
         df_sentiment['情感倾向'] = df_sentiment['情感倾向'].apply(classify_sentiment)
-        
+
         # 如果存在性别列，则进行处理，否则创建默认值
         if '性别' in df_sentiment.columns:
             df_sentiment['性别'] = df_sentiment['性别'].apply(normalize_gender)
@@ -486,6 +512,7 @@ def get_chart_data():
         })
 
 @pb.route('/api/hot-topics')
+@login_required
 def get_hot_topics():
     try:
         topics = get_hot_dy()
@@ -498,40 +525,66 @@ def get_hot_topics():
         }), 500
 
 @pb.route('/api/realtime-monitoring')
+@login_required
 def get_realtime_monitoring():
     try:
-        df = pd.read_csv(ready_path, encoding='utf-8')
-        # 使用统一的列名
-        required_columns = ['用户名', '内容', 'url']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        
-        if missing_columns:
+        df = pd.read_csv(realtime_csv_path, encoding='utf-8')
+
+        # 定义可能的列名映射
+        column_mappings = {
+            'author': ['用户名', '微博作者', '作者', '发布者', 'author'],
+            'content': ['内容', '微博内容', '视频描述', '文本内容', '评论内容', 'content', 'text'],
+            'url': ['url', 'URL', '链接', 'link', '视频链接']
+        }
+
+        # 查找实际使用的列名
+        actual_columns = {}
+        for key, possible_names in column_mappings.items():
+            found = False
+            for name in possible_names:
+                if name in df.columns:
+                    actual_columns[key] = name
+                    found = True
+                    break
+            if not found:
+                print(f"警告：未找到{key}对应的列名")
+                actual_columns[key] = None
+
+        # 确保必要的列存在
+        if not all(actual_columns.values()):
+            missing_columns = [k for k, v in actual_columns.items() if v is None]
             print(f"警告：缺少必要的列：{missing_columns}")
             return json.dumps([], ensure_ascii=False, indent=2)
-            
+
         json_data = []
         for index, row in df.iterrows():
-            # 检查并处理NaN值
-            author = row['用户名'] if pd.notna(row['用户名']) else "未知作者"
-            content = row['内容'] if pd.notna(row['内容']) else "无内容"
-            url = row['url'] if pd.notna(row['url']) else "#"
-            
-            json_data.append({
-                "author": author,
-                "content": content,
-                "Link": url,
-                "authorUrl": url  # 使用相同的URL作为作者链接
-            })
+            try:
+                # 使用找到的实际列名获取数据，并进行空值处理
+                author = str(row[actual_columns['author']]) if pd.notna(row[actual_columns['author']]) else "未知作者"
+                content = str(row[actual_columns['content']]) if pd.notna(row[actual_columns['content']]) else "无内容"
+                url = str(row[actual_columns['url']]) if pd.notna(row.get(actual_columns['url'])) else "#"
+
+                json_data.append({
+                    "author": author.strip(),
+                    "content": content.strip(),
+                    "Link": url.strip(),
+                    "authorUrl": url.strip()  # 使用相同的URL作为作者链接
+                })
+
+            except Exception as e:
+                print(f"处理行 {index} 时出错: {str(e)}")
+                continue
+
         # 使用ensure_ascii=False来正确处理中文字符
         return json.dumps(json_data, ensure_ascii=False, indent=2)
+
     except Exception as e:
         print(f"Error in get_realtime_monitoring: {str(e)}")
         print(traceback.format_exc())
         return json.dumps([], ensure_ascii=False, indent=2)
 
-
-
 @pb.route('/stop_spider_task', methods=['POST'])
+@login_required
 def stop_spider_task():
     """停止所有爬虫任务"""
     try:
@@ -539,7 +592,7 @@ def stop_spider_task():
         for job in jobs:
             scheduler.remove_job(job.id)
         task_status.clear()
-        
+
         return jsonify({
             'status': 'success',
             'message': '所有任务已停止'
@@ -553,6 +606,7 @@ def stop_spider_task():
 
 
 @pb.route('/api/status')
+@login_required
 def get_status():
     """获取当前任务状态"""
     try:
@@ -569,7 +623,7 @@ def get_status():
             next_job = spider_jobs[0]  # 获取最近的爬虫任务
             keyword = next_job.id.replace('spider_job_', '')
             next_run_time = next_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S')
-            
+
             return jsonify({
                 'status': 'scheduled',
                 'message': f'下一次任务将于 {next_run_time} 执行，关键词：{keyword}'
@@ -610,12 +664,13 @@ def get_status():
         }), 500
 
 @pb.route('/api/stats')
+@login_required
 def get_stats():
     """获取实时统计数据"""
     try:
         data_file = get_data_file()
         print(f"正在读取数据文件：{data_file}")
-        
+
         if not os.path.exists(data_file):
             print(f"数据文件不存在：{data_file}")
             return jsonify({
@@ -635,8 +690,8 @@ def get_stats():
 
         # 计算评论数和热度
         total_comments = df['评论数'].sum() if '评论数' in df.columns else 0
-        heat_index = int((df['转发数'].sum() * 0.4 + 
-                         df['评论数'].sum() * 0.3 + 
+        heat_index = int((df['转发数'].sum() * 0.4 +
+                         df['评论数'].sum() * 0.3 +
                          df['点赞数'].sum() * 0.3) / 100)
 
         return jsonify({
@@ -656,19 +711,20 @@ def get_stats():
         })
 
 @pb.route('/api/generate_report', methods=['POST'])
+@login_required
 def generate_report():
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': '无效的请求数据'}), 400
-            
+
         depth = data.get('depth', 'standard')
-        
-        if not os.path.exists(ready_path):
+
+        if not os.path.exists(realtime_csv_path):
             return jsonify({'error': 'CSV文件不存在'}), 404
-            
-        generator = ReportGenerator(ready_path)
-        
+
+        generator = ReportGenerator(realtime_csv_path)
+
         def generate():
             try:
                 current_section = "summary"
@@ -678,12 +734,12 @@ def generate_report():
                     'suggestions': [],
                     'risks': []
                 }
-                
+
                 for chunk in generator.generate_stream(depth):
                     if chunk.get('code') != 200:
                         yield json.dumps({'error': chunk.get('msg', '未知错误')}) + '\n'
                         return
-                        
+
                     content = chunk.get('data', {}).get('text', '')
                     if content:
                         # 根据内容判断当前章节
@@ -693,13 +749,13 @@ def generate_report():
                             current_section = "suggestions"
                         elif "风险提示" in content:
                             current_section = "risks"
-                            
+
                         sections[current_section].append(content)
                         yield json.dumps({
                             'type': current_section,
                             'content': content
                         }) + '\n'
-                
+
                 # 生成完整报告
                 final_report = {
                     'type': 'complete',
@@ -711,10 +767,10 @@ def generate_report():
                     }
                 }
                 yield json.dumps(final_report) + '\n'
-                        
+
             except Exception as stream_error:
                 yield json.dumps({'error': f"生成报告失败: {str(stream_error)}"}) + '\n'
-                
+
         return Response(
             stream_with_context(generate()),
             mimetype='application/x-ndjson',
@@ -723,17 +779,18 @@ def generate_report():
                 'X-Accel-Buffering': 'no'
             }
         )
-        
+
     except Exception as e:
         return jsonify({'error': f"请求处理失败: {str(e)}"}), 500
 
 @pb.route('/api/realtime_data')
+@login_required
 def get_realtime_data():
     """获取实时舆情数据"""
     try:
-        data_file = ready_path
+        data_file = realtime_csv_path
         print(f"数据文件路径: {data_file}")
-        
+
         if not os.path.exists(data_file):
             print(f"数据文件不存在: {data_file}")
             return jsonify({
@@ -778,9 +835,6 @@ def get_realtime_data():
                 'sentiment': 50
             })
 
-        # 获取最新评论
-        latest_row = df.iloc[-1]
-        
         # 定义可能的列名映射
         column_mappings = {
             'content': ['微博内容', '内容', 'content', '评论内容', '文本内容', 'text'],
@@ -803,15 +857,27 @@ def get_realtime_data():
                 print(f"未找到{key}对应的列名")
                 actual_columns[key] = None
 
-        # 获取内容和时间
-        latest_comment = str(latest_row[actual_columns['content']]) if actual_columns['content'] else "暂无数据"
-        comment_time = str(latest_row[actual_columns['time']]) if actual_columns['time'] else "暂无数据"
+        # 获取内容和时间（过滤空值和NaN）
+        if actual_columns['content']:
+            # 过滤掉空值和NaN的内容
+            valid_content_mask = df[actual_columns['content']].notna() & (df[actual_columns['content']].str.strip() != '')
+            valid_content_df = df[valid_content_mask]
+
+            if len(valid_content_df) > 0:
+                latest_row = valid_content_df.iloc[-1]
+                latest_comment = str(latest_row[actual_columns['content']]).strip()
+            else:
+                latest_comment = "暂无有效数据"
+        else:
+            latest_comment = "暂无数据"
+
+        comment_time = str(latest_row[actual_columns['time']]) if actual_columns['time'] and 'latest_row' in locals() else "暂无数据"
 
         # 计算省份数据
         province_count = df[actual_columns['province']].nunique() if actual_columns['province'] else 0
         spread_range = "全国性传播" if province_count > 20 else "区域性传播" if province_count > 10 else "局部传播"
 
-        # 提取关键词（可以根据实际需求实现）
+        # 提取关键词
         keywords = extract_keywords_from_df(df) if len(df) > 0 else ["暂无数据"]
 
         # 计算情感值
@@ -825,7 +891,7 @@ def get_realtime_data():
             'keywords': keywords,
             'sentiment': sentiment
         }
-        
+
         print(f"返回数据：{json.dumps(response_data, ensure_ascii=False)}")
         return jsonify(response_data)
 
@@ -843,22 +909,58 @@ def get_realtime_data():
         })
 
 def extract_keywords_from_df(df, top_n=5):
-    """从DataFrame中提取关键词"""
+    """从DataFrame中提取关键词
+
+    Args:
+        df: 包含文本数据的DataFrame
+        top_n: 返回的关键词数量
+
+    Returns:
+        list: 前N个关键词
+    """
     try:
-        # 合并所有内容
-        all_content = ' '.join(df['内容'].dropna().astype(str))
-        # 简单返回一些固定关键词，您可以根据需要实现更复杂的逻辑
-        return ['热点话题', '用户反馈', '社会关注', '热门事件', '公众讨论']
+        # 定义可能的内容列名
+        content_columns = ['内容', '微博内容', '视频描述', 'content', 'text']
+        content_col = None
+
+        # 寻找包含内容的列
+        for col in content_columns:
+            if col in df.columns:
+                content_col = col
+                break
+
+        if content_col is None:
+            print("未找到包含内容的列")
+            return ["暂无数据"]
+
+        # 分词
+        word_list = []
+        for text in df[content_col]:
+            if pd.notna(text):
+                seg_list = jieba.cut(str(text))
+                # 过滤掉长度小于等于1的词
+                filtered_words = [word for word in seg_list if len(word) > 1]
+                word_list.extend(filtered_words)
+
+        # 统计词频
+        word_counts = {}
+        for word in word_list:
+            word_counts[word] = word_counts.get(word, 0) + 1
+
+        # 排序并返回前N个关键词
+        sorted_keywords = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
+        return [keyword for keyword, count in sorted_keywords[:top_n]]
+
     except Exception as e:
         print(f"关键词提取错误: {str(e)}")
-        return ['数据分析中']
+        return ["数据处理中"]
 
 def calculate_sentiment_percentage(df):
     """计算情感倾向百分比"""
     try:
         if '情感倾向' not in df.columns:
             return 50
-            
+
         def convert_sentiment(value):
             try:
                 if isinstance(value, (int, float)):
@@ -870,7 +972,7 @@ def calculate_sentiment_percentage(df):
                 return 50
             except:
                 return 50
-            
+
         sentiments = df['情感倾向'].apply(convert_sentiment)
         return int(sentiments.mean())
     except Exception as e:
@@ -878,37 +980,83 @@ def calculate_sentiment_percentage(df):
         return 50
 
 def calculate_risk_level(df):
-    """计算风险等级"""
+    """计算风险等级
+
+    基于多个维度计算风险等级：
+    1. 情感倾向（负面情感占比）
+    2. 传播速度（最近时间段的数据量）
+    3. 互动程度（评论、转发、点赞总量）
+
+    Returns:
+        str: "高"/"中"/"低" 风险等级
+    """
     try:
-        if '情感倾向' not in df.columns:
+        if len(df) == 0:
             return "低"
-            
-        def get_sentiment_value(x):
+
+        risk_score = 0
+
+        # 1. 情感倾向分析
+        if '情感倾向' in df.columns:
+            def get_sentiment_value(x):
+                try:
+                    if isinstance(x, (int, float)):
+                        return float(x)
+                    elif isinstance(x, str):
+                        if x == '正面':
+                            return 1.0
+                        elif x == '负面':
+                            return 0.0
+                        elif x == '中性':
+                            return 0.5
+                    return 0.5
+                except:
+                    return 0.5
+
+            sentiments = df['情感倾向'].apply(get_sentiment_value)
+            negative_ratio = len(sentiments[sentiments < 0.3]) / len(df)
+            risk_score += negative_ratio * 40  # 情感倾向占40分
+
+        # 2. 传播速度分析
+        if '发布时间' in df.columns:
             try:
-                if isinstance(x, (int, float)):
-                    return float(x)
-                elif x == '正面':
-                    return 1.0
-                elif x == '负面':
-                    return 0.0
-                return 0.5
+                df['发布时间'] = pd.to_datetime(df['发布时间'])
+                recent_hours = 24
+                recent_threshold = pd.Timestamp.now() - pd.Timedelta(hours=recent_hours)
+                recent_count = len(df[df['发布时间'] >= recent_threshold])
+                speed_score = min(recent_count / 100, 1.0) * 30  # 传播速度占30分
+                risk_score += speed_score
             except:
-                return 0.5
-                
-        sentiments = df['情感倾向'].apply(get_sentiment_value)
-        negative_ratio = len(sentiments[sentiments < 0.3]) / len(df) if len(df) > 0 else 0
-        
-        if negative_ratio > 0.5:
+                pass
+
+        # 3. 互动程度分析
+        interaction_columns = ['转发数', '评论数', '点赞数']
+        if all(col in df.columns for col in interaction_columns):
+            try:
+                total_interactions = (
+                    df['转发数'].astype(float).fillna(0) +
+                    df['评论数'].astype(float).fillna(0) +
+                    df['点赞数'].astype(float).fillna(0)
+                ).sum()
+                interaction_score = min(total_interactions / 10000, 1.0) * 30  # 互动程度占30分
+                risk_score += interaction_score
+            except:
+                pass
+
+        # 根据总分确定风险等级
+        if risk_score >= 70:
             return "高"
-        elif negative_ratio > 0.3:
+        elif risk_score >= 40:
             return "中"
         return "低"
+
     except Exception as e:
         print(f"风险等级计算错误: {str(e)}")
         return "低"
 
 # API路由
 @pb.route('/api/cases', methods=['GET'])
+@login_required
 def get_cases():
     try:
         cases = []
@@ -916,7 +1064,7 @@ def get_cases():
         with open('views/page/data/cases.csv', 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             cases = list(reader)
-            
+
         # 对每个案例添加时间线、分析和建议数据
         for case in cases:
             # 读取时间线数据
@@ -931,7 +1079,7 @@ def get_cases():
                             'content': row['content']
                         })
             case['timeline'] = timelines
-            
+
             # 读取分析数据
             analysis = []
             with open('views/page/data/analysis.csv', 'r', encoding='utf-8') as f:
@@ -943,7 +1091,7 @@ def get_cases():
                             'content': row['content']
                         })
             case['analysis'] = analysis
-            
+
             # 读取建议数据
             suggestions = []
             with open('views/page/data/suggestions.csv', 'r', encoding='utf-8') as f:
@@ -955,12 +1103,13 @@ def get_cases():
                             'content': row['content']
                         })
             case['suggestions'] = suggestions
-            
+
         return jsonify(cases)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @pb.route('/api/cases/<int:case_id>', methods=['GET'])
+@login_required
 def get_case(case_id):
     cases = load_cases()
     case = next((case for case in cases if case['id'] == case_id), None)
@@ -969,18 +1118,20 @@ def get_case(case_id):
     return jsonify(case)
 
 @pb.route('/api/get_latest_data')
+@login_required
 def get_latest_data():
     """获取最新数据的API端点"""
     try:
-        if os.path.exists(ready_path):
-            df = pd.read_csv(ready_path, encoding='utf-8')
+
+        if os.path.exists(realtime_csv_path):
+            df = pd.read_csv(realtime_csv_path, encoding='utf-8')
             infos2 = []
             for _, row in df.iterrows():
                 try:
                     # 处理情感倾向
                     sentiment = row.get('情感倾向', 0.5)
                     sentiment_text = convert_sentiment_to_text(sentiment)
-                        
+
                     info = {
                         '用户名': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
                         '内容': str(row['微博内容']).strip() if pd.notna(row['微博内容']) else "无内容",
@@ -1009,4 +1160,565 @@ def get_latest_data():
         return jsonify({
             'status': 'error',
             'message': f'获取数据失败: {str(e)}'
+        }), 500
+
+@pb.route('/manual')
+@login_required
+def manual():
+    """网络舆情应对手册页面"""
+    try:
+        return render_template('manual.html')
+    except Exception as e:
+        print(f"渲染舆情应对手册页面失败: {str(e)}")
+        return render_template('error.html', error_message="加载舆情应对手册页面失败")
+
+@pb.route('/ai_assistant')
+@login_required
+def ai_assistant():
+    """舆情分析AI助手页面"""
+    try:
+        # 创建存储目录（如果不存在）
+        os.makedirs('data/chat_history', exist_ok=True)
+
+        # 记录用户访问
+        user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        log_user_activity(
+            user_id=user_id,
+            username=username,
+            ip_address=ip_address,
+            action='access_ai_assistant',
+            additional_info={
+                'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown',
+                'referrer': request.referrer if hasattr(request, 'referrer') else 'unknown'
+            }
+        )
+
+        return render_template('ai_assistant.html', now=datetime.now())
+    except Exception as e:
+        error_msg = f"渲染AI助手页面失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()  # 打印详细错误信息
+
+        # 记录错误
+        log_system_event('ai_assistant_error', error_msg, error=e)
+
+        return render_template('error.html', error_message="加载AI助手页面失败")
+
+@pb.route('/verify_password', methods=['POST'])
+@login_required
+def verify_password():
+    """验证访问密码"""
+    try:
+        data = request.get_json()
+        password = data.get('password')
+
+        # 获取用户信息
+        user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        if not password:
+            # 记录密码为空的验证尝试
+            log_user_activity(
+                user_id=user_id,
+                username=username,
+                ip_address=ip_address,
+                action='password_verification_empty',
+                additional_info={
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '密码不能为空'
+            })
+
+        # 使用AI助手模块中的验证功能
+        if verify_access_password(password):
+            # 验证成功，在会话中记录验证状态
+            session['ai_assistant_authenticated'] = True
+            session['ai_assistant_user_id'] = str(uuid.uuid4())  # 生成唯一用户ID
+
+            # 记录成功的验证
+            log_user_activity(
+                user_id=user_id,
+                username=username,
+                ip_address=ip_address,
+                action='password_verification_success',
+                additional_info={
+                    'ai_assistant_user_id': session['ai_assistant_user_id'],
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': True,
+                'message': '验证成功'
+            })
+        else:
+            # 记录失败的验证
+            log_user_activity(
+                user_id=user_id,
+                username=username,
+                ip_address=ip_address,
+                action='password_verification_failed',
+                additional_info={
+                    'password_length': len(password),
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '密码错误'
+            })
+    except Exception as e:
+        error_msg = f"密码验证失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+
+        # 记录错误
+        log_system_event('password_verification_error', error_msg, error=e)
+
+        return jsonify({
+            'success': False,
+            'message': f'验证请求失败: {str(e)}'
+        }), 500
+
+@pb.route('/chat', methods=['POST'])
+@login_required
+def chat():
+    """处理聊天请求"""
+    try:
+        # 获取用户信息
+        system_user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        # 检查用户是否已经通过验证
+        if not session.get('ai_assistant_authenticated', False):
+            # 记录未验证访问尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='unauthorized_chat_attempt',
+                additional_info={
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '请先验证访问密码'
+            }), 403
+
+        data = request.get_json()
+        message = data.get('message')
+
+        if not message:
+            # 记录空消息尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='empty_message_attempt',
+                additional_info={
+                    'ai_assistant_user_id': session.get('ai_assistant_user_id', 'unknown')
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '消息不能为空'
+            })
+
+        # 获取用户ID
+        ai_user_id = session.get('ai_assistant_user_id')
+
+        # 加载聊天历史
+        chat_history = load_chat_history(ai_user_id)
+
+        # 记录用户提问
+        log_user_activity(
+            user_id=system_user_id,
+            username=username,
+            ip_address=ip_address,
+            action='chat_message_sent',
+            message=message,
+            additional_info={
+                'ai_assistant_user_id': ai_user_id,
+                'message_length': len(message),
+                'history_length': len(chat_history)
+            }
+        )
+
+        # 调用AI助手模块获取回复
+        try:
+            # 获取AI回复
+            response = get_chat_response(message, chat_history)
+
+            # 更新聊天历史
+            chat_history.append({
+                'user': message,
+                'ai': response,
+                'timestamp': datetime.now().isoformat()
+            })
+
+            # 保存聊天历史
+            save_chat_history(ai_user_id, chat_history)
+
+            # 记录AI响应
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='chat_response_received',
+                message=message,
+                response=response,
+                additional_info={
+                    'ai_assistant_user_id': ai_user_id,
+                    'response_length': len(response),
+                    'total_messages': len(chat_history)
+                }
+            )
+
+            return jsonify({
+                'success': True,
+                'response': response
+            })
+
+        except Exception as api_error:
+            error_msg = f"API调用失败: {str(api_error)}"
+            print(error_msg)
+            traceback.print_exc()
+
+            # 记录API错误
+            log_system_event('api_call_error', error_msg, error=api_error)
+
+            # 返回错误信息
+            return jsonify({
+                'success': False,
+                'message': f'调用AI服务失败: {str(api_error)}'
+            }), 500
+
+    except Exception as e:
+        error_msg = f"处理聊天请求失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+
+        # 记录系统错误
+        log_system_event('chat_request_error', error_msg, error=e)
+
+        return jsonify({
+            'success': False,
+            'message': f'处理请求失败: {str(e)}'
+        }), 500
+
+@pb.route('/chat_stream', methods=['POST'])
+@login_required
+def chat_stream():
+    """处理流式聊天请求"""
+    try:
+        # 获取用户信息
+        system_user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        # 检查用户是否已经通过验证
+        if not session.get('ai_assistant_authenticated', False):
+            # 记录未验证访问尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='unauthorized_stream_attempt',
+                additional_info={
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '请先验证访问密码'
+            }), 403
+
+        data = request.get_json()
+        message = data.get('message')
+
+        if not message:
+            # 记录空消息尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='empty_stream_message_attempt',
+                additional_info={
+                    'ai_assistant_user_id': session.get('ai_assistant_user_id', 'unknown')
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '消息不能为空'
+            })
+
+        # 获取用户ID
+        ai_user_id = session.get('ai_assistant_user_id')
+
+        # 加载聊天历史
+        chat_history = load_chat_history(ai_user_id)
+
+        # 记录用户流式提问
+        log_user_activity(
+            user_id=system_user_id,
+            username=username,
+            ip_address=ip_address,
+            action='stream_message_sent',
+            message=message,
+            additional_info={
+                'ai_assistant_user_id': ai_user_id,
+                'message_length': len(message),
+                'history_length': len(chat_history)
+            }
+        )
+
+        def generate():
+            # 初始化完整响应
+            full_response = ""
+            completion_sent = False
+            stream_start_time = datetime.now()
+
+            try:
+                # 获取API客户端和模型ID
+                from model.ai_assistant import get_api_client, get_model_id
+                client = get_api_client()
+                model_id = get_model_id()
+
+                # 准备消息列表
+                messages = []
+
+                # 添加聊天历史记录（如果有）
+                if chat_history:
+                    for entry in chat_history:
+                        if 'user' in entry and entry['user'].strip():
+                            messages.append({"role": "user", "content": entry['user']})
+                        if 'ai' in entry and entry['ai'].strip():
+                            messages.append({"role": "assistant", "content": entry['ai']})
+
+                # 添加当前用户消息
+                messages.append({"role": "user", "content": message})
+
+                # 调用API获取流式回复
+                response = client.chat.completions.create(
+                    model=model_id,
+                    messages=messages,
+                    stream=True,
+                    max_tokens=4096,
+                    temperature=0.7,
+                    top_p=0.95
+                )
+
+                # 流式返回响应
+                for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        full_response += content
+                        yield f"data: {json.dumps({'content': content, 'done': False})}\n\n"
+
+                # 发送完成信号
+                yield f"data: {json.dumps({'content': '', 'done': True, 'full_response': full_response})}\n\n"
+                completion_sent = True
+
+                # 更新聊天历史
+                chat_history.append({
+                    'user': message,
+                    'ai': full_response,
+                    'timestamp': datetime.now().isoformat()
+                })
+
+                # 保存聊天历史
+                save_chat_history(ai_user_id, chat_history)
+
+                # 记录流式响应完成
+                stream_duration = (datetime.now() - stream_start_time).total_seconds()
+                log_user_activity(
+                    user_id=system_user_id,
+                    username=username,
+                    ip_address=ip_address,
+                    action='stream_response_completed',
+                    message=message,
+                    response=full_response,
+                    additional_info={
+                        'ai_assistant_user_id': ai_user_id,
+                        'response_length': len(full_response),
+                        'stream_duration_seconds': stream_duration,
+                        'total_messages': len(chat_history)
+                    }
+                )
+
+            except Exception as e:
+                error_msg = f"API流式调用失败: {str(e)}"
+                print(error_msg)
+                traceback.print_exc()
+
+                # 记录流式错误
+                log_system_event('stream_api_error', error_msg, error=e)
+
+                error_response = f"抱歉，在处理您的请求时遇到了问题。错误信息: {str(e)}"
+                yield f"data: {json.dumps({'content': error_response, 'done': True, 'error': True})}\n\n"
+                completion_sent = True
+
+            finally:
+                # 确保在所有情况下都发送完成信号
+                if not completion_sent:
+                    yield f"data: {json.dumps({'content': '', 'done': True, 'full_response': full_response})}\n\n"
+
+        return Response(generate(), mimetype='text/event-stream')
+
+    except Exception as e:
+        error_msg = f"处理流式聊天请求失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+
+        # 记录系统错误
+        log_system_event('stream_request_error', error_msg, error=e)
+
+        return jsonify({
+            'success': False,
+            'message': f'处理请求失败: {str(e)}'
+        }), 500
+
+@pb.route('/chat_history', methods=['GET'])
+@login_required
+def get_chat_history():
+    """获取聊天历史记录"""
+    try:
+        # 获取用户信息
+        system_user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        # 检查用户是否已经通过验证
+        if not session.get('ai_assistant_authenticated', False):
+            # 记录未验证访问尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='unauthorized_history_access',
+                additional_info={
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '请先验证访问密码'
+            }), 403
+
+        # 获取用户ID
+        ai_user_id = session.get('ai_assistant_user_id')
+
+        # 加载聊天历史
+        chat_history = load_chat_history(ai_user_id)
+
+        # 记录历史访问
+        log_user_activity(
+            user_id=system_user_id,
+            username=username,
+            ip_address=ip_address,
+            action='chat_history_accessed',
+            additional_info={
+                'ai_assistant_user_id': ai_user_id,
+                'history_count': len(chat_history)
+            }
+        )
+
+        return jsonify({
+            'success': True,
+            'history': chat_history
+        })
+    except Exception as e:
+        error_msg = f"获取聊天历史失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+
+        # 记录错误
+        log_system_event('chat_history_error', error_msg, error=e)
+
+        return jsonify({
+            'success': False,
+            'message': f'获取聊天历史失败: {str(e)}'
+        }), 500
+
+@pb.route('/clear_chat', methods=['POST'])
+@login_required
+def clear_chat():
+    """清空聊天历史"""
+    try:
+        # 获取用户信息
+        system_user_id = session.get('user_id', 'unknown')
+        username = session.get('username', 'unknown')
+        ip_address = get_client_ip(request)
+
+        # 检查用户是否已经通过验证
+        if not session.get('ai_assistant_authenticated', False):
+            # 记录未验证清空尝试
+            log_user_activity(
+                user_id=system_user_id,
+                username=username,
+                ip_address=ip_address,
+                action='unauthorized_clear_attempt',
+                additional_info={
+                    'user_agent': request.user_agent.string if hasattr(request, 'user_agent') else 'unknown'
+                }
+            )
+
+            return jsonify({
+                'success': False,
+                'message': '请先验证访问密码'
+            }), 403
+
+        # 获取用户ID
+        ai_user_id = session.get('ai_assistant_user_id')
+
+        # 加载当前历史记录（用于日志记录）
+        current_history = load_chat_history(ai_user_id)
+        history_count = len(current_history)
+
+        # 清空聊天历史
+        save_chat_history(ai_user_id, [])
+
+        # 记录清空操作
+        log_user_activity(
+            user_id=system_user_id,
+            username=username,
+            ip_address=ip_address,
+            action='chat_history_cleared',
+            additional_info={
+                'ai_assistant_user_id': ai_user_id,
+                'cleared_history_count': history_count
+            }
+        )
+
+        return jsonify({
+            'success': True,
+            'message': '聊天历史已清空'
+        })
+    except Exception as e:
+        error_msg = f"清空聊天历史失败: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+
+        # 记录错误
+        log_system_event('clear_chat_error', error_msg, error=e)
+
+        return jsonify({
+            'success': False,
+            'message': f'清空聊天历史失败: {str(e)}'
         }), 500

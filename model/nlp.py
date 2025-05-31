@@ -259,7 +259,7 @@ def main_weibo(keyword, max_page):
     result = get_weibo_list(keyword, max_page)
     print(f"爬取完成，获取到 {len(result)} 条数据")
     
-    temp_file = get_temp_file_path('weibo')
+    temp_file = get_temp_file_path('weibo',keyword)
     print(f"将数据保存到临时文件: {temp_file}")
     
     df = pd.DataFrame(result)
@@ -284,7 +284,7 @@ def main_douyin(keyword, max_page):
     result = get_douyin_list(keyword, max_page)
     print(f"爬取完成，获取到 {len(result)} 条数据")
     
-    temp_file = get_temp_file_path('douyin')
+    temp_file = get_temp_file_path('douyin',keyword)
     print(f"将数据保存到临时文件: {temp_file}")
     
     df = pd.DataFrame(result)
@@ -513,7 +513,7 @@ def main_nlp(keyword, precision, platform):
                 df = pd.read_csv(ready_path, encoding='utf-8')
                 
                 # 确保所需列存在
-                required_columns = ['微博id', '微博bid', '微博作者', '微博内容', '发布时间', '转发数', '评论数', '点赞数', 'url']
+                required_columns = ['微博id', '微博bid', '微博作者', '微博内容', '发布时间', '转发数', '评论数', '点赞数', 'url','情感倾向','sentiment_result','性别','省份']
                 for col in required_columns:
                     if col not in df.columns:
                         if col == '微博id':
@@ -532,7 +532,11 @@ def main_nlp(keyword, precision, platform):
                             '分享数': int(row['转发数']) if pd.notna(row['转发数']) and str(row['转发数']).isdigit() else 0,
                             '评论数': int(row['评论数']) if pd.notna(row['评论数']) and str(row['评论数']).isdigit() else 0,
                             '点赞数': int(row['点赞数']) if pd.notna(row['点赞数']) and str(row['点赞数']).isdigit() else 0,
-                            'url': str(row['url']) if pd.notna(row['url']) else ""
+                            'url': str(row['url']) if pd.notna(row['url']) else "",
+                            '情感倾向': str(row['情感倾向']) if pd.notna(row['情感倾向']) else "未知",
+                            'sentiment_result': str(row['sentiment_result']) if pd.notna(row['sentiment_result']) else "未知",
+                            '性别': str(row['性别']) if pd.notna(row['性别']) else "未知",
+                            '省份': str(row['省份']) if pd.notna(row['省份']) else "未知",
                         }
                         
                         # 更新计数

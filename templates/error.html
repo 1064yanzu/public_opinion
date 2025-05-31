@@ -128,14 +128,40 @@
             <i class="fas fa-exclamation-circle error-icon"></i>
             <h2>出错了</h2>
             <p class="error-message">{{ error_message }}</p>
-            <button onclick="goBack()"><i class="fas fa-arrow-left"></i> 返回上一页</button>
+            <button onclick="handleReturn()"><i class="fas fa-arrow-left"></i> 返回上一页</button>
         </div>
     </div>
 
     <script>
-        function goBack() {
-            window.history.back();
+        function handleReturn() {
+            // 如果是从登录页面重定向来的，直接返回登录页
+            if (document.referrer.includes('/user/login')) {
+                window.location.href = '/user/login';
+                return;
+            }
+            
+            // 如果存在上一页历史记录，则返回上一页
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // 如果没有历史记录，则返回首页
+                window.location.href = '/page/home';
+            }
+            
+            // 添加超时处理，如果3秒后还在当前页面，则强制跳转到首页
+            setTimeout(function() {
+                if (window.location.href.includes('/error')) {
+                    window.location.href = '/page/home';
+                }
+            }, 3000);
         }
+        
+        // 添加键盘事件监听
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {  // ESC键
+                handleReturn();
+            }
+        });
     </script>
 </body>
 </html>
