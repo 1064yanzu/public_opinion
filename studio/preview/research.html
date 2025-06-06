@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClarityStudio - 舆情研究台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="research.css">
+    <link rel="stylesheet" href="research-enhance.css">
+    <link rel="preconnect" href="https://fonts.googleapis.cn">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 背景浮动形状 -->
+    <div class="bg-floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+        <div class="shape shape-6"></div>
+        <div class="shape shape-7"></div>
+    </div>
+    
+    <!-- 粒子效果背景 -->
+    <div id="particles-js" class="particles-container"></div>
+    
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="images/logo.svg" alt="ClarityStudio Logo" class="logo-icon">
+                    <span>ClarityStudio</span>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html">首页</a>
+                    <a href="index.html#features">功能</a>
+                    <a href="index.html#pricing">价格</a>
+                </div>
+                <div class="auth-buttons">
+                    <a href="#" class="try-btn"><span>帮助中心</span></a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="research-main">
+        <div class="container research-container">
+            <!-- 左侧操作区 -->
+            <div class="research-sidebar">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="timeline">舆情事件梳理</button>
+                    <button class="mode-btn" data-mode="factcheck">新闻事实核查</button>
+                    <div class="mode-slider"></div>
+                </div>
+
+                <div class="input-section">
+                    <h2 class="section-title">
+                        <span class="mode-title timeline-title">舆情事件梳理</span>
+                        <span class="mode-title factcheck-title">新闻事实核查</span>
+                    </h2>
+                    
+                    <p class="input-description">
+                        <span class="mode-description timeline-description">输入舆情事件关键词，我们将梳理事件发展时间线，帮助您快速把握事件全貌。</span>
+                        <span class="mode-description factcheck-description">输入需要核查的新闻内容，我们将对事实进行严谨分析，给出专业判断。</span>
+                    </p>
+
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="text" id="event-input" class="event-input" placeholder="请输入舆情事件或需核查的新闻...">
+                            <button class="clear-input" title="清空输入">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="submit-btn" id="analyze-btn">
+                            <span class="btn-text">开始分析</span>
+                            <div class="btn-loader"></div>
+                        </button>
+                    </div>
+                    
+                    <div class="recent-queries">
+                        <h3>最近查询</h3>
+                        <div class="query-list">
+                            <div class="query-item" data-query="武汉疫情防控政策调整">
+                                <span class="query-text">武汉疫情防控政策调整</span>
+                                <span class="query-time">2小时前</span>
+                            </div>
+                            <div class="query-item" data-query="2022北京冬奥会开幕式">
+                                <span class="query-text">2022北京冬奥会开幕式</span>
+                                <span class="query-time">昨天</span>
+                            </div>
+                            <div class="query-item" data-query="中国空间站天和核心舱发射">
+                                <span class="query-text">中国空间站天和核心舱发射</span>
+                                <span class="query-time">3天前</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧结果展示区 -->
+            <div class="research-results">
+                <div class="results-header">
+                    <div class="results-title-area">
+                        <h2 id="results-title">等待您的查询...</h2>
+                        <p id="results-subtitle">在左侧输入您感兴趣的舆情事件或需要核查的新闻</p>
+                    </div>
+                    <div class="results-actions">
+                        <button class="action-btn" title="导出为PDF" id="export-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span class="tooltip">导出PDF</span>
+                        </button>
+                        <button class="action-btn" title="分享结果" id="share-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            <span class="tooltip">分享结果</span>
+                        </button>
+                        <button class="action-btn" title="刷新分析" id="refresh-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M1 20v-6h6"></path>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            <span class="tooltip">刷新分析</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 初始状态显示 -->
+                <div class="empty-state">
+                    <div class="empty-illustration">
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92183 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="#3d5af1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 12V12.01" stroke="#3d5af1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 12V12.01" stroke="#3d5af1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16 12V12.01" stroke="#3d5af1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>还没有分析结果</h3>
+                    <p>请在左侧输入您感兴趣的事件或新闻<br>开始您的舆情分析或事实核查之旅</p>
+                </div>
+
+                <!-- 动态内容将通过Ajax加载到这里 -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="images/logo.svg" alt="ClarityStudio Logo" class="logo-icon">
+                    <span>ClarityStudio</span>
+                </div>
+                <p class="copyright">© 2023 ClarityStudio. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 创建一个返回主页的浮动按钮 -->
+    <a href="index.html" class="floating-home-btn" title="返回主页">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+    </a>
+
+    <!-- 加载粒子效果JS库 -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+    <script src="research.js"></script>
+    <script src="research-enhance.js"></script>
+</body>
+</html> 

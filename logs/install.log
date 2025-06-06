@@ -1,0 +1,1349 @@
+开始时间: Wed Jan  8 02:09:50 AM CST 2025
+激活虚拟环境...
+./install_yuqing.sh: line 23: /www/server/pyporject_evn/yuqing_venv/bin/activate: No such file or directory
+开始时间: Wed Jan  8 02:10:13 AM CST 2025
+激活虚拟环境...
+./install_yuqing.sh: line 23: /www/server/pyporject_evn/yuqing_venv/bin/activate: No such file or directory
+开始时间: Wed Jan  8 02:12:38 AM CST 2025
+使用虚拟环境：/www/server/pyporject_evn/yuqing_venv
+配置pip源...
+Writing to /root/.config/pip/pip.conf
+Writing to /root/.config/pip/pip.conf
+更新pip...
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: pip in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (24.3.1)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+安装基础依赖...
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting wheel
+  Downloading https://mirrors.aliyun.com/pypi/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl (72 kB)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (75.7.0)
+Installing collected packages: wheel
+Successfully installed wheel-0.45.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+安装项目依赖...
+从requirements.txt安装依赖...
+正在安装: Flask==2.3.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Flask==2.3.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/fd/56/26f0be8adc2b4257df20c1c4260ddd0aa396cf8e75d90ab2f7ff99bc34f9/flask-2.3.3-py3-none-any.whl (96 kB)
+Collecting Werkzeug>=2.3.7 (from Flask==2.3.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/52/24/ab44c871b0f07f491e5d2ad12c9bd7358e527510618cb1b803a88e986db1/werkzeug-3.1.3-py3-none-any.whl (224 kB)
+Collecting Jinja2>=3.1.2 (from Flask==2.3.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/bd/0f/2ba5fbcd631e3e88689309dbe978c5769e883e4b84ebfe7da30b43275c5a/jinja2-3.1.5-py3-none-any.whl (134 kB)
+Collecting itsdangerous>=2.1.2 (from Flask==2.3.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/04/96/92447566d16df59b2a776c0fb82dbc4d9e07cd95062562af01e408583fc4/itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Requirement already satisfied: click>=8.1.3 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask==2.3.3) (8.1.8)
+Collecting blinker>=1.6.2 (from Flask==2.3.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/10/cb/f2ad4230dc2eb1a74edf38f1a38b9b52277f75bef262d8908e60d957e13c/blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Collecting MarkupSafe>=2.0 (from Jinja2>=3.1.2->Flask==2.3.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f1/a4/aefb044a2cd8d7334c8a47d3fb2c9f328ac48cb349468cc31c20b539305f/MarkupSafe-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23 kB)
+Installing collected packages: MarkupSafe, itsdangerous, blinker, Werkzeug, Jinja2, Flask
+Successfully installed Flask-2.3.3 Jinja2-3.1.5 MarkupSafe-3.0.2 Werkzeug-3.1.3 blinker-1.9.0 itsdangerous-2.2.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Flask-Migrate==4.0.7
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Flask-Migrate==4.0.7
+  Downloading https://mirrors.aliyun.com/pypi/packages/93/01/587023575286236f95d2ab8a826c320375ed5ea2102bb103ed89704ffa6b/Flask_Migrate-4.0.7-py3-none-any.whl (21 kB)
+Requirement already satisfied: Flask>=0.9 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask-Migrate==4.0.7) (2.3.3)
+Collecting Flask-SQLAlchemy>=1.0 (from Flask-Migrate==4.0.7)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1d/6a/89963a5c6ecf166e8be29e0d1bf6806051ee8fe6c82e232842e3aeac9204/flask_sqlalchemy-3.1.1-py3-none-any.whl (25 kB)
+Collecting alembic>=1.9.0 (from Flask-Migrate==4.0.7)
+  Downloading https://mirrors.aliyun.com/pypi/packages/cb/06/8b505aea3d77021b18dcbd8133aa1418f1a1e37e432a465b14c46b2c0eaa/alembic-1.14.0-py3-none-any.whl (233 kB)
+Collecting SQLAlchemy>=1.3.0 (from alembic>=1.9.0->Flask-Migrate==4.0.7)
+  Downloading https://mirrors.aliyun.com/pypi/packages/b4/5f/95e0ed74093ac3c0db6acfa944d4d8ac6284ef5e1136b878a327ea1f975a/SQLAlchemy-2.0.36-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 25.0 MB/s eta 0:00:00
+Collecting Mako (from alembic>=1.9.0->Flask-Migrate==4.0.7)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1e/bf/7a6a36ce2e4cafdfb202752be68850e22607fccd692847c45c1ae3c17ba6/Mako-1.3.8-py3-none-any.whl (78 kB)
+Requirement already satisfied: typing-extensions>=4 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from alembic>=1.9.0->Flask-Migrate==4.0.7) (4.12.2)
+Requirement already satisfied: Werkzeug>=2.3.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask>=0.9->Flask-Migrate==4.0.7) (3.1.3)
+Requirement already satisfied: Jinja2>=3.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask>=0.9->Flask-Migrate==4.0.7) (3.1.5)
+Requirement already satisfied: itsdangerous>=2.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask>=0.9->Flask-Migrate==4.0.7) (2.2.0)
+Requirement already satisfied: click>=8.1.3 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask>=0.9->Flask-Migrate==4.0.7) (8.1.8)
+Requirement already satisfied: blinker>=1.6.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask>=0.9->Flask-Migrate==4.0.7) (1.9.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Jinja2>=3.1.2->Flask>=0.9->Flask-Migrate==4.0.7) (3.0.2)
+Collecting greenlet!=0.4.17 (from SQLAlchemy>=1.3.0->alembic>=1.9.0->Flask-Migrate==4.0.7)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f7/4b/1c9695aa24f808e156c8f4813f685d975ca73c000c2a5056c514c64980f6/greenlet-3.1.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (602 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 602.4/602.4 kB 24.9 MB/s eta 0:00:00
+Installing collected packages: Mako, greenlet, SQLAlchemy, Flask-SQLAlchemy, alembic, Flask-Migrate
+Successfully installed Flask-Migrate-4.0.7 Flask-SQLAlchemy-3.1.1 Mako-1.3.8 SQLAlchemy-2.0.36 alembic-1.14.0 greenlet-3.1.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Flask-SQLAlchemy==3.1.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: Flask-SQLAlchemy==3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (3.1.1)
+Requirement already satisfied: flask>=2.2.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask-SQLAlchemy==3.1.1) (2.3.3)
+Requirement already satisfied: sqlalchemy>=2.0.16 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Flask-SQLAlchemy==3.1.1) (2.0.36)
+Requirement already satisfied: Werkzeug>=2.3.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (3.1.3)
+Requirement already satisfied: Jinja2>=3.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (3.1.5)
+Requirement already satisfied: itsdangerous>=2.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (2.2.0)
+Requirement already satisfied: click>=8.1.3 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (8.1.8)
+Requirement already satisfied: blinker>=1.6.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (1.9.0)
+Requirement already satisfied: typing-extensions>=4.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from sqlalchemy>=2.0.16->Flask-SQLAlchemy==3.1.1) (4.12.2)
+Requirement already satisfied: greenlet!=0.4.17 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from sqlalchemy>=2.0.16->Flask-SQLAlchemy==3.1.1) (3.1.1)
+Requirement already satisfied: MarkupSafe>=2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Jinja2>=3.1.2->flask>=2.2.5->Flask-SQLAlchemy==3.1.1) (3.0.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: aiofiles==23.2.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting aiofiles==23.2.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/c5/19/5af6804c4cc0fed83f47bff6e413a98a36618e7d40185cd36e69737f3b0e/aiofiles-23.2.1-py3-none-any.whl (15 kB)
+Installing collected packages: aiofiles
+Successfully installed aiofiles-23.2.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: aiomysql==0.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting aiomysql==0.2.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/42/87/c982ee8b333c85b8ae16306387d703a1fcdfc81a2f3f15a24820ab1a512d/aiomysql-0.2.0-py3-none-any.whl (44 kB)
+Collecting PyMySQL>=1.0 (from aiomysql==0.2.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/0c/94/e4181a1f6286f545507528c78016e00065ea913276888db2262507693ce5/PyMySQL-1.1.1-py3-none-any.whl (44 kB)
+Installing collected packages: PyMySQL, aiomysql
+Successfully installed PyMySQL-1.1.1 aiomysql-0.2.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: alembic==1.13.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting alembic==1.13.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/7f/50/9fb3a5c80df6eb6516693270621676980acd6d5a9a7efdbfa273f8d616c7/alembic-1.13.1-py3-none-any.whl (233 kB)
+Requirement already satisfied: SQLAlchemy>=1.3.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from alembic==1.13.1) (2.0.36)
+Requirement already satisfied: Mako in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from alembic==1.13.1) (1.3.8)
+Requirement already satisfied: typing-extensions>=4 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from alembic==1.13.1) (4.12.2)
+Requirement already satisfied: greenlet!=0.4.17 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from SQLAlchemy>=1.3.0->alembic==1.13.1) (3.1.1)
+Requirement already satisfied: MarkupSafe>=0.9.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Mako->alembic==1.13.1) (3.0.2)
+Installing collected packages: alembic
+  Attempting uninstall: alembic
+    Found existing installation: alembic 1.14.0
+    Uninstalling alembic-1.14.0:
+      Successfully uninstalled alembic-1.14.0
+Successfully installed alembic-1.13.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: altgraph==0.17.4
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting altgraph==0.17.4
+  Downloading https://mirrors.aliyun.com/pypi/packages/4d/3f/3bc3f1d83f6e4a7fcb834d3720544ca597590425be5ba9db032b2bf322a2/altgraph-0.17.4-py2.py3-none-any.whl (21 kB)
+Installing collected packages: altgraph
+Successfully installed altgraph-0.17.4
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: amqp==5.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting amqp==5.2.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/b3/f0/8e5be5d5e0653d9e1d02b1144efa33ff7d2963dfad07049e02c0fa9b2e8d/amqp-5.2.0-py3-none-any.whl (50 kB)
+Collecting vine<6.0.0,>=5.0.0 (from amqp==5.2.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/03/ff/7c0c86c43b3cbb927e0ccc0255cb4057ceba4799cd44ae95174ce8e8b5b2/vine-5.1.0-py3-none-any.whl (9.6 kB)
+Installing collected packages: vine, amqp
+Successfully installed amqp-5.2.0 vine-5.1.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: annotated-types==0.6.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting annotated-types==0.6.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/28/78/d31230046e58c207284c6b2c4e8d96e6d3cb4e52354721b944d3e1ee4aa5/annotated_types-0.6.0-py3-none-any.whl (12 kB)
+Installing collected packages: annotated-types
+Successfully installed annotated-types-0.6.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: anyio==4.3.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting anyio==4.3.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/14/fd/2f20c40b45e4fb4324834aea24bd4afdf1143390242c0b33774da0e2e34f/anyio-4.3.0-py3-none-any.whl (85 kB)
+Requirement already satisfied: idna>=2.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio==4.3.0) (3.10)
+Collecting sniffio>=1.1 (from anyio==4.3.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl (10 kB)
+Installing collected packages: sniffio, anyio
+Successfully installed anyio-4.3.0 sniffio-1.3.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: APScheduler==3.10.4
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting APScheduler==3.10.4
+  Downloading https://mirrors.aliyun.com/pypi/packages/13/b5/7af0cb920a476dccd612fbc9a21a3745fb29b1fcd74636078db8f7ba294c/APScheduler-3.10.4-py3-none-any.whl (59 kB)
+Collecting six>=1.4.0 (from APScheduler==3.10.4)
+  Downloading https://mirrors.aliyun.com/pypi/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting pytz (from APScheduler==3.10.4)
+  Downloading https://mirrors.aliyun.com/pypi/packages/11/c3/005fcca25ce078d2cc29fd559379817424e94885510568bc1bc53d7d5846/pytz-2024.2-py2.py3-none-any.whl (508 kB)
+Collecting tzlocal!=3.*,>=2.0 (from APScheduler==3.10.4)
+  Downloading https://mirrors.aliyun.com/pypi/packages/97/3f/c4c51c55ff8487f2e6d0e618dba917e3c3ee2caae6cf0fbb59c9b1876f2e/tzlocal-5.2-py3-none-any.whl (17 kB)
+Installing collected packages: pytz, tzlocal, six, APScheduler
+Successfully installed APScheduler-3.10.4 pytz-2024.2 six-1.17.0 tzlocal-5.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: async-timeout==4.0.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting async-timeout==4.0.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/a7/fa/e01228c2938de91d47b307831c62ab9e4001e747789d0b05baf779a6488c/async_timeout-4.0.3-py3-none-any.whl (5.7 kB)
+Installing collected packages: async-timeout
+Successfully installed async-timeout-4.0.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: auto-py-to-exe==2.45.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting auto-py-to-exe==2.45.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/36/92/263e138ffe564ca2c5736be9dc8ed0f9f8cafe07a3225d88c2127854e22e/auto_py_to_exe-2.45.0-py2.py3-none-any.whl (191 kB)
+Collecting Eel!=0.18.0,>=0.11.0 (from auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/6f/a3/5d31ea931bff935157de46fce73402e23ce94a043c9e75c679d47d14d314/eel-0.18.1.tar.gz (26 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting pyinstaller>=5.8.0 (from auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/7f/e0/00d29fc90c3ba50620c61554e26ebb4d764569507be7cd1c8794aa696f9a/pyinstaller-6.11.1-py3-none-manylinux2014_x86_64.whl (710 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 710.1/710.1 kB 18.8 MB/s eta 0:00:00
+Collecting requests (from auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl (64 kB)
+Collecting bottle (from Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/7e/0a/a5260c758ff813acc6967344339aa7ba15f815575f4d49141685c4345d39/bottle-0.13.2-py2.py3-none-any.whl (104 kB)
+Collecting bottle-websocket (from Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/17/8e/a22666b4bb0a6e31de579504077df2b1c2f1438136777c728e6cfabef295/bottle-websocket-0.2.9.tar.gz (2.0 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting future (from Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/da/71/ae30dadffc90b9006d77af76b393cb9dfbfc9629f339fc1574a1c52e6806/future-1.0.0-py3-none-any.whl (491 kB)
+Collecting pyparsing (from Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1c/a7/c8a2d361bf89c0d9577c934ebb7421b25dc84bf3a8e3ac0a40aed9acc547/pyparsing-3.2.1-py3-none-any.whl (107 kB)
+Requirement already satisfied: typing_extensions in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0) (4.12.2)
+Requirement already satisfied: setuptools>=42.0.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller>=5.8.0->auto-py-to-exe==2.45.0) (75.7.0)
+Requirement already satisfied: altgraph in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller>=5.8.0->auto-py-to-exe==2.45.0) (0.17.4)
+Collecting pyinstaller-hooks-contrib>=2024.9 (from pyinstaller>=5.8.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/64/af/965f81a65f4d9bcb337dd0e87845fd2e081c4ab5a1c0b3e0cf20abeac423/pyinstaller_hooks_contrib-2024.11-py3-none-any.whl (339 kB)
+Requirement already satisfied: packaging>=22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller>=5.8.0->auto-py-to-exe==2.45.0) (24.2)
+Collecting charset-normalizer<4,>=2 (from requests->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/88/83/489e9504711fa05d8dde1574996408026bdbdbd938f23be67deebb5eca92/charset_normalizer-3.4.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (143 kB)
+Requirement already satisfied: idna<4,>=2.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from requests->auto-py-to-exe==2.45.0) (3.10)
+Collecting urllib3<3,>=1.21.1 (from requests->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/c8/19/4ec628951a74043532ca2cf5d97b7b14863931476d117c471e8e2b1eb39f/urllib3-2.3.0-py3-none-any.whl (128 kB)
+Collecting certifi>=2017.4.17 (from requests->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a5/32/8f6669fc4798494966bf446c8c4a162e0b5d893dff088afddf76414f70e1/certifi-2024.12.14-py3-none-any.whl (164 kB)
+Collecting gevent-websocket (from bottle-websocket->Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/7b/84/2dc373eb6493e00c884cc11e6c059ec97abae2678d42f06bf780570b0193/gevent_websocket-0.10.1-py3-none-any.whl (22 kB)
+Collecting gevent (from gevent-websocket->bottle-websocket->Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1e/67/0e693f9ddb7909c2414f8fcfc2409aa4157884c147bc83dab979e9cf717c/gevent-24.11.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (6.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 24.0 MB/s eta 0:00:00
+Collecting zope.event (from gevent->gevent-websocket->bottle-websocket->Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/fe/42/f8dbc2b9ad59e927940325a22d6d3931d630c3644dae7e2369ef5d9ba230/zope.event-5.0-py3-none-any.whl (6.8 kB)
+Requirement already satisfied: zope.interface in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket->Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0) (7.2)
+Requirement already satisfied: greenlet>=3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket->Eel!=0.18.0,>=0.11.0->auto-py-to-exe==2.45.0) (3.1.1)
+Building wheels for collected packages: Eel, bottle-websocket
+  Building wheel for Eel (setup.py): started
+  Building wheel for Eel (setup.py): finished with status 'done'
+  Created wheel for Eel: filename=Eel-0.18.1-py3-none-any.whl size=23989 sha256=60261d6a2aec4d49635e8e39cd9a9a6385a32b9b43239495633ffbbd0c71b023
+  Stored in directory: /root/.cache/pip/wheels/bb/16/ff/14cac4ef99bd7bd1e0b530fe5cdaf640ab9dc896c71ca95661
+  Building wheel for bottle-websocket (setup.py): started
+  Building wheel for bottle-websocket (setup.py): finished with status 'done'
+  Created wheel for bottle-websocket: filename=bottle_websocket-0.2.9-py3-none-any.whl size=2333 sha256=5cc15b53dccc4befbc82849bfa515d76c85405f294db08279e024cd2cb839f10
+  Stored in directory: /root/.cache/pip/wheels/45/09/f7/1553ef6a920ff29f345785219c14bd0ec798c1e8747207948c
+Successfully built Eel bottle-websocket
+Installing collected packages: bottle, zope.event, urllib3, pyparsing, pyinstaller-hooks-contrib, future, charset-normalizer, certifi, requests, pyinstaller, gevent, gevent-websocket, bottle-websocket, Eel, auto-py-to-exe
+Successfully installed Eel-0.18.1 auto-py-to-exe-2.45.0 bottle-0.13.2 bottle-websocket-0.2.9 certifi-2024.12.14 charset-normalizer-3.4.1 future-1.0.0 gevent-24.11.1 gevent-websocket-0.10.1 pyinstaller-6.11.1 pyinstaller-hooks-contrib-2024.11 pyparsing-3.2.1 requests-2.32.3 urllib3-2.3.0 zope.event-5.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: bcrypt==4.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting bcrypt==4.2.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/3e/d0/31938bb697600a04864246acde4918c4190a938f891fd11883eaaf41327a/bcrypt-4.2.0-cp39-abi3-manylinux_2_28_x86_64.whl (273 kB)
+Installing collected packages: bcrypt
+Successfully installed bcrypt-4.2.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: beautifulsoup4==4.12.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting beautifulsoup4==4.12.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/b1/fe/e8c672695b37eecc5cbf43e1d0638d88d66ba3a44c4d321c796f4e59167f/beautifulsoup4-4.12.3-py3-none-any.whl (147 kB)
+Collecting soupsieve>1.2 (from beautifulsoup4==4.12.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl (36 kB)
+Installing collected packages: soupsieve, beautifulsoup4
+Successfully installed beautifulsoup4-4.12.3 soupsieve-2.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: billiard==4.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting billiard==4.2.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/50/8d/6e9fdeeab04d803abc5a715175f87e88893934d5590595eacff23ca12b07/billiard-4.2.0-py3-none-any.whl (86 kB)
+Installing collected packages: billiard
+Successfully installed billiard-4.2.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: blinker==1.7.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting blinker==1.7.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/fa/2a/7f3714cbc6356a0efec525ce7a0613d581072ed6eb53eb7b9754f33db807/blinker-1.7.0-py3-none-any.whl (13 kB)
+Installing collected packages: blinker
+  Attempting uninstall: blinker
+    Found existing installation: blinker 1.9.0
+    Uninstalling blinker-1.9.0:
+      Successfully uninstalled blinker-1.9.0
+Successfully installed blinker-1.7.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: bottle==0.13.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: bottle==0.13.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.13.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: bottle-websocket==0.2.9
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: bottle-websocket==0.2.9 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.2.9)
+Requirement already satisfied: bottle in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from bottle-websocket==0.2.9) (0.13.2)
+Requirement already satisfied: gevent-websocket in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from bottle-websocket==0.2.9) (0.10.1)
+Requirement already satisfied: gevent in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent-websocket->bottle-websocket==0.2.9) (24.11.1)
+Requirement already satisfied: zope.event in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket==0.2.9) (5.0)
+Requirement already satisfied: zope.interface in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket==0.2.9) (7.2)
+Requirement already satisfied: greenlet>=3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket==0.2.9) (3.1.1)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.event->gevent->gevent-websocket->bottle-websocket==0.2.9) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: cachetools==5.5.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting cachetools==5.5.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/a4/07/14f8ad37f2d12a5ce41206c21820d8cb6561b728e51fad4530dff0552a67/cachetools-5.5.0-py3-none-any.whl (9.5 kB)
+Installing collected packages: cachetools
+Successfully installed cachetools-5.5.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: celery==5.4.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting celery==5.4.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/90/c4/6a4d3772e5407622feb93dd25c86ce3c0fee746fa822a777a627d56b4f2a/celery-5.4.0-py3-none-any.whl (425 kB)
+Requirement already satisfied: billiard<5.0,>=4.2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from celery==5.4.0) (4.2.0)
+Collecting kombu<6.0,>=5.3.4 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/87/ec/7811a3cf9fdfee3ee88e54d08fcbc3fabe7c1b6e4059826c59d7b795651c/kombu-5.4.2-py3-none-any.whl (201 kB)
+Requirement already satisfied: vine<6.0,>=5.1.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from celery==5.4.0) (5.1.0)
+Requirement already satisfied: click<9.0,>=8.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from celery==5.4.0) (8.1.8)
+Collecting click-didyoumean>=0.3.0 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1b/5b/974430b5ffdb7a4f1941d13d83c64a0395114503cc357c6b9ae4ce5047ed/click_didyoumean-0.3.1-py3-none-any.whl (3.6 kB)
+Collecting click-repl>=0.2.0 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/52/40/9d857001228658f0d59e97ebd4c346fe73e138c6de1bce61dc568a57c7f8/click_repl-0.3.0-py3-none-any.whl (10 kB)
+Collecting click-plugins>=1.1.1 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/e9/da/824b92d9942f4e472702488857914bdd50f73021efea15b4cad9aca8ecef/click_plugins-1.1.1-py2.py3-none-any.whl (7.5 kB)
+Collecting tzdata>=2022.7 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl (346 kB)
+Collecting python-dateutil>=2.8.2 (from celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Collecting prompt-toolkit>=3.0.36 (from click-repl>=0.2.0->celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a9/6a/fd08d94654f7e67c52ca30523a178b3f8ccc4237fce4be90d39c938a831a/prompt_toolkit-3.0.48-py3-none-any.whl (386 kB)
+Requirement already satisfied: amqp<6.0.0,>=5.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from kombu<6.0,>=5.3.4->celery==5.4.0) (5.2.0)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil>=2.8.2->celery==5.4.0) (1.17.0)
+Collecting wcwidth (from prompt-toolkit>=3.0.36->click-repl>=0.2.0->celery==5.4.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/fd/84/fd2ba7aafacbad3c4201d395674fc6348826569da3c0937e75505ead3528/wcwidth-0.2.13-py2.py3-none-any.whl (34 kB)
+Installing collected packages: wcwidth, tzdata, python-dateutil, prompt-toolkit, click-plugins, click-didyoumean, kombu, click-repl, celery
+Successfully installed celery-5.4.0 click-didyoumean-0.3.1 click-plugins-1.1.1 click-repl-0.3.0 kombu-5.4.2 prompt-toolkit-3.0.48 python-dateutil-2.9.0.post0 tzdata-2024.2 wcwidth-0.2.13
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: certifi==2024.2.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting certifi==2024.2.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/ba/06/a07f096c664aeb9f01624f858c3add0a4e913d6c96257acb4fce61e7de14/certifi-2024.2.2-py3-none-any.whl (163 kB)
+Installing collected packages: certifi
+  Attempting uninstall: certifi
+    Found existing installation: certifi 2024.12.14
+    Uninstalling certifi-2024.12.14:
+      Successfully uninstalled certifi-2024.12.14
+Successfully installed certifi-2024.2.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: cffi==1.17.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: cffi==1.17.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (1.17.1)
+Requirement already satisfied: pycparser in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from cffi==1.17.1) (2.22)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: chardet==5.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting chardet==5.2.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl (199 kB)
+Installing collected packages: chardet
+Successfully installed chardet-5.2.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: charset-normalizer==3.3.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting charset-normalizer==3.3.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/40/26/f35951c45070edc957ba40a5b1db3cf60a9dbb1b350c2d5bef03e01e61de/charset_normalizer-3.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (140 kB)
+Installing collected packages: charset-normalizer
+  Attempting uninstall: charset-normalizer
+    Found existing installation: charset-normalizer 3.4.1
+    Uninstalling charset-normalizer-3.4.1:
+      Successfully uninstalled charset-normalizer-3.4.1
+Successfully installed charset-normalizer-3.3.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: click==8.1.7
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting click==8.1.7
+  Downloading https://mirrors.aliyun.com/pypi/packages/00/2e/d53fa4befbf2cfa713304affc7ca780ce4fc1fd8710527771b58311a3229/click-8.1.7-py3-none-any.whl (97 kB)
+Installing collected packages: click
+  Attempting uninstall: click
+    Found existing installation: click 8.1.8
+    Uninstalling click-8.1.8:
+      Successfully uninstalled click-8.1.8
+Successfully installed click-8.1.7
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: click-didyoumean==0.3.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: click-didyoumean==0.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.3.1)
+Requirement already satisfied: click>=7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from click-didyoumean==0.3.1) (8.1.7)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: click-plugins==1.1.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: click-plugins==1.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (1.1.1)
+Requirement already satisfied: click>=4.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from click-plugins==1.1.1) (8.1.7)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: click-repl==0.3.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: click-repl==0.3.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.3.0)
+Requirement already satisfied: click>=7.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from click-repl==0.3.0) (8.1.7)
+Requirement already satisfied: prompt-toolkit>=3.0.36 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from click-repl==0.3.0) (3.0.48)
+Requirement already satisfied: wcwidth in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from prompt-toolkit>=3.0.36->click-repl==0.3.0) (0.2.13)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: colorama==0.4.6
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting colorama==0.4.6
+  Downloading https://mirrors.aliyun.com/pypi/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Installing collected packages: colorama
+Successfully installed colorama-0.4.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: contourpy==1.2.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting contourpy==1.2.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/ee/c0/9bd123d676eb61750e116a2cd915b06483fc406143cfc36c7f263f0f5368/contourpy-1.2.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (306 kB)
+Collecting numpy>=1.20 (from contourpy==1.2.1)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f2/d4/f999444e86986f3533e7151c272bd8186c55dda554284def18557e013a2a/numpy-2.2.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.4/16.4 MB 21.3 MB/s eta 0:00:00
+Installing collected packages: numpy, contourpy
+Successfully installed contourpy-1.2.1 numpy-2.2.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: cryptography==42.0.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting cryptography==42.0.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/48/c8/c0962598c43d3cff2c9d6ac66d0c612bdfb1975be8d87b8889960cf8c81d/cryptography-42.0.5-cp39-abi3-manylinux_2_28_x86_64.whl (4.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 3.1 MB/s eta 0:00:00
+Requirement already satisfied: cffi>=1.12 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from cryptography==42.0.5) (1.17.1)
+Requirement already satisfied: pycparser in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from cffi>=1.12->cryptography==42.0.5) (2.22)
+Installing collected packages: cryptography
+  Attempting uninstall: cryptography
+    Found existing installation: cryptography 44.0.0
+    Uninstalling cryptography-44.0.0:
+      Successfully uninstalled cryptography-44.0.0
+Successfully installed cryptography-42.0.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: cycler==0.12.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting cycler==0.12.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/e7/05/c19819d5e3d95294a6f5947fb9b9629efb316b96de511b418c53d245aae6/cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Installing collected packages: cycler
+Successfully installed cycler-0.12.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Eel==0.18.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: Eel==0.18.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.18.1)
+Requirement already satisfied: bottle in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel==0.18.1) (0.13.2)
+Requirement already satisfied: bottle-websocket in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel==0.18.1) (0.2.9)
+Requirement already satisfied: future in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel==0.18.1) (1.0.0)
+Requirement already satisfied: pyparsing in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel==0.18.1) (3.2.1)
+Requirement already satisfied: typing_extensions in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Eel==0.18.1) (4.12.2)
+Requirement already satisfied: gevent-websocket in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from bottle-websocket->Eel==0.18.1) (0.10.1)
+Requirement already satisfied: gevent in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent-websocket->bottle-websocket->Eel==0.18.1) (24.11.1)
+Requirement already satisfied: zope.event in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket->Eel==0.18.1) (5.0)
+Requirement already satisfied: zope.interface in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket->Eel==0.18.1) (7.2)
+Requirement already satisfied: greenlet>=3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket->bottle-websocket->Eel==0.18.1) (3.1.1)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.event->gevent->gevent-websocket->bottle-websocket->Eel==0.18.1) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: et-xmlfile==1.1.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting et-xmlfile==1.1.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/96/c2/3dd434b0108730014f1b96fd286040dc3bcb70066346f7e01ec2ac95865f/et_xmlfile-1.1.0-py3-none-any.whl (4.7 kB)
+Installing collected packages: et-xmlfile
+Successfully installed et-xmlfile-1.1.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: fastapi==0.110.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting fastapi==0.110.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/ad/0f/feb7fd8957714498fc4a6be7f13408869619f868f418698a2d934afa82a7/fastapi-0.110.2-py3-none-any.whl (91 kB)
+Collecting pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4 (from fastapi==0.110.2)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f3/26/3e1bbe954fde7ee22a6e7d31582c642aad9e84ffe4b5fb61e63b87cd326f/pydantic-2.10.4-py3-none-any.whl (431 kB)
+Collecting starlette<0.38.0,>=0.37.2 (from fastapi==0.110.2)
+  Downloading https://mirrors.aliyun.com/pypi/packages/fd/18/31fa32ed6c68ba66220204ef0be798c349d0a20c1901f9d4a794e08c76d8/starlette-0.37.2-py3-none-any.whl (71 kB)
+Requirement already satisfied: typing-extensions>=4.8.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from fastapi==0.110.2) (4.12.2)
+Requirement already satisfied: annotated-types>=0.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi==0.110.2) (0.6.0)
+Collecting pydantic-core==2.27.2 (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi==0.110.2)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a8/7c/b860618c25678bbd6d1d99dbdfdf0510ccb50790099b963ff78a124b754f/pydantic_core-2.27.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 25.8 MB/s eta 0:00:00
+Requirement already satisfied: anyio<5,>=3.4.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from starlette<0.38.0,>=0.37.2->fastapi==0.110.2) (4.3.0)
+Requirement already satisfied: idna>=2.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio<5,>=3.4.0->starlette<0.38.0,>=0.37.2->fastapi==0.110.2) (3.10)
+Requirement already satisfied: sniffio>=1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio<5,>=3.4.0->starlette<0.38.0,>=0.37.2->fastapi==0.110.2) (1.3.1)
+Installing collected packages: pydantic-core, starlette, pydantic, fastapi
+Successfully installed fastapi-0.110.2 pydantic-2.10.4 pydantic-core-2.27.2 starlette-0.37.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: fonttools==4.51.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting fonttools==4.51.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/c6/b5/dc17e93f60567fa1b0fa3720c2f28e0df5293927e2356e066e87af9adaba/fonttools-4.51.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 3.3 MB/s eta 0:00:00
+Installing collected packages: fonttools
+Successfully installed fonttools-4.51.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: future==1.0.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: future==1.0.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (1.0.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: gevent==24.11.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: gevent==24.11.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (24.11.1)
+Requirement already satisfied: zope.event in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent==24.11.1) (5.0)
+Requirement already satisfied: zope.interface in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent==24.11.1) (7.2)
+Requirement already satisfied: greenlet>=3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent==24.11.1) (3.1.1)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.event->gevent==24.11.1) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: gevent-websocket==0.10.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: gevent-websocket==0.10.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.10.1)
+Requirement already satisfied: gevent in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent-websocket==0.10.1) (24.11.1)
+Requirement already satisfied: zope.event in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket==0.10.1) (5.0)
+Requirement already satisfied: zope.interface in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket==0.10.1) (7.2)
+Requirement already satisfied: greenlet>=3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gevent->gevent-websocket==0.10.1) (3.1.1)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.event->gevent->gevent-websocket==0.10.1) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: greenlet==3.1.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: greenlet==3.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (3.1.1)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: h11==0.14.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: h11==0.14.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.14.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: httpcore==0.17.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting httpcore==0.17.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/94/2c/2bde7ff8dd2064395555220cbf7cba79991172bf5315a07eb3ac7688d9f1/httpcore-0.17.3-py3-none-any.whl (74 kB)
+Requirement already satisfied: h11<0.15,>=0.13 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore==0.17.3) (0.14.0)
+Requirement already satisfied: sniffio==1.* in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore==0.17.3) (1.3.1)
+Requirement already satisfied: anyio<5.0,>=3.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore==0.17.3) (4.3.0)
+Requirement already satisfied: certifi in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore==0.17.3) (2024.2.2)
+Requirement already satisfied: idna>=2.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio<5.0,>=3.0->httpcore==0.17.3) (3.10)
+Installing collected packages: httpcore
+Successfully installed httpcore-0.17.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: httpx==0.24.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting httpx==0.24.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/4e/c1/692013f1e6115a061a14f6c7d05947515a1eb7b85ef6e9bf0ffbf0e92738/httpx-0.24.0-py3-none-any.whl (75 kB)
+Requirement already satisfied: certifi in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx==0.24.0) (2024.2.2)
+Requirement already satisfied: httpcore<0.18.0,>=0.15.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx==0.24.0) (0.17.3)
+Requirement already satisfied: idna in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx==0.24.0) (3.10)
+Requirement already satisfied: sniffio in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx==0.24.0) (1.3.1)
+Requirement already satisfied: h11<0.15,>=0.13 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore<0.18.0,>=0.15.0->httpx==0.24.0) (0.14.0)
+Requirement already satisfied: anyio<5.0,>=3.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore<0.18.0,>=0.15.0->httpx==0.24.0) (4.3.0)
+Installing collected packages: httpx
+Successfully installed httpx-0.24.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: idna==3.7
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting idna==3.7
+  Downloading https://mirrors.aliyun.com/pypi/packages/e5/3e/741d8c82801c347547f8a2a06aa57dbb1992be9e948df2ea0eda2c8b79e8/idna-3.7-py3-none-any.whl (66 kB)
+Installing collected packages: idna
+  Attempting uninstall: idna
+    Found existing installation: idna 3.10
+    Uninstalling idna-3.10:
+      Successfully uninstalled idna-3.10
+Successfully installed idna-3.7
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: imageio==2.34.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting imageio==2.34.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/a3/b6/39c7dad203d9984225f47e0aa39ac3ba3a47c77a02d0ef2a7be691855a06/imageio-2.34.1-py3-none-any.whl (313 kB)
+Requirement already satisfied: numpy in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from imageio==2.34.1) (2.2.1)
+Collecting pillow>=8.3.2 (from imageio==2.34.1)
+  Downloading https://mirrors.aliyun.com/pypi/packages/48/a4/fbfe9d5581d7b111b28f1d8c2762dee92e9821bb209af9fa83c940e507a0/pillow-11.1.0-cp311-cp311-manylinux_2_28_x86_64.whl (4.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 23.6 MB/s eta 0:00:00
+Installing collected packages: pillow, imageio
+Successfully installed imageio-2.34.1 pillow-11.1.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: itsdangerous==2.2.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: itsdangerous==2.2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.2.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: jieba==0.42.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting jieba==0.42.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/c6/cb/18eeb235f833b726522d7ebed54f2278ce28ba9438e3135ab0278d9792a2/jieba-0.42.1.tar.gz (19.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 19.2/19.2 MB 29.7 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Building wheels for collected packages: jieba
+  Building wheel for jieba (setup.py): started
+  Building wheel for jieba (setup.py): finished with status 'done'
+  Created wheel for jieba: filename=jieba-0.42.1-py3-none-any.whl size=19314458 sha256=576a05584d62b7cc3b808dc364c84cd4c9625e8b40557200865fdf68aa0cc61d
+  Stored in directory: /root/.cache/pip/wheels/32/98/ba/a37fcadb96c75c8f9366a3d17da29cdf8a745ffd38d0092e0d
+Successfully built jieba
+Installing collected packages: jieba
+Successfully installed jieba-0.42.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Jinja2==3.1.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Jinja2==3.1.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/30/6d/6de6be2d02603ab56e72997708809e8a5b0fbfee080735109b40a3564843/Jinja2-3.1.3-py3-none-any.whl (133 kB)
+Requirement already satisfied: MarkupSafe>=2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Jinja2==3.1.3) (3.0.2)
+Installing collected packages: Jinja2
+  Attempting uninstall: Jinja2
+    Found existing installation: Jinja2 3.1.5
+    Uninstalling Jinja2-3.1.5:
+      Successfully uninstalled Jinja2-3.1.5
+Successfully installed Jinja2-3.1.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: joblib==1.4.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting joblib==1.4.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/ae/e2/4dea6313ef2b38442fccbbaf4017e50a6c3c8a50e8ee9b512783e5c90409/joblib-1.4.0-py3-none-any.whl (301 kB)
+Installing collected packages: joblib
+Successfully installed joblib-1.4.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: jsonpath==0.82.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting jsonpath==0.82.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/cf/a1/693351acd0a9edca4de9153372a65e75398898ea7f8a5c722ab00f464929/jsonpath-0.82.2.tar.gz (10 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Building wheels for collected packages: jsonpath
+  Building wheel for jsonpath (setup.py): started
+  Building wheel for jsonpath (setup.py): finished with status 'done'
+  Created wheel for jsonpath: filename=jsonpath-0.82.2-py3-none-any.whl size=5615 sha256=5e8a770399723c55ed69b809b7b300918cff211a93c8f8b2174843dfd6fd3d5b
+  Stored in directory: /root/.cache/pip/wheels/b0/84/e8/ca7b2dc203dcbb87fe3223447dce77a2df292a2b8876ab99ce
+Successfully built jsonpath
+Installing collected packages: jsonpath
+Successfully installed jsonpath-0.82.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: jsonpath-ng==1.7.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting jsonpath-ng==1.7.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/35/5a/73ecb3d82f8615f32ccdadeb9356726d6cae3a4bbc840b437ceb95708063/jsonpath_ng-1.7.0-py3-none-any.whl (30 kB)
+Collecting ply (from jsonpath-ng==1.7.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl (49 kB)
+Installing collected packages: ply, jsonpath-ng
+Successfully installed jsonpath-ng-1.7.0 ply-3.11
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: kiwisolver==1.4.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting kiwisolver==1.4.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/17/ba/17a706b232308e65f57deeccae503c268292e6a091313f6ce833a23093ea/kiwisolver-1.4.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 10.4 MB/s eta 0:00:00
+Installing collected packages: kiwisolver
+Successfully installed kiwisolver-1.4.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: kombu==5.3.7
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting kombu==5.3.7
+  Downloading https://mirrors.aliyun.com/pypi/packages/b4/9a/1951f2261271d6994f0df5a55b3e9cdad42ed1fc3020a0dc7f6de80a4566/kombu-5.3.7-py3-none-any.whl (200 kB)
+Requirement already satisfied: amqp<6.0.0,>=5.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from kombu==5.3.7) (5.2.0)
+Requirement already satisfied: vine in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from kombu==5.3.7) (5.1.0)
+Installing collected packages: kombu
+  Attempting uninstall: kombu
+    Found existing installation: kombu 5.4.2
+    Uninstalling kombu-5.4.2:
+      Successfully uninstalled kombu-5.4.2
+Successfully installed kombu-5.3.7
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Mako==1.3.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Mako==1.3.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/c6/c9/9cd84cbd5816aa8bee5fd5a00f857efd636ec30586848d571b67baf0b868/Mako-1.3.3-py3-none-any.whl (78 kB)
+Requirement already satisfied: MarkupSafe>=0.9.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Mako==1.3.3) (3.0.2)
+Installing collected packages: Mako
+  Attempting uninstall: Mako
+    Found existing installation: Mako 1.3.8
+    Uninstalling Mako-1.3.8:
+      Successfully uninstalled Mako-1.3.8
+Successfully installed Mako-1.3.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: MarkupSafe==2.1.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting MarkupSafe==2.1.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/97/18/c30da5e7a0e7f4603abfc6780574131221d9148f323752c2755d48abad30/MarkupSafe-2.1.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (28 kB)
+Installing collected packages: MarkupSafe
+  Attempting uninstall: MarkupSafe
+    Found existing installation: MarkupSafe 3.0.2
+    Uninstalling MarkupSafe-3.0.2:
+      Successfully uninstalled MarkupSafe-3.0.2
+Successfully installed MarkupSafe-2.1.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: matplotlib==3.8.4
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting matplotlib==3.8.4
+  Downloading https://mirrors.aliyun.com/pypi/packages/80/3b/e363612ac1a514abfb5505aa209dd5b724b3232a6de98710d7759559706a/matplotlib-3.8.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 27.1 MB/s eta 0:00:00
+Requirement already satisfied: contourpy>=1.0.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (1.2.1)
+Requirement already satisfied: cycler>=0.10 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (4.51.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (1.4.5)
+Requirement already satisfied: numpy>=1.21 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (2.2.1)
+Requirement already satisfied: packaging>=20.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (24.2)
+Requirement already satisfied: pillow>=8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (11.1.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (3.2.1)
+Requirement already satisfied: python-dateutil>=2.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib==3.8.4) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib==3.8.4) (1.17.0)
+Installing collected packages: matplotlib
+Successfully installed matplotlib-3.8.4
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: mpld3==0.5.10
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting mpld3==0.5.10
+  Downloading https://mirrors.aliyun.com/pypi/packages/95/6a/e3691bcc47485f38b09853207c928130571821d187cf174eed5418d45e82/mpld3-0.5.10-py3-none-any.whl (202 kB)
+Requirement already satisfied: jinja2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from mpld3==0.5.10) (3.1.3)
+Requirement already satisfied: matplotlib in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from mpld3==0.5.10) (3.8.4)
+Requirement already satisfied: MarkupSafe>=2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from jinja2->mpld3==0.5.10) (2.1.5)
+Requirement already satisfied: contourpy>=1.0.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (1.2.1)
+Requirement already satisfied: cycler>=0.10 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (4.51.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (1.4.5)
+Requirement already satisfied: numpy>=1.21 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (2.2.1)
+Requirement already satisfied: packaging>=20.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (24.2)
+Requirement already satisfied: pillow>=8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (11.1.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (3.2.1)
+Requirement already satisfied: python-dateutil>=2.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->mpld3==0.5.10) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib->mpld3==0.5.10) (1.17.0)
+Installing collected packages: mpld3
+Successfully installed mpld3-0.5.10
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: mysql==0.0.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting mysql==0.0.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/9a/52/8d29c58f6ae448a72fbc612955bd31accb930ca479a7ba7197f4ae4edec2/mysql-0.0.3-py3-none-any.whl (1.2 kB)
+Collecting mysqlclient (from mysql==0.0.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/7d/62/51fbcd851834c830c940ded80280f593bd031137603329dd89479c68c5be/mysqlclient-2.2.6.tar.gz (91 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [29 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 353, in <module>
+          main()
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 335, in main
+          json_out['return_val'] = hook(**hook_input['kwargs'])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 118, in get_requires_for_build_wheel
+          return hook(config_settings)
+                 ^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-zuy5tzph/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 334, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-zuy5tzph/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 304, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-zuy5tzph/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 320, in run_setup
+          exec(code, locals())
+        File "<string>", line 155, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: subprocess-exited-with-error
+
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+警告: mysql==0.0.3 安装失败，继续安装其他包...
+正在安装: mysqlclient==2.2.4
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting mysqlclient==2.2.4
+  Downloading https://mirrors.aliyun.com/pypi/packages/79/33/996dc0ba3f03e2399adc91a7de1f61cb14b57ebdb4cc6eca8a78723043cb/mysqlclient-2.2.4.tar.gz (90 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [27 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 353, in <module>
+          main()
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 335, in main
+          json_out['return_val'] = hook(**hook_input['kwargs'])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 118, in get_requires_for_build_wheel
+          return hook(config_settings)
+                 ^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-h0lnkxrg/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 334, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-h0lnkxrg/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 304, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-h0lnkxrg/overlay/lib/python3.11/site-packages/setuptools/build_meta.py", line 320, in run_setup
+          exec(code, locals())
+        File "<string>", line 155, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: subprocess-exited-with-error
+
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+警告: mysqlclient==2.2.4 安装失败，继续安装其他包...
+正在安装: numpy==1.26.4
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting numpy==1.26.4
+  Downloading https://mirrors.aliyun.com/pypi/packages/3a/d0/edc009c27b406c4f9cbc79274d6e46d634d139075492ad055e3d68445925/numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 23.9 MB/s eta 0:00:00
+Installing collected packages: numpy
+  Attempting uninstall: numpy
+    Found existing installation: numpy 2.2.1
+    Uninstalling numpy-2.2.1:
+      Successfully uninstalled numpy-2.2.1
+Successfully installed numpy-1.26.4
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: opencv-python==4.9.0.80
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting opencv-python==4.9.0.80
+  Downloading https://mirrors.aliyun.com/pypi/packages/d9/64/7fdfb9386511cd6805451e012c537073a79a958a58795c4e602e538c388c/opencv_python-4.9.0.80-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (62.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.2/62.2 MB 14.4 MB/s eta 0:00:00
+Requirement already satisfied: numpy>=1.21.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from opencv-python==4.9.0.80) (1.26.4)
+Installing collected packages: opencv-python
+Successfully installed opencv-python-4.9.0.80
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: openpyxl==3.1.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting openpyxl==3.1.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+Requirement already satisfied: et-xmlfile in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from openpyxl==3.1.5) (1.1.0)
+Installing collected packages: openpyxl
+Successfully installed openpyxl-3.1.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: packaging==24.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting packaging==24.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/49/df/1fceb2f8900f8639e278b056416d49134fb8d84c5942ffaa01ad34782422/packaging-24.0-py3-none-any.whl (53 kB)
+Installing collected packages: packaging
+  Attempting uninstall: packaging
+    Found existing installation: packaging 24.2
+    Uninstalling packaging-24.2:
+      Successfully uninstalled packaging-24.2
+Successfully installed packaging-24.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pandas==2.2.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pandas==2.2.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/fc/a5/4d82be566f069d7a9a702dcdf6f9106df0e0b042e738043c0cc7ddd7e3f6/pandas-2.2.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.0/13.0 MB 26.3 MB/s eta 0:00:00
+Requirement already satisfied: numpy>=1.23.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pandas==2.2.2) (1.26.4)
+Requirement already satisfied: python-dateutil>=2.8.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pandas==2.2.2) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pandas==2.2.2) (2024.2)
+Requirement already satisfied: tzdata>=2022.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pandas==2.2.2) (2024.2)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas==2.2.2) (1.17.0)
+Installing collected packages: pandas
+Successfully installed pandas-2.2.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pefile==2023.2.7
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pefile==2023.2.7
+  Downloading https://mirrors.aliyun.com/pypi/packages/55/26/d0ad8b448476d0a1e8d3ea5622dc77b916db84c6aa3cb1e1c0965af948fc/pefile-2023.2.7-py3-none-any.whl (71 kB)
+Installing collected packages: pefile
+Successfully installed pefile-2023.2.7
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Pillow==9.5.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Pillow==9.5.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/3d/59/e6bd2c3715ace343d9739276ceed79657fe116923238d102cf731ab463dd/Pillow-9.5.0-cp311-cp311-manylinux_2_28_x86_64.whl (3.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 31.8 MB/s eta 0:00:00
+Installing collected packages: Pillow
+  Attempting uninstall: Pillow
+    Found existing installation: pillow 11.1.0
+    Uninstalling pillow-11.1.0:
+      Successfully uninstalled pillow-11.1.0
+Successfully installed Pillow-9.5.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: playwright==1.42.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting playwright==1.42.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/f2/0f/9b5f73d29c35d2c5b839e0097e52400e4678d8d968bf7aa683c12e2939bf/playwright-1.42.0-py3-none-manylinux1_x86_64.whl (37.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.3/37.3 MB 15.6 MB/s eta 0:00:00
+Collecting greenlet==3.0.3 (from playwright==1.42.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/c6/1f/12d5a6cc26e8b483c2e7975f9c22e088ac735c0d8dcb8a8f72d31a4e5f04/greenlet-3.0.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (620 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 620.0/620.0 kB 23.7 MB/s eta 0:00:00
+Collecting pyee==11.0.1 (from playwright==1.42.0)
+  Downloading https://mirrors.aliyun.com/pypi/packages/7a/40/bfe7fd2cb55ca7dbb4c56e9f0060567c3e84dd9bdf8a782261f1d2d7c32f/pyee-11.0.1-py3-none-any.whl (15 kB)
+Requirement already satisfied: typing-extensions in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyee==11.0.1->playwright==1.42.0) (4.12.2)
+Installing collected packages: pyee, greenlet, playwright
+  Attempting uninstall: greenlet
+    Found existing installation: greenlet 3.1.1
+    Uninstalling greenlet-3.1.1:
+      Successfully uninstalled greenlet-3.1.1
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+gevent 24.11.1 requires greenlet>=3.1.1; platform_python_implementation == "CPython", but you have greenlet 3.0.3 which is incompatible.
+Successfully installed greenlet-3.0.3 playwright-1.42.0 pyee-11.0.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: ply==3.11
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: ply==3.11 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (3.11)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: prettytable==3.10.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting prettytable==3.10.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/3d/c4/a32f4bf44faf95accbbd5d7864ddef9e289749a8efbc3adaad4a4671779a/prettytable-3.10.0-py3-none-any.whl (28 kB)
+Requirement already satisfied: wcwidth in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from prettytable==3.10.0) (0.2.13)
+Installing collected packages: prettytable
+Successfully installed prettytable-3.10.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: prompt-toolkit==3.0.43
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting prompt-toolkit==3.0.43
+  Downloading https://mirrors.aliyun.com/pypi/packages/ee/fd/ca7bf3869e7caa7a037e23078539467b433a4e01eebd93f77180ab927766/prompt_toolkit-3.0.43-py3-none-any.whl (386 kB)
+Requirement already satisfied: wcwidth in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from prompt-toolkit==3.0.43) (0.2.13)
+Installing collected packages: prompt-toolkit
+  Attempting uninstall: prompt-toolkit
+    Found existing installation: prompt_toolkit 3.0.48
+    Uninstalling prompt_toolkit-3.0.48:
+      Successfully uninstalled prompt_toolkit-3.0.48
+Successfully installed prompt-toolkit-3.0.43
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pycparser==2.22
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: pycparser==2.22 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.22)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pydantic==2.10.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pydantic==2.10.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/62/51/72c18c55cf2f46ff4f91ebcc8f75aa30f7305f3d726be3f4ebffb4ae972b/pydantic-2.10.3-py3-none-any.whl (456 kB)
+Requirement already satisfied: annotated-types>=0.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic==2.10.3) (0.6.0)
+Collecting pydantic-core==2.27.1 (from pydantic==2.10.3)
+  Downloading https://mirrors.aliyun.com/pypi/packages/4a/c1/3e38cd777ef832c4fdce11d204592e135ddeedb6c6f525478a53d1c7d3e5/pydantic_core-2.27.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 1.8 MB/s eta 0:00:00
+Requirement already satisfied: typing-extensions>=4.12.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic==2.10.3) (4.12.2)
+Installing collected packages: pydantic-core, pydantic
+  Attempting uninstall: pydantic-core
+    Found existing installation: pydantic_core 2.27.2
+    Uninstalling pydantic_core-2.27.2:
+      Successfully uninstalled pydantic_core-2.27.2
+  Attempting uninstall: pydantic
+    Found existing installation: pydantic 2.10.4
+    Uninstalling pydantic-2.10.4:
+      Successfully uninstalled pydantic-2.10.4
+Successfully installed pydantic-2.10.3 pydantic-core-2.27.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pydantic_core==2.27.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: pydantic_core==2.27.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.27.1)
+Requirement already satisfied: typing-extensions!=4.7.0,>=4.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic_core==2.27.1) (4.12.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pyecharts==2.0.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pyecharts==2.0.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/2a/7e/bd0d5e87d4077c89294f48e2452bb64677f7183ba688d29220645193c197/pyecharts-2.0.5-py3-none-any.whl (146 kB)
+Requirement already satisfied: jinja2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyecharts==2.0.5) (3.1.3)
+Requirement already satisfied: prettytable in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyecharts==2.0.5) (3.10.0)
+Collecting simplejson (from pyecharts==2.0.5)
+  Downloading https://mirrors.aliyun.com/pypi/packages/b7/d4/850948bcbcfe0b4a6c69dfde10e245d3a1ea45252f16a1e2308a3b06b1da/simplejson-3.19.3-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (144 kB)
+Requirement already satisfied: MarkupSafe>=2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from jinja2->pyecharts==2.0.5) (2.1.5)
+Requirement already satisfied: wcwidth in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from prettytable->pyecharts==2.0.5) (0.2.13)
+Installing collected packages: simplejson, pyecharts
+Successfully installed pyecharts-2.0.5 simplejson-3.19.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pyee==11.0.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: pyee==11.0.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (11.0.1)
+Requirement already satisfied: typing-extensions in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyee==11.0.1) (4.12.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: PyExecJS==1.5.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting PyExecJS==1.5.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/ba/8e/aedef81641c8dca6fd0fb7294de5bed9c45f3397d67fddf755c1042c2642/PyExecJS-1.5.1.tar.gz (13 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: six>=1.10.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from PyExecJS==1.5.1) (1.17.0)
+Building wheels for collected packages: PyExecJS
+  Building wheel for PyExecJS (setup.py): started
+  Building wheel for PyExecJS (setup.py): finished with status 'done'
+  Created wheel for PyExecJS: filename=PyExecJS-1.5.1-py3-none-any.whl size=14575 sha256=dfe08fb1595f525bae3164ab90d7d38242078f3bd7214797dd9cdf2ea0541eb6
+  Stored in directory: /root/.cache/pip/wheels/37/c9/05/656460a7b48cd8930713ae82bba4867899dacb3f41bb48b6ae
+Successfully built PyExecJS
+Installing collected packages: PyExecJS
+Successfully installed PyExecJS-1.5.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pyinstaller==6.11.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: pyinstaller==6.11.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (6.11.1)
+Requirement already satisfied: setuptools>=42.0.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller==6.11.1) (75.7.0)
+Requirement already satisfied: altgraph in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller==6.11.1) (0.17.4)
+Requirement already satisfied: pyinstaller-hooks-contrib>=2024.9 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller==6.11.1) (2024.11)
+Requirement already satisfied: packaging>=22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller==6.11.1) (24.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pyinstaller-hooks-contrib==2024.10
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pyinstaller-hooks-contrib==2024.10
+  Downloading https://mirrors.aliyun.com/pypi/packages/a9/64/445861ee7a5fd32874c0f6cfe8222aacc8feda22539332e0d8ff50dadec6/pyinstaller_hooks_contrib-2024.10-py3-none-any.whl (338 kB)
+Requirement already satisfied: setuptools>=42.0.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller-hooks-contrib==2024.10) (75.7.0)
+Requirement already satisfied: packaging>=22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pyinstaller-hooks-contrib==2024.10) (24.0)
+Installing collected packages: pyinstaller-hooks-contrib
+  Attempting uninstall: pyinstaller-hooks-contrib
+    Found existing installation: pyinstaller-hooks-contrib 2024.11
+    Uninstalling pyinstaller-hooks-contrib-2024.11:
+      Successfully uninstalled pyinstaller-hooks-contrib-2024.11
+Successfully installed pyinstaller-hooks-contrib-2024.10
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: PyJWT==2.8.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting PyJWT==2.8.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/2b/4f/e04a8067c7c96c364cef7ef73906504e2f40d690811c021e1a1901473a19/PyJWT-2.8.0-py3-none-any.whl (22 kB)
+Installing collected packages: PyJWT
+Successfully installed PyJWT-2.8.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: PyMySQL==1.1.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting PyMySQL==1.1.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/e5/30/20467e39523d0cfc2b6227902d3687a16364307260c75e6a1cb4422b0c62/PyMySQL-1.1.0-py3-none-any.whl (44 kB)
+Installing collected packages: PyMySQL
+  Attempting uninstall: PyMySQL
+    Found existing installation: PyMySQL 1.1.1
+    Uninstalling PyMySQL-1.1.1:
+      Successfully uninstalled PyMySQL-1.1.1
+Successfully installed PyMySQL-1.1.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pyparsing==3.1.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pyparsing==3.1.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/9d/ea/6d76df31432a0e6fdf81681a895f009a4bb47b3c39036db3e1b528191d52/pyparsing-3.1.2-py3-none-any.whl (103 kB)
+Installing collected packages: pyparsing
+  Attempting uninstall: pyparsing
+    Found existing installation: pyparsing 3.2.1
+    Uninstalling pyparsing-3.2.1:
+      Successfully uninstalled pyparsing-3.2.1
+Successfully installed pyparsing-3.1.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: python-dateutil==2.9.0.post0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: python-dateutil==2.9.0.post0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil==2.9.0.post0) (1.17.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pytz==2024.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pytz==2024.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/9c/3d/a121f284241f08268b21359bd425f7d4825cffc5ac5cd0e1b3d82ffd2b10/pytz-2024.1-py2.py3-none-any.whl (505 kB)
+Installing collected packages: pytz
+  Attempting uninstall: pytz
+    Found existing installation: pytz 2024.2
+    Uninstalling pytz-2024.2:
+      Successfully uninstalled pytz-2024.2
+Successfully installed pytz-2024.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: pywin32-ctypes==0.2.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting pywin32-ctypes==0.2.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl (30 kB)
+Installing collected packages: pywin32-ctypes
+Successfully installed pywin32-ctypes-0.2.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: redis==4.6.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting redis==4.6.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/20/2e/409703d645363352a20c944f5d119bdae3eb3034051a53724a7c5fee12b8/redis-4.6.0-py3-none-any.whl (241 kB)
+Requirement already satisfied: async-timeout>=4.0.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from redis==4.6.0) (4.0.3)
+Installing collected packages: redis
+Successfully installed redis-4.6.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: requests==2.31.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting requests==2.31.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/70/8e/0e2d847013cb52cd35b38c009bb167a1a26b2ce6cd6965bf26b47bc0bf44/requests-2.31.0-py3-none-any.whl (62 kB)
+Requirement already satisfied: charset-normalizer<4,>=2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from requests==2.31.0) (3.3.2)
+Requirement already satisfied: idna<4,>=2.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from requests==2.31.0) (3.7)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from requests==2.31.0) (2.3.0)
+Requirement already satisfied: certifi>=2017.4.17 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from requests==2.31.0) (2024.2.2)
+Installing collected packages: requests
+  Attempting uninstall: requests
+    Found existing installation: requests 2.32.3
+    Uninstalling requests-2.32.3:
+      Successfully uninstalled requests-2.32.3
+Successfully installed requests-2.31.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: scikit-learn==1.4.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting scikit-learn==1.4.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/4e/53/14405a47292b59235d811a2af8634aba188ccfd1a38ef4b8042f3447d79a/scikit_learn-1.4.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.1/12.1 MB 8.4 MB/s eta 0:00:00
+Requirement already satisfied: numpy>=1.19.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from scikit-learn==1.4.2) (1.26.4)
+Collecting scipy>=1.6.0 (from scikit-learn==1.4.2)
+  Downloading https://mirrors.aliyun.com/pypi/packages/ad/21/6dc57f6f6c8014dc6d07111e4976422580789fa96c4d7ddf63614939cb6c/scipy-1.15.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (40.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.6/40.6 MB 15.7 MB/s eta 0:00:00
+Requirement already satisfied: joblib>=1.2.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from scikit-learn==1.4.2) (1.4.0)
+Collecting threadpoolctl>=2.0.0 (from scikit-learn==1.4.2)
+  Downloading https://mirrors.aliyun.com/pypi/packages/4b/2c/ffbf7a134b9ab11a67b0cf0726453cedd9c5043a4fe7a35d1cefa9a1bcfb/threadpoolctl-3.5.0-py3-none-any.whl (18 kB)
+Installing collected packages: threadpoolctl, scipy, scikit-learn
+Successfully installed scikit-learn-1.4.2 scipy-1.15.0 threadpoolctl-3.5.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: scipy==1.13.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting scipy==1.13.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/e8/fb/e5955e2ddbdf2baee461eb53ec8d0adedd20a6dfc5510ef8d5e7e44ba461/scipy-1.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (38.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 38.6/38.6 MB 14.8 MB/s eta 0:00:00
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from scipy==1.13.0) (1.26.4)
+Installing collected packages: scipy
+  Attempting uninstall: scipy
+    Found existing installation: scipy 1.15.0
+    Uninstalling scipy-1.15.0:
+      Successfully uninstalled scipy-1.15.0
+Successfully installed scipy-1.13.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: simplejson==3.19.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting simplejson==3.19.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/70/c1/816573ae91aebf06a0fefd8ea30ca43127aa58e68684d2ddfe17c8457afb/simplejson-3.19.2-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (144 kB)
+Installing collected packages: simplejson
+  Attempting uninstall: simplejson
+    Found existing installation: simplejson 3.19.3
+    Uninstalling simplejson-3.19.3:
+      Successfully uninstalled simplejson-3.19.3
+Successfully installed simplejson-3.19.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: six==1.16.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting six==1.16.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl (11 kB)
+Installing collected packages: six
+  Attempting uninstall: six
+    Found existing installation: six 1.17.0
+    Uninstalling six-1.17.0:
+      Successfully uninstalled six-1.17.0
+Successfully installed six-1.16.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: sniffio==1.3.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: sniffio==1.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (1.3.1)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: snownlp==0.12.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting snownlp==0.12.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/3d/b3/37567686662100d3bce62d3b0f2adec18ab4b9ff2b61abd7a61c39343c1d/snownlp-0.12.3.tar.gz (37.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.6/37.6 MB 16.8 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Building wheels for collected packages: snownlp
+  Building wheel for snownlp (setup.py): started
+  Building wheel for snownlp (setup.py): finished with status 'done'
+  Created wheel for snownlp: filename=snownlp-0.12.3-py3-none-any.whl size=37760943 sha256=85007ebcc1d725c95b57c8fd0571ba50c6937b539d8cb4d558eff63cd90f55a0
+  Stored in directory: /root/.cache/pip/wheels/5d/1b/39/5858382edd02cf94d091109658ee9176a9157078bb25f84ef6
+Successfully built snownlp
+Installing collected packages: snownlp
+Successfully installed snownlp-0.12.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: soupsieve==2.6
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: soupsieve==2.6 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.6)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: SQLAlchemy==2.0.29
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting SQLAlchemy==2.0.29
+  Downloading https://mirrors.aliyun.com/pypi/packages/82/ec/ac6a2e917300713593bce3f4efe2002819a8bd30c3051317ec86c73b2e8d/SQLAlchemy-2.0.29-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 24.0 MB/s eta 0:00:00
+Requirement already satisfied: typing-extensions>=4.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from SQLAlchemy==2.0.29) (4.12.2)
+Requirement already satisfied: greenlet!=0.4.17 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from SQLAlchemy==2.0.29) (3.0.3)
+Installing collected packages: SQLAlchemy
+  Attempting uninstall: SQLAlchemy
+    Found existing installation: SQLAlchemy 2.0.36
+    Uninstalling SQLAlchemy-2.0.36:
+      Successfully uninstalled SQLAlchemy-2.0.36
+Successfully installed SQLAlchemy-2.0.29
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: starlette==0.37.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: starlette==0.37.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.37.2)
+Requirement already satisfied: anyio<5,>=3.4.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from starlette==0.37.2) (4.3.0)
+Requirement already satisfied: idna>=2.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio<5,>=3.4.0->starlette==0.37.2) (3.7)
+Requirement already satisfied: sniffio>=1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from anyio<5,>=3.4.0->starlette==0.37.2) (1.3.1)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: tenacity==8.2.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting tenacity==8.2.2
+  Downloading https://mirrors.aliyun.com/pypi/packages/e7/b0/c23bd61e1b32c9b96fbca996c87784e196a812da8d621d8d04851f6c8181/tenacity-8.2.2-py3-none-any.whl (24 kB)
+Installing collected packages: tenacity
+Successfully installed tenacity-8.2.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: threadpoolctl==3.4.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting threadpoolctl==3.4.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/1e/84/ccd9b08653022b7785b6e3ee070ffb2825841e0dc119be22f0840b2b35cb/threadpoolctl-3.4.0-py3-none-any.whl (17 kB)
+Installing collected packages: threadpoolctl
+  Attempting uninstall: threadpoolctl
+    Found existing installation: threadpoolctl 3.5.0
+    Uninstalling threadpoolctl-3.5.0:
+      Successfully uninstalled threadpoolctl-3.5.0
+Successfully installed threadpoolctl-3.4.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: tqdm==4.66.5
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting tqdm==4.66.5
+  Downloading https://mirrors.aliyun.com/pypi/packages/48/5d/acf5905c36149bbaec41ccf7f2b68814647347b72075ac0b1fe3022fdc73/tqdm-4.66.5-py3-none-any.whl (78 kB)
+Installing collected packages: tqdm
+Successfully installed tqdm-4.66.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: typing_extensions==4.12.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: typing_extensions==4.12.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (4.12.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: tzdata==2024.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting tzdata==2024.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/65/58/f9c9e6be752e9fcb8b6a0ee9fb87e6e7a1f6bcab2cdc73f02bb7ba91ada0/tzdata-2024.1-py2.py3-none-any.whl (345 kB)
+Installing collected packages: tzdata
+  Attempting uninstall: tzdata
+    Found existing installation: tzdata 2024.2
+    Uninstalling tzdata-2024.2:
+      Successfully uninstalled tzdata-2024.2
+Successfully installed tzdata-2024.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: tzlocal==5.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: tzlocal==5.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (5.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: urllib3==2.2.1
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting urllib3==2.2.1
+  Downloading https://mirrors.aliyun.com/pypi/packages/a2/73/a68704750a7679d0b6d3ad7aa8d4da8e14e151ae82e6fee774e6e0d05ec8/urllib3-2.2.1-py3-none-any.whl (121 kB)
+Installing collected packages: urllib3
+  Attempting uninstall: urllib3
+    Found existing installation: urllib3 2.3.0
+    Uninstalling urllib3-2.3.0:
+      Successfully uninstalled urllib3-2.3.0
+Successfully installed urllib3-2.2.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: uvicorn==0.29.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting uvicorn==0.29.0
+  Downloading https://mirrors.aliyun.com/pypi/packages/73/f5/cbb16fcbe277c1e0b8b3ddd188f2df0e0947f545c49119b589643632d156/uvicorn-0.29.0-py3-none-any.whl (60 kB)
+Requirement already satisfied: click>=7.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from uvicorn==0.29.0) (8.1.7)
+Requirement already satisfied: h11>=0.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from uvicorn==0.29.0) (0.14.0)
+Installing collected packages: uvicorn
+  Attempting uninstall: uvicorn
+    Found existing installation: uvicorn 0.34.0
+    Uninstalling uvicorn-0.34.0:
+      Successfully uninstalled uvicorn-0.34.0
+Successfully installed uvicorn-0.29.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: vine==5.1.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: vine==5.1.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (5.1.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: wcwidth==0.2.13
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: wcwidth==0.2.13 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (0.2.13)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: Werkzeug==2.3.8
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting Werkzeug==2.3.8
+  Downloading https://mirrors.aliyun.com/pypi/packages/fd/21/0a674dfe66e9df9072c46269c882e9f901d36d987d8ea50ead033a9c1e01/werkzeug-2.3.8-py3-none-any.whl (242 kB)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Werkzeug==2.3.8) (2.1.5)
+Installing collected packages: Werkzeug
+  Attempting uninstall: Werkzeug
+    Found existing installation: Werkzeug 3.1.3
+    Uninstalling Werkzeug-3.1.3:
+      Successfully uninstalled Werkzeug-3.1.3
+Successfully installed Werkzeug-2.3.8
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: wordcloud==1.9.3
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting wordcloud==1.9.3
+  Downloading https://mirrors.aliyun.com/pypi/packages/40/ad/c22887189c23cc133ae7cbad48c71312f1a962b960fe7f51fd792808a307/wordcloud-1.9.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (548 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 548.3/548.3 kB 858.0 kB/s eta 0:00:00
+Requirement already satisfied: numpy>=1.6.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from wordcloud==1.9.3) (1.26.4)
+Requirement already satisfied: pillow in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from wordcloud==1.9.3) (9.5.0)
+Requirement already satisfied: matplotlib in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from wordcloud==1.9.3) (3.8.4)
+Requirement already satisfied: contourpy>=1.0.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (1.2.1)
+Requirement already satisfied: cycler>=0.10 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (4.51.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (1.4.5)
+Requirement already satisfied: packaging>=20.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (24.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (3.1.2)
+Requirement already satisfied: python-dateutil>=2.7 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from matplotlib->wordcloud==1.9.3) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib->wordcloud==1.9.3) (1.16.0)
+Installing collected packages: wordcloud
+Successfully installed wordcloud-1.9.3
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: zhipuai==2.1.5.20241204
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting zhipuai==2.1.5.20241204
+  Downloading https://mirrors.aliyun.com/pypi/packages/7e/6d/64760af2069ddf6f38a173b582eefb345332632afcfbf8bdb6e5c19258b8/zhipuai-2.1.5.20241204-py3-none-any.whl (105 kB)
+Requirement already satisfied: cachetools>=4.2.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zhipuai==2.1.5.20241204) (5.5.0)
+Requirement already satisfied: httpx>=0.23.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zhipuai==2.1.5.20241204) (0.24.0)
+Requirement already satisfied: pydantic<3.0,>=1.9.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zhipuai==2.1.5.20241204) (2.10.3)
+Requirement already satisfied: pydantic-core>=2.14.6 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zhipuai==2.1.5.20241204) (2.27.1)
+Requirement already satisfied: pyjwt<2.9.0,>=2.8.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zhipuai==2.1.5.20241204) (2.8.0)
+Requirement already satisfied: certifi in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx>=0.23.0->zhipuai==2.1.5.20241204) (2024.2.2)
+Requirement already satisfied: httpcore<0.18.0,>=0.15.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx>=0.23.0->zhipuai==2.1.5.20241204) (0.17.3)
+Requirement already satisfied: idna in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx>=0.23.0->zhipuai==2.1.5.20241204) (3.7)
+Requirement already satisfied: sniffio in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpx>=0.23.0->zhipuai==2.1.5.20241204) (1.3.1)
+Requirement already satisfied: annotated-types>=0.6.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic<3.0,>=1.9.0->zhipuai==2.1.5.20241204) (0.6.0)
+Requirement already satisfied: typing-extensions>=4.12.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from pydantic<3.0,>=1.9.0->zhipuai==2.1.5.20241204) (4.12.2)
+Requirement already satisfied: h11<0.15,>=0.13 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore<0.18.0,>=0.15.0->httpx>=0.23.0->zhipuai==2.1.5.20241204) (0.14.0)
+Requirement already satisfied: anyio<5.0,>=3.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from httpcore<0.18.0,>=0.15.0->httpx>=0.23.0->zhipuai==2.1.5.20241204) (4.3.0)
+Installing collected packages: zhipuai
+Successfully installed zhipuai-2.1.5.20241204
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: zope.event==5.0
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: zope.event==5.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (5.0)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.event==5.0) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+正在安装: zope.interface==7.2
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: zope.interface==7.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (7.2)
+Requirement already satisfied: setuptools in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from zope.interface==7.2) (75.7.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+确保关键包安装...
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: flask==2.3.3 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.3.3)
+Requirement already satisfied: Werkzeug==2.3.8 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (2.3.8)
+Requirement already satisfied: gunicorn==23.0.0 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (23.0.0)
+Requirement already satisfied: Jinja2>=3.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask==2.3.3) (3.1.3)
+Requirement already satisfied: itsdangerous>=2.1.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask==2.3.3) (2.2.0)
+Requirement already satisfied: click>=8.1.3 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask==2.3.3) (8.1.7)
+Requirement already satisfied: blinker>=1.6.2 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from flask==2.3.3) (1.7.0)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from Werkzeug==2.3.8) (2.1.5)
+Requirement already satisfied: packaging in /www/server/pyporject_evn/yuqing_venv/lib/python3.11/site-packages (from gunicorn==23.0.0) (24.0)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+验证关键包安装...
+Flask版本: 2.3.3
+Werkzeug版本: 2.3.8
+设置项目权限...
+安装完成时间: Wed Jan  8 02:17:23 AM CST 2025
+
+======================安装完成======================
+1. 虚拟环境路径: /www/server/pyporject_evn/yuqing_venv
+2. 项目路径: /www/wwwroot
+3. 日志路径: /www/wwwroot/logs
+
+接下来的步骤：
+1. 在宝塔面板的Python项目管理中：
+   - 点击项目的'配置文件'
+   - 确保'启动方式'选择为'gunicorn'
+   - 确保'运行文件'设置为'app.py'
+   - 确保'运行目录'设置为'/www/wwwroot'
+   - 确保'虚拟环境'设置正确
+
+2. 检查gunicorn配置：
+   - 工作进程：4
+   - 绑定端口：0.0.0.0:8000
+   - 运行用户：www
+
+3. 重启项目：
+   - 在宝塔面板中点击'重启'按钮
+
+4. 如果遇到问题：
+   - 检查安装日志: /www/wwwroot/logs/install.log
+   - 检查项目日志: 宝塔面板Python项目管理中的'日志'
+   - 检查权限问题: ls -l /www/wwwroot
+
+故障排除命令：
+# 手动启动服务
+cd /www/wwwroot
+gunicorn -w 4 -b 0.0.0.0:8000 app:app
+
+# 检查进程
+ps aux | grep gunicorn
+
+# 检查端口
+netstat -tlnp | grep 8000
+=================================================

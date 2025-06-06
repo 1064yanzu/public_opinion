@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时间线</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .glass-card:hover {
+      box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .timeline-line {
+      @apply absolute left-1/2 top-0 bottom-0 w-0.5;
+      background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(37, 99, 235, 0.1) 5%,
+        rgba(37, 99, 235, 0.3) 50%,
+        rgba(37, 99, 235, 0.1) 95%,
+        transparent 100%
+      );
+    }
+    
+    .timeline-node {
+      @apply absolute left-1/2 top-7 w-3 h-3 rounded-full -translate-x-1/2 transition-all duration-300;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      box-shadow: 
+        0 0 0 4px rgba(59, 130, 246, 0.1),
+        0 0 0 8px rgba(59, 130, 246, 0.05);
+    }
+    
+    .timeline-card {
+      @apply w-[calc(50%-2rem)] transition-all duration-500 relative;
+      opacity: 0.8;
+      transform: translateY(20px);
+    }
+    
+    .timeline-card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .timeline-card::after {
+      content: '';
+      @apply absolute top-8 w-8 h-0.5;
+      background: linear-gradient(90deg, 
+        rgba(37, 99, 235, 0.3) 0%, 
+        rgba(37, 99, 235, 0.1) 100%
+      );
+    }
+    
+    .timeline-card.left {
+      @apply mr-8;
+    }
+    
+    .timeline-card.right {
+      @apply ml-[calc(50%+2rem)];
+    }
+    
+    .timeline-card.left::after {
+      @apply right-[-2rem];
+    }
+    
+    .timeline-card.right::after {
+      @apply left-[-2rem];
+    }
+    
+    @media (max-width: 768px) {
+      .timeline-line {
+        @apply left-6;
+      }
+      
+      .timeline-node {
+        @apply left-6;
+      }
+      
+      .timeline-card {
+        @apply w-[calc(100%-4rem)] ml-14;
+      }
+      
+      .timeline-card::after {
+        @apply left-[-1.5rem] w-6;
+      }
+    }
+
+    .gradient-text {
+      @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600;
+    }
+
+    .date-tag {
+      @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+  </style>
+</head>
+<body class="py-12 px-4">
+  <div id="app" class="max-w-4xl mx-auto">
+    <!-- 标题区域 -->
+    <header class="text-center mb-16">
+      <h1 class="text-5xl font-bold mb-4 gradient-text tracking-tight">
+        {{ data.title }}
+      </h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ data.subtitle }}</p>
+    </header>
+
+    <!-- 简介区域 -->
+    <div class="mb-20">
+      <div class="glass-card rounded-xl p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <h2 class="text-xl font-bold gradient-text flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+              </svg>
+              背景介绍
+            </h2>
+            <p class="text-gray-600 text-sm leading-relaxed">{{ data.background }}</p>
+          </div>
+          <div class="space-y-3">
+            <h2 class="text-xl font-bold gradient-text flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              事件概要
+            </h2>
+            <p class="text-gray-600 text-sm leading-relaxed">{{ data.summary }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 时间线 -->
+    <div class="relative">
+      <div class="timeline-line"></div>
+      <div class="space-y-12">
+        <div 
+          v-for="(event, index) in data.events" 
+          :key="index"
+          class="relative group"
+          @mouseover="activeIndex = index"
+          @mouseleave="activeIndex = null"
+        >
+          <div 
+            class="timeline-node"
+            :class="{ 'scale-150': activeIndex === index }"
+          ></div>
+          <div 
+            class="timeline-card glass-card rounded-xl p-5 cursor-pointer transition-all duration-300"
+            :class="[
+              { 'left': index % 2 === 0, 'right': index % 2 === 1 },
+              { 'show': true }
+            ]"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <time class="date-tag text-blue-700">{{ event.date }}</time>
+              <div class="text-xs text-gray-400">#{{ String(index + 1).padStart(2, '0') }}</div>
+            </div>
+            <h3 class="text-lg font-bold mb-2 text-gray-800 group-hover:text-blue-600 transition-colors">
+              {{ event.title }}
+            </h3>
+            <div 
+              class="text-gray-600 text-sm leading-relaxed"
+              :class="{ 'line-clamp-3': activeIndex !== index }"
+            >
+              {{ event.description }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3"></script>
+  <script>
+    const { createApp } = Vue
+    
+    createApp({
+      data() {
+        return {
+          activeIndex: null,
+          data: {
+            title: '厦门PX事件时间线',
+            subtitle: '2004年至2008年厦门PX项目发展历程',
+            background: 'PX(对二甲苯)是重要的石化基础原料，主要用于生产聚酯纤维、塑料和树脂等，广泛应用于纺织、包装、建筑等行业。2004年，腾龙芳烃(厦门)有限公司计划在厦门海沧区投资建设PX项目，总投资108亿元，规划年产80万吨PX，预计年产值超过200亿元。',
+            summary: '厦门PX事件是中国环境运动的重要里程碑。从2004年项目规划到2008年最终迁址，历经项目审批、专家质疑、媒体报道、公众抗议和政府回应等多个阶段。这一事件推动了环境影响评价制度的完善和公众参与机制的建立，对中国环境治理和公民社会发展产生了深远影响。',
+            events: [
+              {
+                date: '2004年7月',
+                title: '项目初始规划',
+                description: '腾龙芳烃(厦门)有限公司计划投资108亿元在海沧区建设PX(对二甲苯)项目，规划年产80万吨PX。项目总投资108亿元，预计年产值超过200亿元。该项目是厦门市"十一五"期间重点引进的工业项目。'
+              },
+              {
+                date: '2006年',
+                title: '项目获国家发改委批准',
+                description: '厦门PX项目获得国家发改委立项批准，选址从最初的漳州古雷变更为厦门海沧区，距离市区约7公里，临近居民区和学校。项目总投资108亿元，预计年产80万吨PX。批准文件指出该项目符合国家产业政策，有利于优化石化产业布局。'
+              },
+              {
+                date: '2007年2月',
+                title: '专家提案质疑',
+                description: '厦门大学赵玉山教授等人向政协提交提案，指出项目选址存在安全隐患，不符合化工项目选址要求。提案指出，根据国家相关规定，此类化工项目与居民区的安全距离应不少于100米，而厦门PX项目距离最近的居民区仅约1.5公里，与国际通行的安全标准相距甚远。'
+              },
+              {
+                date: '2007年3月',
+                title: '媒体广泛报道',
+                description: '《中国经营报》发表《厦门百亿项目遭遇环保质疑》一文，随后《凤凰周刊》等媒体也相继报道，引发社会关注。凤凰周刊发表了题为《厦门PX项目：一个化工项目引发的争议》的报道，详细介绍了项目可能带来的环境风险和社会影响。'
+              },
+              {
+                date: '2007年5月28日',
+                title: '短信广泛传播',
+                description: '一条呼吁厦门市民"散步"抗议PX项目的短信在厦门市内广泛传播，短信在几天内传遍全市。短信内容提到："如果PX项目在厦门建成，将等于在厦门设置了一颗原子弹，我们的子孙后代将面临白血病和畸形儿的威胁。为了我们自己和子孙后代，请转发这条短信。在6月1日，请到市政府前散步。"'
+              },
+              {
+                date: '2007年6月1-2日',
+                title: '市民"散步"事件',
+                description: '厦门市民自发上街"散步"，表达对PX项目选址的意见。参与者以和平方式表达诉求，举牌"我要生存"、"还我蓝天碧水"等口号。据不完全统计，参与"散步"的市民人数达数万人，路线从市中心一直延伸到市政府所在地。这次集体行动持续了两天，期间秩序良好，未发生任何暴力冲突。'
+              },
+              {
+                date: '2007年6月5-6日',
+                title: '政府回应',
+                description: '厦门市政府宣布暂停PX项目建设，并承诺进行进一步环评。市政府发言人表示："将认真听取市民意见，进行科学决策。"市政府还表示将委托权威机构对项目进行全面环境影响评估，并承诺在评估完成前暂停项目建设。'
+              },
+              {
+                date: '2007年12月',
+                title: '环评公示与公众听证',
+                description: '厦门市举行PX项目环评公众听证会，邀请了来自各界的100多位代表参加。听证会分两天进行，共有107位代表发言，其中大多数代表表示反对项目在厦门建设。听证会上，环保专家详细介绍了项目可能带来的环境影响，包括大气污染、水污染以及潜在的安全风险等。'
+              },
+              {
+                date: '2008年1月',
+                title: '项目最终迁址',
+                description: '福建省发改委宣布，厦门PX项目将迁至漳州古雷半岛重建。官方通告称："根据科学评估和公众意见，决定将项目迁至更合适的区域建设。"通告还指出，古雷半岛位于福建省漳州市东南部，距离市区较远，周边人口密度低，更适合建设化工项目。'
+              },
+              {
+                date: '2008年至今',
+                title: '后续发展',
+                description: '此后，中国多地也出现PX项目相关讨论，包括大连(2011年)、宁波(2012年)、昆明(2013年)等地。这些地区的PX项目也都遇到了不同程度的公众质疑和抗议。厦门PX事件被视为中国公民环保意识觉醒的重要标志，也促使政府在环境决策中更加重视公众参与和科学评估。'
+              }
+            ]
+          }
+        }
+      },
+      mounted() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('show')
+            }
+          })
+        }, {
+          threshold: 0.1,
+          rootMargin: '0px 0px -10% 0px'
+        })
+
+        document.querySelectorAll('.timeline-card').forEach(card => {
+          observer.observe(card)
+        })
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html> 

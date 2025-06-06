@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="舆情分析,数据分析,社交媒体分析">
+    <meta name="description" content="舆情分析系统 - 实时监控与分析社交媒体动态">
+    <title>舆情分析系统</title>
+
+    <!-- CDN资源 -->
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <!-- 本地样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/modern.css') }}">
+    <style>
+        /* 主题变量 */
+        :root {
+            --table-bg: #ffffff;
+            --table-header-bg: #f8f9fa;
+            --table-border: #e5e7eb;
+            --table-text: #374151;
+            --table-hover-bg: #f3f4f6;
+            --table-link: #3b82f6;
+            --table-link-hover: #2563eb;
+            --content-max-lines: 3;
+            --modal-bg: #ffffff;
+            --modal-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2);
+            --modal-border: #f0f0f0;
+            --modal-backdrop: rgba(17, 24, 39, 0.7);
+            --modal-button-bg: #f8fafc;
+            --modal-button-hover: #f1f5f9;
+            --modal-button-active: #e2e8f0;
+            --modal-button-text: #1e293b;
+            --modal-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --modal-text: #1e293b;
+        }
+
+        [data-theme="dark"] {
+            --table-bg: #1f2937;
+            --table-header-bg: #111827;
+            --table-border: #374151;
+            --table-text: #e5e7eb;
+            --table-hover-bg: #374151;
+            --table-link: #60a5fa;
+            --table-link-hover: #93c5fd;
+            --modal-bg: #1e1e1e;
+            --modal-border: #2d2d2d;
+            --modal-button-bg: #2d2d2d;
+            --modal-button-hover: #3d3d3d;
+            --modal-button-active: #4d4d4d;
+            --modal-button-text: #e5e7eb;
+            --modal-text: #e5e7eb;
+        }
+
+        /* 基础样式 */
+        .data-table-wrapper {
+            background: var(--table-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin: 1rem 0;
+            padding: 1.5rem;
+            border: 1px solid var(--table-border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 表格控制区 */
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--table-header-bg);
+            border-radius: 8px;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .table-controls select,
+        .table-controls input {
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--table-border);
+            border-radius: 6px;
+            background: var(--table-bg);
+            color: var(--table-text);
+            min-width: 120px;
+            max-width: 200px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .table-controls select:focus,
+        .table-controls input:focus {
+            outline: none;
+            border-color: var(--table-link);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+            table-layout: fixed;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--table-border);
+            color: var(--table-text);
+            line-height: 1.6;
+            vertical-align: top;
+        }
+
+        /* 设置列宽 */
+        .data-table th:nth-child(1) { width: 12%; } /* 作者 */
+        .data-table th:nth-child(2) { width: 40%; } /* 内容 */
+        .data-table th:nth-child(3) { width: 15%; } /* 时间 */
+        .data-table th:nth-child(4),
+        .data-table th:nth-child(5),
+        .data-table th:nth-child(6) { width: 11%; } /* 数字列 */
+
+        /* 内容预览 */
+        .content-cell {
+            position: relative;
+            max-width: 100%;
+        }
+
+        .content-preview {
+            position: relative;
+            display: -webkit-box;
+            -webkit-line-clamp: var(--content-max-lines);
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+            cursor: pointer;
+            color: var(--table-link);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            word-break: break-word;
+            padding-right: 2.5rem;
+        }
+
+        .content-preview:hover {
+            color: var(--table-link-hover);
+        }
+
+        .preview-action {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            background: var(--modal-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .content-preview:hover .preview-action {
+            opacity: 1;
+            transform: translateY(-50%) translateX(-0.25rem);
+        }
+
+        /* 模态框容器 */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-container.show {
+            display: flex;
+        }
+
+        /* 遮罩层 */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(17, 24, 39, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .modal-container.show .modal-backdrop {
+            opacity: 1;
+        }
+
+        /* 模态框对话框 */
+        .modal-dialog {
+            position: relative;
+            width: min(90vw, 700px);
+            background: var(--modal-bg);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .modal-container.show .modal-dialog {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* 模态框头部 */
+        .modal-header {
+            position: relative;
+            padding: 1.5rem;
+            background: var(--modal-bg);
+            border-bottom: 1px solid var(--modal-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--modal-text);
+            margin: 0;
+        }
+
+        .modal-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--modal-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal-close i {
+            font-size: 1.125rem;
+        }
+
+        /* 模态框内容 */
+        .modal-content {
+            padding: 2rem;
+            color: var(--modal-text);
+            line-height: 1.8;
+            font-size: 1rem;
+            max-height: calc(85vh - 6rem);
+            overflow-y: auto;
+            background: var(--modal-bg);
+        }
+
+        /* 滚动条美化 */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(203, 213, 225, 0.5);
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.7);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .modal-dialog {
+                width: 95vw;
+                margin: 1rem;
+            }
+
+            .modal-header {
+                padding: 1.25rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+            }
+
+            .modal-btn {
+                padding: 0.625rem;
+            }
+
+            .modal-btn span {
+                display: none;
+            }
+        }
+
+        /* 数字列样式 */
+        .number-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .data-table th:nth-child(4),
+            .data-table th:nth-child(5),
+            .data-table th:nth-child(6),
+            .data-table td:nth-child(4),
+            .data-table td:nth-child(5),
+            .data-table td:nth-child(6) {
+                display: none;
+            }
+
+            .data-table th:nth-child(1) { width: 20%; }
+            .data-table th:nth-child(2) { width: 50%; }
+            .data-table th:nth-child(3) { width: 30%; }
+        }
+
+        @media (max-width: 768px) {
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-controls select,
+            .table-controls input {
+                max-width: 100%;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .modal-dialog {
+                width: 95vw;
+                margin: 1rem;
+            }
+
+            .modal-header {
+                padding: 1rem;
+            }
+
+            .modal-title {
+                font-size: 1.125rem;
+            }
+
+            .modal-content {
+                padding: 1rem;
+                font-size: 0.9375rem;
+            }
+
+            .modal-btn {
+                padding: 0.5rem 1rem;
+            }
+
+            .modal-btn span {
+                display: none;
+            }
+
+            .modal-actions {
+                gap: 0.5rem;
+            }
+
+            :root {
+                --content-max-lines: 2;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .data-table th:nth-child(1),
+            .data-table td:nth-child(1) {
+                display: none;
+            }
+
+            .data-table th:nth-child(2) { width: 70%; }
+            .data-table th:nth-child(3) { width: 30%; }
+
+            .table-pagination {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .content-preview.expanded {
+                padding: 1.75rem 1.25rem;
+            }
+        }
+
+        /* 作者链接样式 */
+        .author-link {
+            position: relative;
+            color: var(--table-link);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            padding-right: 2rem;
+        }
+
+        .author-link:hover {
+            color: var(--table-link-hover);
+            text-decoration: none;
+        }
+
+        /* 内容预览样式 */
+        .content-preview {
+            position: relative;
+            display: -webkit-box;
+            -webkit-line-clamp: var(--content-max-lines);
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+            color: var(--table-text);
+            word-break: break-word;
+            padding-right: 2.5rem;
+        }
+
+        a.content-preview {
+            color: var(--table-link);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        a.content-preview:hover {
+            color: var(--table-link-hover);
+        }
+
+        .preview-action {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            background: var(--modal-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+            pointer-events: none;
+        }
+
+        .author-link:hover .preview-action,
+        a.content-preview:hover .preview-action {
+            opacity: 1;
+            transform: translateY(-50%) translateX(-0.25rem);
+        }
+    </style>
+
+    </head>
+
+<body>
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+            <a href="#" class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>舆情分析</span>
+            </a>
+            <nav>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.home') }}" class="active">
+                            <i class="fas fa-home"></i>
+                            <span>主页面</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.tableData') }}">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>舆情看板</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.setting_spider') }}">
+                            <i class="fas fa-spider"></i>
+                            <span>爬取设置</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.manual') }}">
+                            <i class="fas fa-book-open"></i>
+                            <span>舆情应对手册</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.case_study') }}">
+                            <i class="fas fa-book"></i>
+                            <span>舆情案例</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('page.settle') }}">
+                            <i class="fas fa-file-alt"></i>
+                            <span>舆情报告</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('user.logout') }}">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>退出登录</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <button class="toggle-btn" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </aside>
+
+    <!-- 主要内容区域 -->
+    <main class="main" id="main">
+        <!-- 顶部栏 -->
+        <div class="top-bar glass">
+            <h1 class="page-title">舆情分析系统</h1>
+            <div class="top-actions">
+                <button class="btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>夜间模式</span>
+                </button>
+                <select class="btn" id="langSelect">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate">
+                    <div class="stat-card">
+                        <i class="fas fa-comments stat-icon"></i>
+                        <div class="stat-value">{{ row_count }}</div>
+                        <div class="stat-label">总信息数量</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.1s">
+                    <div class="stat-card">
+                        <i class="fas fa-users stat-icon"></i>
+                        <div class="stat-value">{{ unique_user_count }}</div>
+                        <div class="stat-label">评论者数量</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.2s">
+                    <div class="stat-card">
+                        <i class="fas fa-network-wired stat-icon"></i>
+                        <div class="stat-value">{{ unique_ip_count }}</div>
+                        <div class="stat-label">评论IP地址数</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card animate" style="animation-delay: 0.3s">
+                    <div class="stat-card">
+                        <i class="fas fa-fire stat-icon"></i>
+                        <div class="stat-value">{{ total_heat_value }}</div>
+                        <div class="stat-label">热度值</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 词云图 -->
+        <div class="card mb-4 animate" style="animation-delay: 0.4s">
+            <div class="card-header">
+                <h2 class="card-title">词云分析</h2>
+            </div>
+            <div class="card-body p-4">
+                <img src="{{ url_for('static', filename='assets/images/wordcloud.png') }}" alt="词云图" id="image" style="width: 100%; height: auto; max-height: 400px; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- 爬取结果展示部分 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">爬取结果展示</h2>
+                <span class="badge bg-primary">{{ infos2_data|length }} 条记录</span>
+            </div>
+            <div class="card-body">
+                {% if infos2_data %}
+                <div class="data-table-wrapper">
+                    <div class="table-controls">
+                        <div class="d-flex align-items-center">
+                            <label class="me-2">显示条数:</label>
+                            <select id="entriesPerPage" class="form-select">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="-1">全部</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <label class="me-2">搜索:</label>
+                            <input type="search" id="searchInput" class="form-control" placeholder="输入关键词...">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="crawlTable">
+                            <thead>
+                                <tr>
+                                    <th>作者</th>
+                                    <th>内容</th>
+                                    <th>发布时间</th>
+                                    <th>转发数</th>
+                                    <th>评论数</th>
+                                    <th>点赞数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for info in infos2_data %}
+                                {% if info.content != "无内容" and info.author != "无作者" %}
+                                <tr>
+                                    <td>
+                                        {% if info.profile_url %}
+                                        <a href="{{ info.profile_url }}" target="_blank" class="author-link">
+                                            {{ info.author }}
+                                            <span class="preview-action">访问主页</span>
+                                        </a>
+                                        {% else %}
+                                        {{ info.author }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="content-cell">
+                                        {% if info.url %}
+                                        <a href="{{ info.url }}" target="_blank" class="content-preview">
+                                            {{ info.content }}
+                                            <span class="preview-action">查看原文</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="content-preview">{{ info.content }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ info.time }}</td>
+                                    <td class="number-cell">{{ info.shares }}</td>
+                                    <td class="number-cell">{{ info.comments }}</td>
+                                    <td class="number-cell">{{ info.likes }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="modal-backdrop" id="modalBackdrop"></div>
+
+                    <div class="table-pagination">
+                        <div class="pagination-info">
+                            显示第 <span id="startEntry">1</span> 至 <span id="endEntry">10</span> 项，共 <span id="totalEntries">{{ infos2_data|length }}</span> 项
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="prevPage" class="btn btn-outline-primary">&laquo; 上一页</button>
+                            <div id="pageNumbers" class="d-flex gap-2"></div>
+                            <button id="nextPage" class="btn btn-outline-primary">下一页 &raquo;</button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-database"></i>
+                    <p>暂无爬取数据，请先在爬取设置页面进行数据采集。</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 新闻卡片 -->
+        <div class="card animate" style="animation-delay: 0.6s">
+            <div class="card-header">
+                <h2 class="card-title">每日热点</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    {% for news in daily_hotspots %}
+                    <div class="col-lg-3 col-md-6">
+                        <a href="{{ news.link }}" class="card news-card" target="_blank">
+                            <div class="news-image" style="background-image: url('{{ url_for('static', filename='assets/images/newscard.png') }}');"></div>
+                            <div class="news-content">
+                                <h3 class="news-title">{{ news.title }}</h3>
+                                <div class="news-source">
+                                    <i class="fas fa-newspaper"></i>
+                                    <span>来源: {{ news.source }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JS资源 -->
+    <script src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='assets/js/cropper.min.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. 主题切换功能
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                const icon = themeToggle.querySelector('i');
+                const text = themeToggle.querySelector('span');
+
+                if (savedTheme === 'dark') {
+                    body.setAttribute('data-theme', 'dark');
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    text.textContent = '日间模式';
+                } else {
+                    body.removeAttribute('data-theme');
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    text.textContent = '夜间模式';
+                }
+            }
+
+            themeToggle.addEventListener('click', function() {
+                const isDark = body.hasAttribute('data-theme');
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
+
+                if (isDark) {
+                    body.removeAttribute('data-theme');
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    text.textContent = '夜间模式';
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    text.textContent = '日间模式';
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            // 2. 侧边栏控制
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const main = document.getElementById('main');
+            const sidebarOverlay = document.createElement('div');
+            sidebarOverlay.className = 'sidebar-overlay';
+            document.body.appendChild(sidebarOverlay);
+
+            function toggleSidebar() {
+                const isMobile = window.innerWidth <= 768;
+
+                if (isMobile) {
+                    sidebar.classList.toggle('show');
+                    sidebarOverlay.classList.toggle('show');
+                    main.classList.toggle('pushed');
+                    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    main.classList.toggle('expanded');
+                }
+            }
+
+            sidebarToggle.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+
+            // 3. 语言切换功能
+            const langSelect = document.getElementById('langSelect');
+            const translations = {
+                zh: {
+                    pageTitle: '舆情分析系统',
+                    themeToggleText: '夜间模式',
+                    totalInfo: '总信息数量',
+                    commenters: '评论者数量',
+                    ipCount: '评论IP地址数',
+                    heatValue: '热度值',
+                    wordCloud: '词云分析',
+                    crawlResults: '爬取结果展示',
+                    dailyHot: '每日热点',
+                    showEntries: '显示条数',
+                    search: '搜索',
+                    noData: '暂无数据'
+                },
+                en: {
+                    pageTitle: 'Public Opinion Analysis',
+                    themeToggleText: 'Dark Mode',
+                    totalInfo: 'Total Information',
+                    commenters: 'Commenters',
+                    ipCount: 'IP Addresses',
+                    heatValue: 'Heat Value',
+                    wordCloud: 'Word Cloud',
+                    crawlResults: 'Crawl Results',
+                    dailyHot: 'Daily Hot',
+                    showEntries: 'Show Entries',
+                    search: 'Search',
+                    noData: 'No Data'
+                }
+            };
+
+            function updateLanguage(lang) {
+                const text = translations[lang];
+                if (!text) return;
+
+                // 更新页面文本
+                document.querySelector('.page-title').textContent = text.pageTitle;
+                document.title = text.pageTitle;
+
+                // 更新统计卡片
+                document.querySelectorAll('.stat-label').forEach((el, index) => {
+                    const keys = ['totalInfo', 'commenters', 'ipCount', 'heatValue'];
+                    if (text[keys[index]]) {
+                        el.textContent = text[keys[index]];
+                    }
+                });
+
+                // 更新卡片标题
+                document.querySelectorAll('.card-title').forEach(el => {
+                    if (el.textContent.includes('词云')) el.textContent = text.wordCloud;
+                    if (el.textContent.includes('爬取')) el.textContent = text.crawlResults;
+                    if (el.textContent.includes('热点')) el.textContent = text.dailyHot;
+                });
+
+                // 更新表格控件
+                const entriesLabel = document.querySelector('label[for="entriesPerPage"]');
+                const searchLabel = document.querySelector('label[for="searchInput"]');
+                if (entriesLabel) entriesLabel.textContent = text.showEntries + ':';
+                if (searchLabel) searchLabel.textContent = text.search + ':';
+            }
+
+            langSelect.addEventListener('change', function(e) {
+                const lang = e.target.value;
+                localStorage.setItem('selectedLang', lang);
+                updateLanguage(lang);
+            });
+
+            // 4. 表格功能
+            const table = document.getElementById('crawlTable');
+            if (table) {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                let currentPage = 1;
+                let entriesPerPage = 10;
+                let filteredRows = [...rows];
+
+                function updateTable() {
+                    const start = (currentPage - 1) * entriesPerPage;
+                    const end = entriesPerPage === -1 ? filteredRows.length : Math.min(start + entriesPerPage, filteredRows.length);
+
+                    tbody.innerHTML = '';
+                    for (let i = start; i < end; i++) {
+                        tbody.appendChild(filteredRows[i].cloneNode(true));
+                    }
+
+                    updatePagination();
+                    updateTableInfo(start, end);
+                }
+
+                function updatePagination() {
+                    const totalPages = entriesPerPage === -1 ? 1 : Math.ceil(filteredRows.length / entriesPerPage);
+                    const pageNumbers = document.getElementById('pageNumbers');
+                    if (!pageNumbers) return;
+
+                    pageNumbers.innerHTML = '';
+                    for (let i = 1; i <= totalPages; i++) {
+                        const button = document.createElement('button');
+                        button.className = `btn ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
+                        button.textContent = i;
+                        button.addEventListener('click', () => {
+                            currentPage = i;
+                            updateTable();
+                        });
+                        pageNumbers.appendChild(button);
+                    }
+
+                    // 更新翻页按钮状态
+                    const prevBtn = document.getElementById('prevPage');
+                    const nextBtn = document.getElementById('nextPage');
+                    if (prevBtn) prevBtn.disabled = currentPage === 1;
+                    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+                }
+
+                function updateTableInfo(start, end) {
+                    const startEntry = document.getElementById('startEntry');
+                    const endEntry = document.getElementById('endEntry');
+                    const totalEntries = document.getElementById('totalEntries');
+
+                    if (startEntry) startEntry.textContent = filteredRows.length ? start + 1 : 0;
+                    if (endEntry) endEntry.textContent = end;
+                    if (totalEntries) totalEntries.textContent = filteredRows.length;
+                }
+
+                // 搜索功能
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function(e) {
+                        const searchTerm = e.target.value.toLowerCase();
+                        filteredRows = rows.filter(row => {
+                            return row.textContent.toLowerCase().includes(searchTerm);
+                        });
+                        currentPage = 1;
+                        updateTable();
+                    });
+                }
+
+                // 每页显示条数
+                const entriesSelect = document.getElementById('entriesPerPage');
+                if (entriesSelect) {
+                    entriesSelect.addEventListener('change', function(e) {
+                        entriesPerPage = parseInt(e.target.value);
+                        currentPage = 1;
+                        updateTable();
+                    });
+                }
+
+                // 翻页按钮
+                const prevBtn = document.getElementById('prevPage');
+                const nextBtn = document.getElementById('nextPage');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            updateTable();
+                        }
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        const totalPages = Math.ceil(filteredRows.length / entriesPerPage);
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            updateTable();
+                        }
+                    });
+                }
+
+                // 初始化表格
+                updateTable();
+            }
+
+            // 5. 初始化所有功能
+            initTheme();
+            const savedLang = localStorage.getItem('selectedLang') || 'zh';
+            langSelect.value = savedLang;
+            updateLanguage(savedLang);
+
+            // 6. 响应式处理
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    const isMobile = window.innerWidth <= 768;
+                    if (!isMobile && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        main.classList.remove('pushed');
+                        document.body.style.overflow = '';
+                    }
+                }, 250);
+            });
+        });
+    </script>
+
+    <!-- 在body末尾添加模态框容器 -->
+    <div class="modal-container" id="modalContainer">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">内容详情</div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content"></div>
+        </div>
+    </div>
+</body>
+</html>

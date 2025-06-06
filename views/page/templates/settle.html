@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>舆情分析系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 移动端基础优化 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem !important;
+            }
+
+            h1 {
+                font-size: 1.5rem !important;
+            }
+
+            .grid {
+                gap: 1rem !important;
+            }
+
+            .p-8 {
+                padding: 1rem !important;
+            }
+
+            [class*="rounded-2"] {
+                border-radius: 1rem !important;
+            }
+        }
+
+        /* 暗色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(to bottom right, #1a1a1a, #2d3748) !important;
+            }
+
+            .bg-white\/80 {
+                background-color: rgba(45, 55, 72, 0.8) !important;
+            }
+
+            .bg-white {
+                background-color: rgba(45, 55, 72, 0.9) !important;
+            }
+
+            .text-gray-800 {
+                color: #e2e8f0 !important;
+            }
+
+            .text-gray-500 {
+                color: #a0aec0 !important;
+            }
+
+            .text-gray-700 {
+                color: #e2e8f0 !important;
+            }
+
+            .bg-gray-50 {
+                background-color: rgba(45, 55, 72, 0.5) !important;
+            }
+        }
+
+        /* 触摸反馈优化 */
+        @media (hover: none) {
+            .hover\:shadow-xl:active {
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                           0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+                transform: translateY(-2px);
+            }
+
+            .btn-primary:active {
+                transform: scale(0.98);
+            }
+        }
+
+        /* 滚动优化 */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.5) transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.5);
+            border-radius: 2px;
+        }
+
+        /* 加载动画优化 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* 移动端性能优化 */
+        @media (max-width: 768px) {
+            * {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .backdrop-blur-xl {
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+
+            .transition-all {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+
+        /* 移动端布局优化 */
+        @media (max-width: 640px) {
+            .sm\:grid-cols-1 {
+                grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            }
+
+            .sm\:text-sm {
+                font-size: 0.875rem !important;
+                line-height: 1.25rem !important;
+            }
+
+            .sm\:p-4 {
+                padding: 1rem !important;
+            }
+
+            .sm\:space-y-4 > * + * {
+                margin-top: 1rem !important;
+            }
+        }
+
+        /* 移动端触摸区域优化 */
+        @media (max-width: 768px) {
+            button, 
+            [role="button"],
+            .clickable {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            input,
+            select,
+            textarea {
+                font-size: 16px !important; /* 防止iOS自动缩放 */
+            }
+        }
+
+        /* 加载状态优化 */
+        .loading-skeleton {
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.1),
+                rgba(255, 255, 255, 0.2),
+                rgba(255, 255, 255, 0.1)
+            );
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 主按钮样式优化 */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 50%, #4338ca 100%);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #2563eb 0%, #4338ca 50%, #3730a3 100%);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                transparent 100%
+            );
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .btn-primary {
+                background: linear-gradient(135deg, #3b82f6 0%, #4338ca 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-4 sm:p-8">
+    <!-- 返回按钮 -->
+    <div class="fixed top-4 sm:top-8 left-4 sm:left-8 z-50">
+        <a href="{{ url_for('page.home') }}" class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/80 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-gray-700 hover:text-indigo-600 group">
+            <i class="fas fa-arrow-left transform group-hover:-translate-x-1 transition-transform duration-300"></i>
+            <span class="hidden sm:inline">返回主页</span>
+        </a>
+    </div>
+
+    <!-- 主容器卡片 -->
+    <div class="container mx-auto bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-[2rem] shadow-xl p-4 sm:p-8 border border-white/20">
+        <div class="max-w-7xl mx-auto space-y-4 sm:space-y-8">
+            <!-- 页面标题 -->
+            <div class="text-center mb-6 sm:mb-12">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">舆情报告及应对策略</h1>
+                <p class="text-sm sm:text-base text-gray-500">舆情报告及应对策略</p>
+            </div>
+
+            <!-- 统计数据卡片组 -->
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                <!-- 今日监测 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 sm:w-12 h-10 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-blue-500 text-lg sm:text-xl"></i>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium text-gray-500">今日监测</span>
+                    </div>
+                    <p class="text-xl sm:text-3xl font-bold text-gray-800" id="todayMonitor">0</p>
+                </div>
+
+                <!-- 总评论数 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 sm:w-12 h-10 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-comments text-purple-500 text-lg sm:text-xl"></i>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium text-gray-500">总评论数</span>
+                    </div>
+                    <p class="text-xl sm:text-3xl font-bold text-gray-800" id="totalComments">0</p>
+                </div>
+
+                <!-- 热度指数 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 sm:w-12 h-10 sm:h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-fire text-red-500 text-lg sm:text-xl"></i>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium text-gray-500">热度指数</span>
+                    </div>
+                    <p class="text-xl sm:text-3xl font-bold text-gray-800" id="heatIndex">0</p>
+                </div>
+
+                <!-- 风险等级 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 sm:w-12 h-10 sm:h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-green-500 text-lg sm:text-xl"></i>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium text-gray-500">风险等级</span>
+                    </div>
+                    <p class="text-xl sm:text-3xl font-bold text-gray-800" id="riskLevel">低</p>
+                </div>
+            </div>
+
+            <!-- 实时数据展示 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <!-- 最新评论 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+                        <div class="w-8 sm:w-10 h-8 sm:h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-comment-alt text-indigo-500 text-sm sm:text-base"></i>
+                        </div>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">最新评论</h2>
+                    </div>
+                    <div class="space-y-3 sm:space-y-4">
+                        <p class="text-base sm:text-lg leading-relaxed text-gray-700" id="latestComment">加载中...</p>
+                        <p class="text-xs sm:text-sm text-gray-500" id="commentTime"></p>
+                    </div>
+                </div>
+
+                <!-- 传播趋势 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+                        <div class="w-8 sm:w-10 h-8 sm:h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-area text-blue-500 text-sm sm:text-base"></i>
+                        </div>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">传播趋势</h2>
+                    </div>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
+                            <span class="text-gray-700 font-medium">涉及省份</span>
+                            <span class="text-blue-600 font-bold" id="provinceCount">0个</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
+                            <span class="text-gray-700 font-medium">传播范围</span>
+                            <span class="text-blue-600 font-bold" id="spreadRange">局部传播</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关键词和情感指标 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <!-- 热点关键词 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">热点关键词</h2>
+                    <div class="flex flex-wrap gap-2" id="keywordsList">
+                        <!-- 关键词将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                <!-- 情感指标 -->
+                <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">情感指标</h2>
+                    <div class="relative pt-1" id="sentimentIndicator">
+                        <div class="flex mb-2 items-center justify-between">
+                            <div>
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
+                                    情感倾向
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-semibold inline-block text-indigo-600">0%</span>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
+                            <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI分析进程 -->
+            <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800">AI分析进程</h2>
+                </div>
+                <div id="aiResponseStream" class="h-32 sm:h-40 overflow-y-auto bg-white/50 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm custom-scrollbar">
+                    <div class="text-gray-500">准备开始分析...</div>
+                </div>
+            </div>
+
+            <!-- 报告深度选择 -->
+            <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">选择报告深度</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div class="report-depth-option" data-value="basic">
+                        <div class="depth-card p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 transition-colors cursor-pointer">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold">基础分析</h3>
+                                <i class="fas fa-chart-line text-indigo-500"></i>
+                            </div>
+                            <p class="text-gray-600 text-sm">快速生成核心分析结果</p>
+                        </div>
+                    </div>
+                    <div class="report-depth-option" data-value="standard">
+                        <div class="depth-card p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 transition-colors cursor-pointer">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold">标准分析</h3>
+                                <i class="fas fa-chart-bar text-indigo-500"></i>
+                            </div>
+                            <p class="text-gray-600 text-sm">全面的数据分析和建议</p>
+                        </div>
+                    </div>
+                    <div class="report-depth-option" data-value="deep">
+                        <div class="depth-card p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 transition-colors cursor-pointer">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold">深度分析</h3>
+                                <i class="fas fa-chart-pie text-indigo-500"></i>
+                            </div>
+                            <p class="text-gray-600 text-sm">深入的分析和战略建议</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生成报告按钮 -->
+            <div class="flex justify-center py-4 sm:py-6">
+                <button id="generateReport" class="btn-primary px-6 sm:px-8 py-3 sm:py-4 text-white rounded-xl flex items-center space-x-2 sm:space-x-3 font-medium text-base sm:text-lg bg-gradient-to-r from-blue-600 to-indigo-700">
+                    <i class="fas fa-magic text-white/90"></i>
+                    <span class="relative z-10">生成报告及应对建议</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报告卡片弹窗 -->
+    <div id="reportCard" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeReportCard()"></div>
+        <div class="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col transform transition-all opacity-0 duration-300">
+            <!-- 卡片头部 -->
+            <div class="sticky top-0 p-6 border-b border-gray-100 flex items-center justify-between bg-white/95 backdrop-blur-sm z-10">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                        <i class="fas fa-robot text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">AI 舆情分析</h2>
+                        <p class="text-sm text-gray-500">实时生成分析报告</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="generatingStatus" class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-sm flex items-center space-x-2">
+                        <i class="fas fa-sync-alt animate-spin"></i>
+                        <span>正在生成...</span>
+                    </div>
+                    <button onclick="closeReportCard()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 卡片内容区域 - 可滚动 -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar" style="max-height: calc(85vh - 8rem);">
+                <div class="p-8">
+                    <div id="markdownContent" class="prose prose-lg max-w-none">
+                        <!-- Markdown 内容将在这里渲染 -->
+                    </div>
+                    
+                    <!-- 生成中的动画 -->
+                    <div id="generatingAnimation" class="flex flex-col items-center justify-center space-y-6 py-12">
+                        <div class="relative">
+                            <div class="w-20 h-20 rounded-full border-4 border-blue-100"></div>
+                            <div class="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent animate-spin absolute top-0 left-0"></div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-lg text-gray-600 font-medium mb-2">正在生成分析报告</p>
+                            <p class="text-sm text-gray-500">请稍候，这可能需要一些时间...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 卡片底部 - 固定在底部 -->
+            <div class="sticky bottom-0 p-6 border-t border-gray-100 flex justify-between items-center bg-white/95 backdrop-blur-sm">
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                    <span>报告生成后自动保存</span>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="copyReport()" class="px-6 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-2 font-medium">
+                        <i class="fas fa-copy"></i>
+                        <span>复制报告</span>
+                    </button>
+                    <button onclick="downloadReport()" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2 font-medium shadow-md">
+                        <i class="fas fa-download"></i>
+                        <span>下载报告</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+    let currentReport = null;
+
+    // 更新统计数据
+    async function updateStats() {
+        try {
+            const response = await fetch('/page/api/stats');
+            const data = await response.json();
+            
+            document.getElementById('todayMonitor').textContent = data.todayMonitor;
+            document.getElementById('totalComments').textContent = data.totalComments;
+            document.getElementById('heatIndex').textContent = data.heatIndex;
+            document.getElementById('riskLevel').textContent = data.riskLevel;
+        } catch (error) {
+            console.error('更新统计数据失败:', error);
+        }
+    }
+
+    // 更新实时数据
+    async function updateRealtimeData() {
+        try {
+            const response = await fetch('/page/api/realtime_data');
+            const data = await response.json();
+            
+            document.getElementById('latestComment').textContent = data.latestComment;
+            document.getElementById('commentTime').textContent = data.commentTime;
+            document.getElementById('provinceCount').textContent = data.provinceCount;
+            document.getElementById('spreadRange').textContent = data.spreadRange;
+            
+            // 更新关键词列表
+            const keywordsList = document.getElementById('keywordsList');
+            keywordsList.innerHTML = data.keywords.map(keyword => 
+                `<span class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm">${keyword}</span>`
+            ).join('');
+            
+            // 更新情感指标
+            const sentimentBar = document.querySelector('#sentimentIndicator .bg-indigo-500');
+            const sentimentText = document.querySelector('#sentimentIndicator span');
+            sentimentBar.style.width = `${data.sentiment}%`;
+            sentimentText.textContent = `${data.sentiment}%`;
+        } catch (error) {
+            console.error('更新实时数据失败:', error);
+        }
+    }
+
+    // 选择报告深度
+    document.querySelectorAll('.report-depth-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.depth-card').forEach(card => {
+                card.classList.remove('border-indigo-500');
+            });
+            this.querySelector('.depth-card').classList.add('border-indigo-500');
+        });
+    });
+
+    // 生成报告
+    document.getElementById('generateReport').addEventListener('click', async function() {
+        const reportCard = document.getElementById('reportCard');
+        const markdownContent = document.getElementById('markdownContent');
+        const aiResponseStream = document.getElementById('aiResponseStream');
+        const generatingAnimation = document.getElementById('generatingAnimation');
+        const cardContent = reportCard.querySelector('.bg-white');
+        
+        // 显示卡片
+        reportCard.classList.remove('hidden');
+        setTimeout(() => cardContent.classList.remove('opacity-0'), 10);
+        
+        // 初始化内容
+        markdownContent.innerHTML = '';
+        aiResponseStream.innerHTML = '<div class="text-gray-500">开始生成报告...</div>';
+        generatingAnimation.style.display = 'flex';
+        
+        let fullContent = '';
+        
+        try {
+            const depth = document.querySelector('.report-depth-option .depth-card.border-indigo-500')?.parentElement?.dataset?.value || 'standard';
+            const response = await fetch('/page/api/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ depth })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim());
+
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line);
+                        
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+
+                        if (data.content) {
+                            fullContent += data.content;
+                            // 使用marked渲染Markdown内容
+                            markdownContent.innerHTML = marked.parse(fullContent);
+                            aiResponseStream.innerHTML = marked.parse(fullContent);
+                            
+                            // 保存到全局变量供后续使用
+                            currentReport = fullContent;
+                            
+                            // 平滑滚动到底部
+                            const contentWrapper = markdownContent.parentElement;
+                            contentWrapper.scrollTop = contentWrapper.scrollHeight;
+                        }
+                    } catch (e) {
+                        console.error('解析响应数据失败:', e);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('生成报告失败:', error);
+            const errorMessage = `
+                <div class="bg-red-50 text-red-500 p-4 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    生成报告失败：${error.message}
+                </div>
+            `;
+            markdownContent.innerHTML = errorMessage;
+            aiResponseStream.innerHTML = errorMessage;
+        } finally {
+            generatingAnimation.style.display = 'none';
+        }
+    });
+
+    // 关闭报告卡片
+    function closeReportCard() {
+        const reportCard = document.getElementById('reportCard');
+        const cardContent = reportCard.querySelector('.bg-white');
+        cardContent.classList.add('opacity-0');
+        setTimeout(() => reportCard.classList.add('hidden'), 300);
+    }
+
+    // 复制报告
+    function copyReport() {
+        if (!currentReport) return;
+        
+        navigator.clipboard.writeText(currentReport).then(() => {
+            const button = event.currentTarget;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i><span>已复制</span>';
+            button.classList.add('text-green-500');
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('text-green-500');
+            }, 2000);
+        }).catch(err => {
+            console.error('复制失败:', err);
+            alert('复制失败，请手动复制');
+        });
+    }
+
+    // 下载报告
+    function downloadReport() {
+        if (!currentReport) return;
+        
+        const blob = new Blob([currentReport], { type: 'text/markdown' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `舆情分析报告_${new Date().toISOString().split('T')[0]}.md`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 默认选中标准分析
+        document.querySelector('[data-value="standard"] .depth-card').classList.add('border-indigo-500');
+        
+        // 更新初始数据
+        updateStats();
+        updateRealtimeData();
+        
+        // 设置定时更新
+        setInterval(updateStats, 30000);  // 每30秒更新一次统计数据
+        setInterval(updateRealtimeData, 10000);  // 每10秒更新一次实时数据
+    });
+    </script>
+</body>
+</html>

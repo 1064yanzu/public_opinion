@@ -1,0 +1,167 @@
+
+[2025-02-10 13:31:37 +0800] [2123696] [DEBUG] Current configuration:
+  config: ./gunicorn.conf.py
+  wsgi_app: None
+  bind: ['0.0.0.0:8000']
+  backlog: 2048
+  workers: 2
+  worker_class: sync
+  threads: 2
+  worker_connections: 1000
+  max_requests: 0
+  max_requests_jitter: 0
+  timeout: 120
+  graceful_timeout: 30
+  keepalive: 2
+  limit_request_line: 4094
+  limit_request_fields: 100
+  limit_request_field_size: 8190
+  reload: True
+  reload_engine: auto
+  reload_extra_files: []
+  spew: False
+  check_config: False
+  print_config: False
+  preload_app: False
+  sendfile: None
+  reuse_port: False
+  chdir: /www/wwwroot/flask
+  daemon: False
+  raw_env: []
+  pidfile: None
+  worker_tmp_dir: None
+  user: 0
+  group: 0
+  umask: 0
+  initgroups: False
+  tmp_upload_dir: None
+  secure_scheme_headers: {'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}
+  forwarded_allow_ips: ['127.0.0.1', '::1']
+  accesslog: /www/wwwroot/flask/logs/access.log
+  disable_redirect_access_to_syslog: False
+  access_log_format: %(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
+  errorlog: /www/wwwroot/flask/logs/error.log
+  loglevel: debug
+  capture_output: True
+  logger_class: gunicorn.glogging.Logger
+  logconfig: None
+  logconfig_dict: {}
+  logconfig_json: None
+  syslog_addr: udp://localhost:514
+  syslog: False
+  syslog_prefix: None
+  syslog_facility: user
+  enable_stdio_inheritance: False
+  statsd_host: None
+  dogstatsd_tags: 
+  statsd_prefix: 
+  proc_name: None
+  default_proc_name: app:app
+  pythonpath: None
+  paste: None
+  on_starting: <function OnStarting.on_starting at 0x7fcc94112700>
+  on_reload: <function OnReload.on_reload at 0x7fcc94112840>
+  when_ready: <function WhenReady.when_ready at 0x7fcc94112980>
+  pre_fork: <function Prefork.pre_fork at 0x7fcc94112ac0>
+  post_fork: <function Postfork.post_fork at 0x7fcc94112c00>
+  post_worker_init: <function PostWorkerInit.post_worker_init at 0x7fcc94112d40>
+  worker_int: <function WorkerInt.worker_int at 0x7fcc94112e80>
+  worker_abort: <function WorkerAbort.worker_abort at 0x7fcc94112fc0>
+  pre_exec: <function PreExec.pre_exec at 0x7fcc94113100>
+  pre_request: <function PreRequest.pre_request at 0x7fcc94113240>
+  post_request: <function PostRequest.post_request at 0x7fcc941132e0>
+  child_exit: <function ChildExit.child_exit at 0x7fcc94113420>
+  worker_exit: <function WorkerExit.worker_exit at 0x7fcc94113560>
+  nworkers_changed: <function NumWorkersChanged.nworkers_changed at 0x7fcc941136a0>
+  on_exit: <function OnExit.on_exit at 0x7fcc941137e0>
+  ssl_context: <function NewSSLContext.ssl_context at 0x7fcc941139c0>
+  proxy_protocol: False
+  proxy_allow_ips: ['127.0.0.1', '::1']
+  keyfile: None
+  certfile: None
+  ssl_version: 2
+  cert_reqs: 0
+  ca_certs: None
+  suppress_ragged_eofs: True
+  do_handshake_on_connect: False
+  ciphers: None
+  raw_paste_global_conf: []
+  permit_obsolete_folding: False
+  strip_header_spaces: False
+  permit_unconventional_http_method: False
+  permit_unconventional_http_version: False
+  casefold_http_method: False
+  forwarder_headers: ['SCRIPT_NAME', 'PATH_INFO']
+  header_map: drop
+[2025-02-10 13:31:37 +0800] [2123696] [INFO] Starting gunicorn 23.0.0
+[2025-02-10 13:31:37 +0800] [2123696] [DEBUG] Arbiter booted
+[2025-02-10 13:31:37 +0800] [2123696] [INFO] Listening at: http://0.0.0.0:8000 (2123696)
+[2025-02-10 13:31:37 +0800] [2123696] [INFO] Using worker: gthread
+[2025-02-10 13:31:37 +0800] [2123698] [INFO] Booting worker with pid: 2123698
+[2025-02-10 13:31:37 +0800] [2123698] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 608, in spawn_worker
+    worker.init_process()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/gthread.py", line 94, in init_process
+    super().init_process()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 135, in init_process
+    self.load_wsgi()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 147, in load_wsgi
+    self.wsgi = self.app.wsgi()
+                ^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+                    ^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+    return self.load_wsgiapp()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+    return util.import_app(self.app_uri)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/util.py", line 370, in import_app
+    mod = importlib.import_module(module)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1140, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'app'
+[2025-02-10 13:31:37 +0800] [2123698] [INFO] Worker exiting (pid: 2123698)
+[2025-02-10 13:31:37 +0800] [2123699] [INFO] Booting worker with pid: 2123699
+[2025-02-10 13:31:37 +0800] [2123699] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 608, in spawn_worker
+    worker.init_process()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/gthread.py", line 94, in init_process
+    super().init_process()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 135, in init_process
+    self.load_wsgi()
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 147, in load_wsgi
+    self.wsgi = self.app.wsgi()
+                ^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+                    ^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+    return self.load_wsgiapp()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+    return util.import_app(self.app_uri)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/site-packages/gunicorn/util.py", line 370, in import_app
+    mod = importlib.import_module(module)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/www/server/pyporject_evn/wwwroot_venv/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1140, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'app'
+[2025-02-10 13:31:38 +0800] [2123699] [INFO] Worker exiting (pid: 2123699)
+[2025-02-10 13:31:38 +0800] [2123696] [ERROR] Worker (pid:2123698) exited with code 3
+[2025-02-10 13:31:38 +0800] [2123696] [ERROR] Worker (pid:2123699) was sent SIGTERM!
+[2025-02-10 13:31:38 +0800] [2123696] [ERROR] Shutting down: Master
+[2025-02-10 13:31:38 +0800] [2123696] [ERROR] Reason: Worker failed to boot.

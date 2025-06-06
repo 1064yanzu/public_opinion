@@ -1,0 +1,639 @@
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a8a4e6;
+    --text-color: #2d3436;
+    --border-color: rgba(255, 255, 255, 0.18);
+    --bg-color: #f0f2f5;
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+body {
+    background: linear-gradient(135deg, #a8e6cf 0%, #6c5ce7 100%);
+    min-height: 100vh;
+}
+
+.main-container {
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+/* 顶部搜索区域 */
+.header-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--glass-shadow);
+    margin-bottom: 30px;
+}
+
+.header-section h2 {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.search-box {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    width: 400px;
+    transition: all 0.3s ease;
+}
+
+.search-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.search-box input {
+    background: transparent;
+    padding: 12px 20px;
+    font-size: 16px;
+}
+
+.search-btn {
+    background: var(--primary-color);
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: var(--secondary-color);
+}
+
+/* 内容布局 */
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 30px;
+}
+
+/* 筛选器样式 */
+.filter-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--glass-shadow);
+}
+
+.filter-group {
+    margin-bottom: 25px;
+}
+
+.filter-group label {
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.form-select, .form-control {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus, .form-control:focus {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 2px var(--secondary-color);
+}
+
+.filter-button {
+    background: var(--primary-color);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* 案例卡片样式 */
+.case-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    transition: all 0.3s ease;
+}
+
+.case-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+}
+
+.case-header {
+    margin-bottom: 15px;
+}
+
+.case-header h3 {
+    font-size: 20px;
+    color: #2d3436;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.case-tags {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tag {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tag.type {
+    color: #6c5ce7;
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.tag.result.success {
+    color: #00b894;
+    background: rgba(0, 184, 148, 0.1);
+    border: 1px solid rgba(0, 184, 148, 0.2);
+}
+
+.tag.result.failure {
+    color: #ff7675;
+    background: rgba(255, 118, 117, 0.1);
+    border: 1px solid rgba(255, 118, 117, 0.2);
+}
+
+.case-summary {
+    color: #636e72;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+/* 模态框样式 */
+.case-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: #2d3436;
+}
+
+.modal-header {
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-body {
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.98);
+}
+
+/* 指标卡片 */
+.case-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.metric-content h4 {
+    color: #636e72;
+    margin: 0;
+    font-size: 14px;
+}
+
+.metric-content p {
+    color: #2d3436;
+    margin: 5px 0 0 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* 图表区域 */
+.charts-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 时间线 */
+.timeline-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 经验教训 */
+.lessons-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.lesson-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 滚动条美化 */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(108, 92, 231, 0.5);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(108, 92, 231, 0.7);
+}
+/* 详情模态框样式 */
+.case-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--glass-shadow);
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 25px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+    flex: 1;
+}
+
+.modal-title h2 {
+    margin: 0 0 15px 0;
+    color: var(--text-color);
+    font-size: 24px;
+}
+
+.modal-tags {
+    display: flex;
+    gap: 10px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--primary-color);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+/* 关键指标卡片 */
+.case-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card i {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.metric-content h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.metric-content p {
+    margin: 5px 0 0 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* 图表区域 */
+.charts-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.charts-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+}
+
+/* 时间线样式优化 */
+.timeline-section {
+    margin-bottom: 40px;
+}
+
+.timeline-section h3 {
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+}
+
+.timeline-point {
+    position: absolute;
+    left: -44px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-point {
+    transform: scale(1.2);
+}
+
+.timeline-content {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-content {
+    transform: translateX(10px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.timeline-header h4 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 18px;
+}
+
+.timeline-indicators {
+    display: flex;
+    gap: 15px;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #666;
+}
+
+.indicator.positive {
+    color: #00b894;
+}
+
+.indicator.negative {
+    color: #ff7675;
+}
+
+.timeline-date {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.timeline-content p {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+/* 经验教训部分优化 */
+.lessons-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.lessons-section h3 {
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+.lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.lesson-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.lesson-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-card.high {
+    border-left: 4px solid #ff7675;
+}
+
+.lesson-card.medium {
+    border-left: 4px solid #fdcb6e;
+}
+
+.lesson-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.lesson-header i {
+    color: var(--primary-color);
+    font-size: 20px;
+}
+
+.lesson-header h4 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.lesson-card p {
+    margin: 0;
+    color: #666;
+    line-height: 1.6;
+}

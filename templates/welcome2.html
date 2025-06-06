@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据洞见团队</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/team.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-bg"></div>
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <img src="{{ url_for('static', filename='assets/images/icon.png') }}" alt="Logo">
+                </div>
+                <a href="#" class="logo-text">舆情监测</a>
+            </div>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">项目介绍</a>
+                <a href="#video" class="nav-link">演示视频</a>
+                <a href="#team" class="nav-link">成员介绍</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区 -->
+    <section id="features" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">网络舆情监测的智能革新</h1>
+                <p class="hero-desc">
+                    我们提供全方位的舆情监测解决方案，帮助您实时掌握网络动态，快速响应市场变化。
+                </p>
+                <a href="{{ url_for('user.login') }}" class="try-button">上手尝试</a>
+            </div>
+
+            <div class="features-grid">
+                <!-- 实时洞察卡片 -->
+                <div id="features" class="feature-card">
+                    <div class="feature-content">
+                        <h3 class="feature-title">实时洞察，先机尽在掌握</h3>
+                        <p class="feature-desc">秒级数据更新，实时热点追踪</p>
+                        <ul class="feature-list">
+                            <li class="feature-item">每30秒刷新一次最新舆情数据</li>
+                            <li class="feature-item">自动捕捉并展示最新的新闻热点</li>
+                        </ul>
+                    </div>
+                    <div class="feature-animation">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2B50AA"/>
+                                    <stop offset="100%" style="stop-color:#00F5FF"/>
+                                </linearGradient>
+                                <!-- 添加滤镜效果 -->
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <!-- 背景圆环 -->
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43, 80, 170, 0.1)" stroke-width="2"/>
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 245, 255, 0.1)" stroke-width="2" transform="rotate(45 50 50)"/>
+                            
+                            <!-- 动态圆环 -->
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#gradient1)" stroke-width="4" filter="url(#glow)">
+                                <animate attributeName="stroke-dasharray" from="0 251.2" to="251.2 0" dur="3s" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-dashoffset" from="251.2" to="0" dur="3s" repeatCount="indefinite"/>
+                            </circle>
+                            
+                            <!-- 旋转的点 -->
+                            <circle cx="50" cy="10" r="4" fill="url(#gradient1)" filter="url(#glow)">
+                                <animateTransform
+                                    attributeName="transform"
+                                    type="rotate"
+                                    from="0 50 50"
+                                    to="360 50 50"
+                                    dur="2s"
+                                    repeatCount="indefinite"/>
+                            </circle>
+                            
+                            <!-- 数据流线条 -->
+                            <path d="M50 20 L50 80" stroke="url(#gradient1)" stroke-width="2" opacity="0.5">
+                                <animate attributeName="stroke-dasharray" values="0,60;60,0" dur="2s" repeatCount="indefinite"/>
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 智能分析卡片 -->
+                <div class="feature-card">
+                    <div class="feature-content">
+                        <h3 class="feature-title">智能分析，精准决策</h3>
+                        <p class="feature-desc">先进的情感分析预警机制</p>
+                        <ul class="feature-list">
+                            <li class="feature-item">快速区分正面、负面和中性情绪</li>
+                            <li class="feature-item">三级预警提示，及时发现潜在问题</li>
+                        </ul>
+                    </div>
+                    <div class="feature-animation">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2B50AA"/>
+                                    <stop offset="100%" style="stop-color:#00F5FF"/>
+                                </linearGradient>
+                            </defs>
+                            <rect x="20" y="20" width="60" height="60" fill="none" stroke="url(#gradient2)" stroke-width="4">
+                                <animate attributeName="width" values="60;50;60" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="height" values="60;50;60" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="x" values="20;25;20" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="y" values="20;25;20" dur="2s" repeatCount="indefinite"/>
+                            </rect>
+                            <line x1="30" y1="70" x2="70" y2="70" stroke="url(#gradient2)" stroke-width="4">
+                                <animate attributeName="y1" values="70;65;70" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="y2" values="70;75;70" dur="2s" repeatCount="indefinite"/>
+                            </line>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 可视化呈现卡片 -->
+                <div class="feature-card">
+                    <div class="feature-content">
+                        <h3 class="feature-title">可视化呈现，信息一目了然</h3>
+                        <p class="feature-desc">热力图与词云直观展示数据</p>
+                        <ul class="feature-list">
+                            <li class="feature-item">热力图展示舆情分布</li>
+                            <li class="feature-item">词云展现舆论焦点</li>
+                        </ul>
+                    </div>
+                    <div class="feature-animation">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2B50AA"/>
+                                    <stop offset="100%" style="stop-color:#00F5FF"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 80 L40 40 L60 60 L80 20" fill="none" stroke="url(#gradient3)" stroke-width="4">
+                                <animate attributeName="d" 
+                                    values="M20 80 L40 40 L60 60 L80 20;M20 70 L40 50 L60 50 L80 30;M20 80 L40 40 L60 60 L80 20" 
+                                    dur="3s" 
+                                    repeatCount="indefinite"/>
+                            </path>
+                            <circle cx="20" cy="80" r="4" fill="url(#gradient3)"/>
+                            <circle cx="40" cy="40" r="4" fill="url(#gradient3)"/>
+                            <circle cx="60" cy="60" r="4" fill="url(#gradient3)"/>
+                            <circle cx="80" cy="20" r="4" fill="url(#gradient3)"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 全面覆盖卡片 -->
+                <div class="feature-card">
+                    <div class="feature-content">
+                        <h3 class="feature-title">全面覆盖，无缝集成</h3>
+                        <p class="feature-desc">多平台数据采集与整合</p>
+                        <ul class="feature-list">
+                            <li class="feature-item">多平台不断数据采集</li>
+                            <li class="feature-item">一式数据概览与分析</li>
+                        </ul>
+                    </div>
+                    <div class="feature-animation">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="gradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2B50AA"/>
+                                    <stop offset="100%" style="stop-color:#00F5FF"/>
+                                </linearGradient>
+                            </defs>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#gradient4)" stroke-width="4"/>
+                            <g transform="translate(50 50)">
+                                <circle cx="0" cy="-30" r="6" fill="url(#gradient4)">
+                                    <animateTransform
+                                        attributeName="transform"
+                                        type="rotate"
+                                        from="0"
+                                        to="360"
+                                        dur="4s"
+                                        repeatCount="indefinite"/>
+                                </circle>
+                            </g>
+                            <g transform="translate(50 50)">
+                                <circle cx="0" cy="-20" r="4" fill="url(#gradient4)">
+                                    <animateTransform
+                                        attributeName="transform"
+                                        type="rotate"
+                                        from="0"
+                                        to="-360"
+                                        dur="3s"
+                                        repeatCount="indefinite"/>
+                                </circle>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 在features-grid之前添加 -->
+    <div class="innovation-section">
+        <div class="section-title">
+            <h2>行业首创功能</h2>
+            <p>引领舆情监测技术革新，打造智能化舆情分析新标准</p>
+        </div>
+        <div class="innovation-grid">
+            <div class="innovation-card">
+                <div class="innovation-bg"></div>
+                <div class="innovation-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M6.5 20Q4.22 20 2.61 18.43 1 16.85 1 14.58 1 12.63 2.17 11.1 3.35 9.57 5.25 9.15 5.88 6.85 7.75 5.43 9.63 4 12 4 14.93 4 16.96 6.04 19 8.07 19 11 20.73 11.2 21.86 12.5 23 13.78 23 15.5 23 17.38 21.69 18.69 20.38 20 18.5 20Z"/>
+                    </svg>
+                </div>
+                <h3 class="innovation-title">潮汐动态爬取</h3>
+                <p class="innovation-desc">智能感知网络舆情潮起潮落，实时捕捉热点动态</p>
+                <ul class="innovation-features">
+                    <li class="innovation-feature">自适应采集频率调节</li>
+                    <li class="innovation-feature">多维度数据实时更新</li>
+                    <li class="innovation-feature">智能热点预警机制</li>
+                </ul>
+            </div>
+
+            <div class="innovation-card">
+                <div class="innovation-bg"></div>
+                <div class="innovation-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M21 8c-1.45 0-2.26 1.44-1.93 2.51l-3.55 3.56c-.3-.09-.74-.09-1.04 0l-2.55-2.55C12.27 10.45 11.46 9 10 9c-1.45 0-2.27 1.44-1.93 2.52l-4.56 4.55C2.44 15.74 1 16.55 1 18c0 1.1.9 2 2 2 1.45 0 2.26-1.44 1.93-2.51l4.55-4.56c.3.09.74.09 1.04 0l2.55 2.55C12.73 16.55 13.54 18 15 18c1.45 0 2.27-1.44 1.93-2.52l3.56-3.55c1.07.33 2.51-.48 2.51-1.93 0-1.1-.9-2-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="innovation-title">可视化案例库</h3>
+                <p class="innovation-desc">系统化整理舆情应对经验，提供直观的决策支持</p>
+                <ul class="innovation-features">
+                    <li class="innovation-feature">交互式案例分析</li>
+                    <li class="innovation-feature">多维度数据可视化</li>
+                    <li class="innovation-feature">一键生成分析报告</li>
+                </ul>
+            </div>
+
+            <div class="innovation-card">
+                <div class="innovation-bg"></div>
+                <div class="innovation-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 3C6.95 3 3.15 4.85 0 7.23L12 22 24 7.25C20.85 4.87 17.05 3 12 3ZM13 16H11V14H13V16ZM13 12H11V8H13V12Z"/>
+                    </svg>
+                </div>
+                <h3 class="innovation-title">多专家协同</h3>
+                <p class="innovation-desc">融合多领域专家智慧，提供专业的舆情应对方案</p>
+                <ul class="innovation-features">
+                    <li class="innovation-feature">智能化方案生成</li>
+                    <li class="innovation-feature">多模型协同决策</li>
+                    <li class="innovation-feature">实时优化推荐</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加视频区域HTML -->
+    <section id="video" class="video-section">
+        <div class="video-decoration video-decoration-1"></div>
+        <div class="video-decoration video-decoration-2"></div>
+        
+        <div class="video-container">
+            <div class="video-content">
+                <h2 class="video-title">功能演示视频</h2>
+                <!-- <p class="video-desc">
+                    通过短视频了解我们的产品功能和使用方法
+                </p> -->
+            </div>
+            
+            <div class="video-wrapper">
+                <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=113792222498933&bvid=BV1PTrYYkEdg&cid=27763410394&p=1" 
+                        scrolling="no" 
+                        border="0" 
+                        frameborder="no" 
+                        framespacing="0" 
+                        allowfullscreen="true">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- 在 video-section 后添加成员介绍模块 -->
+    <section id="team" class="team-section">
+        <div class="team-container">
+            <div class="team-content">
+                <h2 class="team-title">团队成员</h2>
+                <p class="team-desc">我们是一支充满激情的团队</p>
+            </div>
+            
+            <div class="team-grid">
+                <!-- 卡片1-6 -->
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 添加第六个卡片 -->
+                <div class="member-card-wrapper">
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-front-content">
+                                    <div class="card-logo">
+                                        <svg viewBox="0 0 24 24" width="40" height="40">
+                                            <path fill="#2B50AA" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="card-hint">点击查看团队成员</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="member-avatar">
+                                    <img src="" alt="成员头像" data-member-id="0">
+                                </div>
+                                <h3 class="member-name"></h3>
+                                <p class="member-role"></p>
+                                <p class="member-desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 添加模态框 -->
+    <div class="member-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='assets/js/team.js') }}"></script>
+</body>
+</html>

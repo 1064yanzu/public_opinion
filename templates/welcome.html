@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舆情监测系统 - 现代清晰的解决方案</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/clarity_team.css') }}">
+    <link rel="stylesheet" href="clarity_team.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
+    <style>
+        /* 图片加载错误的备用样式 */
+        .member-avatar img.error {
+            background-color: #3B82F6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="container">
+                <a href="#" class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>数据洞见</span>
+                </a>
+                <div class="nav-links">
+                    <a href="#features">功能特点</a>
+                    <a href="#innovations">创新优势</a>
+                    <a href="#team">团队介绍</a>
+                </div>
+                <a href="{{ url_for('user.login') }}" class="btn-primary">立即体验</a>
+            </div>
+        </nav>
+
+        <!-- 首页大图 -->
+        <section class="hero">
+            <div class="container">
+                <div class="light-effect hero-light"></div>
+                <div class="hero-content">
+                    <div class="chip">行业领先的舆情分析技术</div>
+                    <h1>让<span class="highlight">舆情分析</span>变得简单高效</h1>
+                    <p class="hero-text">基于先进AI技术打造的新一代舆情监测系统，帮助您实时把握舆论走向，精准识别风险，高效制定应对策略。</p>
+                    <div class="hero-cta">
+                        <a href="{{ url_for('user.login') }}" class="btn-hero">免费试用</a>
+                        <a href="#video-demo" class="btn-text">
+                            观看演示
+                            <span class="arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="interface-preview">
+                        <div class="interface-time">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                        </div>
+                        <div class="interface-document">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                        </div>
+                        <div class="interface-analysis">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M19 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 2V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 19V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-dot"></div>
+                </div>
+            </div>
+            <svg class="hero-curve" width="100%" height="40" viewBox="0 0 1440 40" preserveAspectRatio="none">
+                <path d="M0,0 C240,40 480,40 720,20 C960,0 1200,0 1440,20 L1440,40 L0,40 Z" fill="currentColor"></path>
+            </svg>
+        </section>
+
+        <!-- 波浪过渡效果 -->
+        <div class="section-transition">
+            <div class="wave-transition">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="var(--bg-secondary)"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 核心功能 -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="light-effect features-light"></div>
+                <div class="section-header">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#0070f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 16V12" stroke="#0070f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 8H12.01" stroke="#0070f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h2>核心功能</h2>
+                    <p>我们提供全方位的舆情监测与分析功能，帮助您掌握网络言论动态</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 7.5V6.75C21 5.09315 19.6569 3.75 18 3.75H6C4.34315 3.75 3 5.09315 3 6.75V17.25C3 18.9069 4.34315 20.25 6 20.25H18C19.6569 20.25 21 18.9069 21 17.25V16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M15 12L12 12M12 12L9 12M12 12L12 9M12 12L12 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <h3>全网数据采集</h3>
+                        <p>覆盖全网热门平台，实时捕捉相关信息，确保不遗漏任何重要舆情数据。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 16L19 19M18 12C18 15.3137 15.3137 18 12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9.5 12.5L11 14L14.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>精准情感分析</h3>
+                        <p>基于AI深度学习技术，准确识别文本情感倾向，支持复杂语境和多语种分析。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 21.0001L3 3.00006M21 21.0001L21 3.00006M7.5 11.0001L12 6.50006M12 6.50006L16.5 11.0001M12 6.50006L12 21.0001" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>热点事件追踪</h3>
+                        <p>自动识别舆情热点，追踪事件发展脉络，提供完整的事件分析与态势演变。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.074 2.633C11.394 2.01 12.605 2.01 12.926 2.633L22.926 21.633C23.24 22.244 22.782 23 22.099 23L1.901 23C1.218 23 0.76 22.244 1.074 21.633L11.074 2.633Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 9V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="17" r="1" fill="currentColor"/>
+                        </svg>
+                        <h3>风险预警</h3>
+                        <p>基于历史数据分析与实时监测，提前识别潜在舆情风险，及时预警可能出现的负面舆情。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 5C4 4.44772 4.44772 4 5 4H19C19.5523 4 20 4.44772 20 5V7C20 7.55228 19.5523 8 19 8H5C4.44772 8 4 7.55228 4 7V5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 13C4 12.4477 4.44772 12 5 12H11C11.5523 12 12 12.4477 12 13V19C12 19.5523 11.5523 20 11 20H5C4.44772 20 4 19.5523 4 19V13Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16 13C16 12.4477 16.4477 12 17 12H19C19.5523 12 20 12.4477 20 13V19C20 19.5523 19.5523 20 19 20H17C16.4477 20 16 19.5523 16 19V13Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>可视化报告</h3>
+                        <p>多维度数据可视化展示，直观呈现舆情态势，提供定制化报告与分析结论。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.10745 2.67414C9.98414 2.24187 11.0159 2 12 2C13.9693 2 15.4832 2.52376 16.6434 3.27248M7.5 4.5C5.47644 5.52159 4 7.36744 4 10C4 11.1405 4.33639 12.2013 4.85849 13.1203M19.5 13.5C19.8273 12.7729 20 11.9357 20 11C20 9.54637 19.5544 8.22485 18.8383 7.11283M17 17.5C15.7751 18.4328 14.1378 19 12 19C10.8022 19 9.74439 18.8637 8.81934 18.5921M4.5 17L6.5 15L8.5 17L10.5 15L12.5 17L14.5 15L16.5 17L18.5 15L20.5 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>趋势预测</h3>
+                        <p>基于大数据分析和机器学习，预测舆情走向，辅助决策者制定应对策略。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 波浪过渡效果 -->
+        <div class="section-transition">
+            <div class="wave-transition">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" fill="var(--background)"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 创新优势 -->
+        <section id="innovations" class="innovations">
+            <div class="container">
+                <div class="section-header">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.66347 17H14.3364M11.9999 3V4M18.3639 5.63604L17.6568 6.34315M21 11.9999H20M4 11.9999H3M6.34309 6.34315L5.63599 5.63604M8.46441 15.5356C6.51179 13.5829 6.51179 10.4171 8.46441 8.46449C10.417 6.51187 13.5829 6.51187 15.5355 8.46449C17.4881 10.4171 17.4881 13.5829 15.5355 15.5356L14.9884 16.0827C14.3555 16.7155 13.9999 17.5739 13.9999 18.469V19C13.9999 20.1046 13.1045 21 11.9999 21C10.8954 21 9.99995 20.1046 9.99995 19V18.469C9.99995 17.5739 9.64438 16.7155 9.01151 16.0827L8.46441 15.5356Z" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h2>创新优势</h2>
+                    <p>我们突破传统舆情分析局限，提供更精准、高效的舆情监测服务</p>
+                </div>
+
+                <div class="innovations-grid">
+                    <div class="innovation-card">
+                        <svg class="innovation-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 9.5V7C20 5.89543 19.1046 5 18 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13 19L15 21L20 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 9H16M8 13H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>深度语义理解</h3>
+                        <ul>
+                            <li>超越传统关键词匹配，理解语境</li>
+                            <li>识别隐含情感与意图</li>
+                            <li>支持多语言语义分析</li>
+                        </ul>
+                    </div>
+
+                    <div class="innovation-card">
+                        <svg class="innovation-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 3.60005C15 3.60005 14.0111 3.60005 12.0444 3.60005C10.0778 3.60005 9.11115 4.55005 9.11115 6.20005C9.11115 8.44505 9.11115 8.44505 9.11115 8.44505" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M12 14.3L15.8571 11.4M15.8571 11.4C15.6118 11.4 14.8571 11.4 14.8571 11.4C14.3049 11.4 13.8572 10.9523 13.8572 10.4V9.40002C13.8572 8.84774 14.3049 8.40002 14.8571 8.40002H16.8571C17.4094 8.40002 17.8571 8.84774 17.8571 9.40002V10.4C17.8571 10.9523 17.4094 11.4 16.8571 11.4C16.8571 11.4 16.1025 11.4 15.8571 11.4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M11.9999 14.3L8.14282 11.4M8.14282 11.4C8.38818 11.4 9.14282 11.4 9.14282 11.4C9.69511 11.4 10.1428 10.9523 10.1428 10.4V9.40002C10.1428 8.84774 9.69511 8.40002 9.14282 8.40002H7.14282C6.59054 8.40002 6.14282 8.84774 6.14282 9.40002V10.4C6.14282 10.9523 6.59054 11.4 7.14282 11.4C7.14282 11.4 7.89746 11.4 8.14282 11.4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.99976 20.4H14.9998" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M11.9998 14.3V20.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <h3>实时处理引擎</h3>
+                        <ul>
+                            <li>毫秒级数据处理响应</li>
+                            <li>支持海量数据高并发分析</li>
+                            <li>分布式架构确保稳定性</li>
+                        </ul>
+                    </div>
+
+                    <div class="innovation-card">
+                        <svg class="innovation-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="9" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="9" cy="17" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="17" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M12 7H14M13 17H14M12 12H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <h3>AI自学习能力</h3>
+                        <ul>
+                            <li>模型持续学习优化</li>
+                            <li>适应新兴网络用语</li>
+                            <li>根据行业特性自动调整</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 波浪过渡效果 -->
+        <div class="section-transition">
+            <div class="wave-transition">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="var(--bg-secondary)"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 视频演示 -->
+        <section id="video-demo" class="video-demo">
+            <div class="container">
+                <div class="section-header">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 8.00005V16.0001C2 17.1046 2.89543 18.0001 4 18.0001H20C21.1046 18.0001 22 17.1046 22 16.0001V8.00005C22 6.89548 21.1046 6.00005 20 6.00005H4C2.89543 6.00005 2 6.89548 2 8.00005Z" stroke="#0070f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 12.0001L10 9.00005V15.0001L15 12.0001Z" stroke="#0070f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h2>系统演示</h2>
+                    <p>观看视频了解清晰舆情系统如何帮助您实现舆情监测的全面升级</p>
+                </div>
+
+                <div class="video-container">
+                    <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=113792222498933&bvid=BV1PTrYYkEdg&cid=27763410394&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- 波浪过渡效果 -->
+        <div class="section-transition">
+            <div class="wave-transition">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="var(--bg-secondary)"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 团队介绍 -->
+        <section id="team" class="team">
+            <div class="container">
+                <div class="light-effect team-light"></div>
+                <div class="section-header">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 19C3 16.7909 4.79086 15 7 15H11C13.2091 15 15 16.7909 15 19V21H3V19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 14L17 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 14L21 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 14L19 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 11C7.34315 11 6 9.65685 6 8C6 6.34315 7.34315 5 9 5C10.6569 5 12 6.34315 12 8C12 9.65685 10.6569 11 9 11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h2>我们的团队</h2>
+                    <p>我们是一个专业、热情的团队</p>
+                </div>
+
+                <div class="team-grid">
+                    <!-- 团队成员卡片将通过JavaScript动态生成 -->
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-pattern">
+                                    <svg class="pattern-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <svg class="pattern-dot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="6" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <p class="card-hint">点击探索我们的团队成员</p>
+                            </div>
+                            <div class="card-back">
+                                <!-- 成员信息将在JavaScript中动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 成员模态框 -->
+        <div class="member-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-container">
+                <button class="close-modal">✕</button>
+                <div class="modal-body">
+                    <!-- 模态框内容将由 JS 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='assets/clarity_team.js') }}"></script>
+    <script src="clarity_team.js"></script>
+</body>
+</html> 
