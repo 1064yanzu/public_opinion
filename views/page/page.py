@@ -19,7 +19,13 @@ import json
 import time
 import uuid
 from utils.report_generator import ReportGenerator
-from model.ai_assistant import get_chat_response, verify_access_password, save_chat_history, load_chat_history
+import asyncio
+from services.ai_service import (
+    get_chat_response as async_get_chat_response,
+    verify_access_password,
+    save_chat_history,
+    load_chat_history,
+)
 import os
 import traceback  # 添加这个用于详细错误追踪
 from utils.ai_assistant_logger import log_user_activity, log_system_event, get_client_ip
@@ -1360,7 +1366,7 @@ def chat():
         # 调用AI助手模块获取回复
         try:
             # 获取AI回复
-            response = get_chat_response(message, chat_history)
+            response = asyncio.run(async_get_chat_response(message, chat_history))
 
             # 更新聊天历史
             chat_history.append({

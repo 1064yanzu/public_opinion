@@ -5,7 +5,8 @@ from utils.common import update_persistent_file
 import numpy as np
 import pandas as pd
 import os
-from model.nlp import main_nlp
+import asyncio
+from services.crawler_service import run_spider
 from utils.common import get_temp_file_path,get_persistent_file_path
 
 
@@ -51,7 +52,9 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
         print(f"当前间隔时间: {interval}分钟")
 
         # 执行爬虫任务并获取数据
-        infos2_data, share_num, comment_num, like_num, sentiment_counts = main_nlp(keyword, precision, platforms)
+        infos2_data, share_num, comment_num, like_num, sentiment_counts = asyncio.run(
+            run_spider(keyword, platforms, start_date, end_date, precision)
+        )
         
         print(f"main_nlp 返回数据类型:")
         print(f"infos2_data: {type(infos2_data)}, 长度: {len(infos2_data) if isinstance(infos2_data, (list, dict)) else 'N/A'}")
