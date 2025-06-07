@@ -1,5 +1,8 @@
 # API配置
-ZHIPUAI_API_KEY = "011f3b2503b3df17f792d2d0512fc175.eE53OpK9lcrPjMBr"
+import os
+
+# 从环境变量获取 ZHIPUAI_API_KEY，避免密钥直接写在代码中
+ZHIPUAI_API_KEY = os.getenv("ZHIPUAI_API_KEY", "")
 
 
 # 报告生成配置

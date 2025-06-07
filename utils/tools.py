@@ -87,8 +87,8 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
         print(f"成功添加下一次任务: {job_id}")
 
         # 更新数据文件
-        csv_2 = 'weibo_temp.csv'
-        csv_1 = f'{keyword}.csv'
+        csv_2 = get_temp_file_path('weibo', keyword)
+        csv_1 = get_persistent_file_path('微博', keyword)
         update_database(csv_1, csv_2)
 
         # 转换数据类型并返回

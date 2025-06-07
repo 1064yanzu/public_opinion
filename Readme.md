@@ -28,7 +28,7 @@
    python utils/init_system.py
    ```
 4. **配置密钥**
-   - 在 `config/settings.py` 或环境变量中设置 `ZHIPUAI_API_KEY` 等大模型相关配置
+   - 将智谱清言的 API Key 写入环境变量 `ZHIPUAI_API_KEY`，或在 `.env` 文件中设置后加载
 5. **启动服务**
    ```bash
    python app.py          # 开发模式
@@ -49,8 +49,9 @@
 ├── utils/                 # 工具函数及系统初始化脚本
 ├── templates/             # 前端模板
 ├── static/                # 静态资源
-├── persistent_data/       # 持久化爬取结果
-└── temp_data/             # 临时文件和中间结果
+├── persistent_data/       # 持久化爬取结果及历史记录
+├── temp_data/             # 临时文件和中间结果
+└── static/assets/images/  # 爬虫下载的图片
 ```
 
 ## 开发与扩展

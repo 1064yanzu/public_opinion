@@ -40,6 +40,12 @@ def init_system():
             with open(data_file, 'w', encoding='utf-8') as f:
                 f.write("微博作者,微博内容,发布时间,转发数,评论数,点赞数,省份,url\n")
             print(f"创建数据文件: {data_file}")
+
+        history_path = os.path.join(root_dir, 'persistent_data', 'memory.csv')
+        if not os.path.exists(history_path):
+            with open(history_path, 'w', encoding='utf-8') as f:
+                f.write("时间,平台,关键词,开始时间,截止时间,精度\n")
+            print(f"创建历史记录文件: {history_path}")
             
         print("系统初始化完成！")
         return True

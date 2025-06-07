@@ -1,6 +1,7 @@
 import atexit
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, Blueprint, request, session, jsonify, Response, stream_with_context
 from model.nlp import get_info2,get_info3
 import csv
@@ -33,13 +34,19 @@ from config.settings import ZHIPUAI_API_KEY, MODEL_CONFIG, REPORT_CONFIG
 from utils.auth_decorator import login_required
 
 # 全局变量
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(
+    executors={"default": ThreadPoolExecutor(max_workers=10)},
+    timezone="Asia/Shanghai"
+)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 # 获取当前文件的绝对路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 获取项目根目录
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+
+# 历史记录文件路径
+history_file = os.path.join(root_dir, 'persistent_data', 'memory.csv')
 
 pb = Blueprint('page',__name__,url_prefix='/page',template_folder='templates')
 ready_path = get_persistent_file_path('all','any')
@@ -221,8 +228,8 @@ def setting_spider():
         try:
             # 获取历史记录
             history_records = []
-            if os.path.exists('memory.csv'):
-                with open('memory.csv', 'r', encoding='utf-8') as file:
+            if os.path.exists(history_file):
+                with open(history_file, 'r', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
                     for row in reader:
                         try:
@@ -311,9 +318,9 @@ def setting_spider():
             # 保存历史记录
             try:
                 memory_headers = ["时间", "平台", "关键词", "开始时间", "截止时间", "精度"]
-                file_exists = os.path.exists('memory.csv')
+                file_exists = os.path.exists(history_file)
 
-                with open('memory.csv', mode='a', newline='', encoding='utf-8') as file:
+                with open(history_file, mode='a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     if not file_exists:
                         writer.writerow(memory_headers)
