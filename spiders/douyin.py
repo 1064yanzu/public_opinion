@@ -2,8 +2,16 @@ import csv
 import time
 import requests
 import pandas as pd
+import random
+import gc
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from utils.common import get_persistent_file_path, get_temp_file_path, update_persistent_file
+from utils.network_optimizer import optimized_spider_request, batch_spider_requests, spider_optimizer
+from utils.performance_monitor import monitor_performance
+from utils.cache_manager import cached
+from config.settings import PERFORMANCE_CONFIG
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42",
@@ -14,64 +22,135 @@ headers = {
     'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
 }
 
-def spider(url,params):
-    response = requests.get(url,params=params,headers=headers)
-    response.encoding = 'utf-8'
-    return response.json()
+@monitor_performance('douyin_spider_request')
+def spider(url, params):
+    """优化的抖音爬虫请求函数"""
+    try:
+        # 使用优化的网络请求
+        result = optimized_spider_request(url, params=params, headers=headers)
+        return result
+    except Exception as e:
+        print(f"抖音爬虫请求失败: {url}, 错误: {str(e)}")
+        return None
 
 
+@monitor_performance('get_douyin_list')
 def get_douyin_list(v_keyword, v_max_page):
+    """
+    获取抖音视频列表（优化版本）
+    :param v_keyword: 关键词
+    :param v_max_page: 最大页数
+    :return: 数据列表
+    """
+    print(f"开始爬取抖音数据: 关键词={v_keyword}, 最大页数={v_max_page}")
+
+    # 限制最大页数
+    v_max_page = min(v_max_page, 20)
+
     offset = 0
     count = 16
     url = 'https://www.douyin.com/aweme/v1/web/search/item/?'
-    params = {
-        'aid': '6383',
-        'channel': 'channel_pc_web',
-        'search_channel': 'aweme_video_web',
-        'enable_history': 1,
-        'keyword':v_keyword,
-        'query_correct_type': 1,
-        'is_filter_search': 0,
-        'offset':offset,
-        'count': count,
-        'need_filter_settings': 1,
-        'list_type': 'single',
-        'search_id': '202409171828464D4F194FEB9D97AC723A'
-    }
 
     data_list = []  # 创建一个空列表来存储数据
     heads = ['用户名', '粉丝数', "发布时间", "视频描述", "视频时长", "点赞数", "收藏数", "评论数", "下载量", "分享数",
-         'uni_id','认证','url']  # 假设这些是你需要的列名
+         'uni_id','认证','url']
+
+    successful_pages = 0
+    failed_pages = 0
 
     for i in range(v_max_page):
-        r_data = spider(url, params)
-        if r_data is not None and r_data['has_more'] == 0:
-            break
-        if r_data is not None:
-            for data in r_data['data']:
-                analyzed_data = analysis_data(data)
-                data_list.append(analyzed_data)
-                time.sleep(0.1)
+        try:
+            params = {
+                'aid': '6383',
+                'channel': 'channel_pc_web',
+                'search_channel': 'aweme_video_web',
+                'enable_history': 1,
+                'keyword': v_keyword,
+                'query_correct_type': 1,
+                'is_filter_search': 0,
+                'offset': offset,
+                'count': count,
+                'need_filter_settings': 1,
+                'list_type': 'single',
+                'search_id': '202409171828464D4F194FEB9D97AC723A'
+            }
+
+            r_data = spider(url, params)
+
+            if r_data is None:
+                print(f"第{i+1}页请求失败")
+                failed_pages += 1
+                continue
+
+            if r_data.get('has_more') == 0:
+                print(f"第{i+1}页：没有更多数据")
+                break
+
+            if 'data' in r_data and r_data['data']:
+                page_data = []
+                for data in r_data['data']:
+                    try:
+                        analyzed_data = analysis_data(data)
+                        if analyzed_data:
+                            page_data.append(analyzed_data)
+                    except Exception as e:
+                        print(f"数据解析失败: {str(e)}")
+                        continue
+
+                data_list.extend(page_data)
+                successful_pages += 1
+                print(f'第{i+1}页爬取完成，获取到 {len(page_data)} 条数据')
+
+                # 添加延迟，避免请求过快
+                if i < v_max_page - 1:
+                    time.sleep(random.uniform(0.5, 1.5))
+            else:
+                print(f"第{i+1}页：数据格式异常")
+                failed_pages += 1
+
+        except Exception as e:
+            print(f"第{i+1}页爬取异常: {str(e)}")
+            failed_pages += 1
+            continue
+
+        # 更新参数
         offset += count
         count = 10
-        print(f'正在爬取抖音第{i+1}页数据')
-    
+
+    print(f"抖音爬取完成: 成功页数={successful_pages}, 失败页数={failed_pages}, 总数据量={len(data_list)}")
+
     # 创建DataFrame
-    df = pd.DataFrame(data_list, columns=heads)
-    
-    # 使用新的文件路径函数
-    persistent_file = get_persistent_file_path('douyin', v_keyword)
-    temp_file = get_temp_file_path('douyin', v_keyword)
-    
-    # 保存数据到临时文件
-    df.to_csv(temp_file, index=False, encoding='utf-8-sig')
-    
-    # 更新持久文件
-    update_persistent_file(persistent_file, temp_file)
-    
-    # 将 DataFrame 转换为列表包裹的字典形式
-    result = df.to_dict(orient='records')
-    return result
+    if data_list:
+        df = pd.DataFrame(data_list, columns=heads)
+
+        # 数据清理和去重
+        df = df.drop_duplicates(subset=['uni_id'], keep='first')
+        print(f"去重后数据量: {len(df)}")
+
+        # 使用新的文件路径函数
+        persistent_file = get_persistent_file_path('douyin', v_keyword)
+        temp_file = get_temp_file_path('douyin', v_keyword)
+
+        # 使用优化的CSV写入
+        from utils.csv_optimizer import csv_optimizer
+        csv_optimizer.write_csv_optimized(df, temp_file)
+
+        # 更新持久文件
+        update_persistent_file(persistent_file, temp_file)
+
+        print(f"数据已保存到: {temp_file}")
+        print(f"爬虫统计: {spider_optimizer.get_stats()}")
+
+        # 内存清理
+        del data_list
+        gc.collect()
+
+        # 将 DataFrame 转换为列表包裹的字典形式
+        result = df.to_dict(orient='records')
+        return result
+    else:
+        print("未获取到任何抖音数据")
+        return []
 
 def trans_time(timestamp=None):
     # 如果没有传入时间戳，则使用当前时间

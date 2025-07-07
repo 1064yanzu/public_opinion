@@ -60,33 +60,59 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
         print(f"like_num: {type(like_num)}, 值: {like_num}")
         print(f"sentiment_counts: {type(sentiment_counts)}, 值: {sentiment_counts}")
 
+        # 暂时禁用自动调度功能，避免无限循环
         # 计算下次执行时间
         next_run_time = datetime.now() + timedelta(minutes=interval)
         print(f"下次执行时间: {next_run_time}")
 
-        # 使用全局scheduler添加下一次任务
-        from views.page.page import scheduler
-        job_id = f'spider_job_{keyword}'
-        
-        # 如果已存在相同ID的任务，先移除它
-        if scheduler.get_job(job_id):
-            scheduler.remove_job(job_id)
+        # 注释掉自动调度功能，改为手动触发
+        # from views.page.page import scheduler, ensure_scheduler_started
+        # ensure_scheduler_started()  # 确保调度器已启动
+        # job_id = f'spider_job_{keyword}'
 
-        # 添加新的定时任务
-        scheduler.add_job(
-            func=dynamic_spider_task,
-            trigger='date',
-            run_date=next_run_time,
-            args=[keyword, platforms, start_date, end_date, precision],
-            id=job_id,
-            replace_existing=True
-        )
-        print(f"成功添加下一次任务: {job_id}")
+        # # 如果已存在相同ID的任务，先移除它
+        # if scheduler.get_job(job_id):
+        #     scheduler.remove_job(job_id)
+
+        # # 添加新的定时任务
+        # scheduler.add_job(
+        #     func=dynamic_spider_task,
+        #     trigger='date',
+        #     run_date=next_run_time,
+        #     args=[keyword, platforms, start_date, end_date, precision],
+        #     id=job_id,
+        #     replace_existing=True
+        # )
+        print(f"自动调度已禁用，避免无限循环执行")
 
         # 更新数据文件
-        csv_2 = 'weibo_temp.csv'
-        csv_1 = f'{keyword}.csv'
-        update_database(csv_1, csv_2)
+        # main_nlp函数会生成基于关键词的临时文件
+        csv_2 = get_temp_file_path('weibo', keyword)  # 使用关键词作为临时文件名
+        csv_1 = get_persistent_file_path('weibo', keyword)  # 使用正确的持久化文件路径
+
+        # 检查文件是否存在
+        if os.path.exists(csv_2):
+            print(f"找到临时文件: {csv_2}")
+            update_database(csv_1, csv_2)
+        else:
+            print(f"警告: 临时文件不存在: {csv_2}")
+            # 尝试查找其他可能的临时文件
+            possible_files = [
+                f'weibo_temp.csv',
+                f'temp_data/weibo_{keyword}.csv',
+                f'{keyword}.csv'
+            ]
+            found_file = None
+            for possible_file in possible_files:
+                if os.path.exists(possible_file):
+                    found_file = possible_file
+                    print(f"找到备用临时文件: {found_file}")
+                    break
+
+            if found_file:
+                update_database(csv_1, found_file)
+            else:
+                print("跳过数据库更新 - 没有找到任何临时文件")
 
         # 转换数据类型并返回
         return to_python_type(infos2_data), to_python_type(share_num), to_python_type(comment_num), to_python_type(like_num), to_python_type(sentiment_counts)

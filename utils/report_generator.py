@@ -576,7 +576,7 @@ class ReportGenerator:
             text = re.sub(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]', '', text)
             
             # 移除特殊字符
-            text = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9，。！？、；：""''（）【】《》\s]', '', text)
+            text = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9，。！？、；：""''（）【】《》\\s]', '', text)
             
             # 移除多余空白
             text = re.sub(r'\s+', ' ', text).strip()
@@ -893,7 +893,8 @@ class ReportGenerator:
                 'generation_state': {
                     'completed_sections': [],
                     'current_section': None
-                }
+                },
+                'analysis_results': {}  # 添加缺失的analysis_results键
             }
             
             return context
@@ -906,9 +907,15 @@ class ReportGenerator:
     def _update_analysis_context(self, context, section, content):
         """更新分析上下文"""
         try:
+            # 确保必要的键存在
+            if 'analysis_results' not in context:
+                context['analysis_results'] = {}
+            if 'generation_state' not in context:
+                context['generation_state'] = {'completed_sections': [], 'current_section': None}
+
             # 保存当前部分的结果
             context['analysis_results'][section['name']] = ''.join(content)
-            
+
             # 更新生成状态
             context['generation_state']['completed_sections'] = context['generation_state'].get('completed_sections', []) + [section['name']]
             context['generation_state']['current_section'] = None

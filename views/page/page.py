@@ -28,8 +28,148 @@ from utils.auth_decorator import login_required
 
 # 全局变量
 scheduler = BackgroundScheduler()
-scheduler.start()
-atexit.register(lambda: scheduler.shutdown())
+# 不在模块导入时启动调度器，而是在需要时启动
+_scheduler_started = False
+
+def ensure_scheduler_started():
+    """确保调度器已启动"""
+    global _scheduler_started
+    if not _scheduler_started:
+        scheduler.start()
+        atexit.register(lambda: scheduler.shutdown())
+        _scheduler_started = True
+        print("调度器已启动")
+
+def load_home_data_cached():
+    """加载主页数据（带缓存）"""
+    global _home_data_cache
+    import time
+
+    current_time = time.time()
+
+    # 检查缓存是否有效
+    cache_age = current_time - _home_data_cache['timestamp']
+    print(f"缓存检查: 数据存在={_home_data_cache['data'] is not None}, 缓存年龄={cache_age:.1f}秒, 缓存期限={_home_data_cache['cache_duration']}秒")
+
+    if (_home_data_cache['data'] is not None and
+        cache_age < _home_data_cache['cache_duration']):
+        print("✅ 使用缓存的主页数据")
+        return _home_data_cache['data']
+
+    print("🔄 重新加载主页数据...")
+
+    # 加载基础统计数据
+    try:
+        unique_user_count, total_heat_value, unique_ip_count, row_count = fenxi()
+    except Exception as e:
+        print(f"获取基础统计数据失败: {str(e)}")
+        unique_user_count = total_heat_value = unique_ip_count = row_count = 0
+
+    # 快速加载微博数据（只读取前20条）
+    infos2_data = []
+    try:
+        if os.path.exists(ready_path):
+            file_size = os.path.getsize(ready_path) / (1024 * 1024)  # MB
+            print(f"快速读取CSV文件: {ready_path} (大小: {file_size:.2f}MB)")
+
+            # 只读取前20行以提高速度
+            df = pd.read_csv(ready_path, encoding='utf-8', nrows=20)
+            print(f"快速读取完成，数据行数: {len(df)}")
+
+            for i in range(min(20, len(df))):
+                try:
+                    row = df.iloc[i]
+                    shares = pd.to_numeric(row['转发数'], errors='coerce')
+                    comments = pd.to_numeric(row['评论数'], errors='coerce')
+                    likes = pd.to_numeric(row['点赞数'], errors='coerce')
+
+                    info = {
+                        'author': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
+                        'content': str(row['微博内容']).strip()[:150] if pd.notna(row['微博内容']) else "无内容",  # 进一步限制内容长度
+                        'time': str(row['发布时间']).strip() if pd.notna(row['发布时间']) else "未知时间",
+                        'shares': int(shares) if pd.notna(shares) else 0,
+                        'comments': int(comments) if pd.notna(comments) else 0,
+                        'likes': int(likes) if pd.notna(likes) else 0,
+                        'url': str(row['url']).strip() if pd.notna(row['url']) else "#",
+                        'profile_url': "#"
+                    }
+                    infos2_data.append(info)
+                except Exception as e:
+                    print(f"处理行数据时出错: {str(e)}")
+                    continue
+        else:
+            print(f"CSV文件不存在: {ready_path}")
+    except Exception as e:
+        print(f"快速加载数据失败: {str(e)}")
+        infos2_data = []
+
+    # 加载每日热点数据（恢复完整功能）
+    daily_hotspots = []
+    try:
+        current_date = datetime.now().strftime('%Y%m%d')
+        csv_file_name = f'{current_date}_pengpai.csv'
+        target_dir = os.path.join(root_dir, 'static', 'content')
+        images_dir = os.path.join(target_dir, csv_file_name)
+
+        print(f"查找热点文件: {images_dir}")
+
+        if os.path.exists(images_dir):
+            print(f"✅ 找到热点文件: {csv_file_name}")
+            with open(images_dir, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                count = 0
+                for row in reader:
+                    if count >= 8:  # 加载8条热点数据
+                        break
+                    try:
+                        hotspot = {
+                            'title': row.get('标题', '无标题')[:100],  # 限制标题长度
+                            'cover_image': row.get('封面链接', ''),
+                            'link': row.get('链接', '#'),  # 使用link而不是url
+                            'source': row.get('发文者', '未知来源'),
+                            'read_link': row.get('down_link', '#')
+                        }
+                        daily_hotspots.append(hotspot)
+                        count += 1
+                    except Exception as e:
+                        print(f"处理热点数据行时出错: {str(e)}")
+                        continue
+            print(f"✅ 成功加载 {len(daily_hotspots)} 条热点数据")
+        else:
+            print(f"⚠️ 热点文件不存在: {csv_file_name}")
+            print("尝试获取新的热点数据...")
+            # 如果文件不存在，尝试获取新数据
+            try:
+                from spiders.pengpai import get_pengpai_list
+                daily_hotspots = get_pengpai_list()
+                print(f"✅ 从网络获取到 {len(daily_hotspots)} 条热点数据")
+            except Exception as e:
+                print(f"❌ 获取网络热点数据失败: {str(e)}")
+                daily_hotspots = []
+    except Exception as e:
+        print(f"❌ 加载热点数据失败: {str(e)}")
+        daily_hotspots = []
+
+    # 缓存数据
+    data = {
+        'unique_user_count': unique_user_count,
+        'total_heat_value': total_heat_value,
+        'unique_ip_count': unique_ip_count,
+        'row_count': row_count,
+        'infos2_data': infos2_data,
+        'daily_hotspots': daily_hotspots
+    }
+
+    _home_data_cache['data'] = data
+    _home_data_cache['timestamp'] = current_time
+
+    print(f"📊 主页数据加载完成，已缓存")
+    print(f"   - 微博数据: {len(infos2_data)}条")
+    print(f"   - 热点数据: {len(daily_hotspots)}条")
+    if daily_hotspots:
+        print(f"   - 热点示例: {daily_hotspots[0]['title'][:50]}...")
+
+    return data
 # 获取当前文件的绝对路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 获取项目根目录
@@ -42,6 +182,13 @@ task_status = {}
 # 初始化realtime_csv_path全局变量
 realtime_csv_path = ready_path  # 设置默认值为ready_path
 
+# 添加数据缓存
+_home_data_cache = {
+    'data': None,
+    'timestamp': 0,
+    'cache_duration': 300  # 5分钟缓存
+}
+
 def run_wordcloud_task(csv_path, task_id):
     try:
         get_wordcloud_csv(csv_path)
@@ -52,6 +199,7 @@ def run_wordcloud_task(csv_path, task_id):
         print(f"词云生成任务失败: {task_id}, 错误: {str(e)}")
     finally:
         try:
+            ensure_scheduler_started()  # 确保调度器已启动
             if scheduler.get_job(task_id):
                 scheduler.remove_job(task_id)
         except Exception as e:
@@ -99,81 +247,30 @@ def get_data_file():
 @pb.route('/home')
 @login_required
 def home():
+    """主页 - 使用缓存优化加载速度"""
     try:
-        # 获取基础统计数据
-        unique_user_count, total_heat_value, unique_ip_count, row_count = fenxi()
+        # 使用缓存数据快速加载
+        data = load_home_data_cached()
+
+        unique_user_count = data['unique_user_count']
+        total_heat_value = data['total_heat_value']
+        unique_ip_count = data['unique_ip_count']
+        row_count = data['row_count']
+        infos2_data = data['infos2_data']
+        daily_hotspots = data['daily_hotspots']
+
+        # 调试信息
+        print(f"🏠 主页数据准备完成:")
+        print(f"   - 微博数据: {len(infos2_data)}条")
+        print(f"   - 热点数据: {len(daily_hotspots)}条")
+
     except Exception as e:
-        print(f"获取基础统计数据失败: {str(e)}")
+        print(f"❌ 加载主页数据失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # 提供默认值
         unique_user_count = total_heat_value = unique_ip_count = row_count = 0
-
-    try:
-        # 获取爬取结果数据
-        if os.path.exists(ready_path):
-            print(f"正在读取CSV文件: {ready_path}")
-            df = pd.read_csv(ready_path, encoding='utf-8')
-            print(f"成功读取CSV文件，数据行数: {len(df)}")
-            print(f"列名: {df.columns.tolist()}")
-
-            # 准备展示数据
-            infos2_data = []
-            for _, row in df.iterrows():
-                try:
-                    # 确保数值类型的字段为整数
-                    shares = pd.to_numeric(row['转发数'], errors='coerce')
-                    comments = pd.to_numeric(row['评论数'], errors='coerce')
-                    likes = pd.to_numeric(row['点赞数'], errors='coerce')
-
-                    info = {
-                        'author': str(row['微博作者']).strip() if pd.notna(row['微博作者']) else "未知作者",
-                        'content': str(row['微博内容']).strip() if pd.notna(row['微博内容']) else "无内容",
-                        'time': str(row['发布时间']).strip() if pd.notna(row['发布时间']) else "未知时间",
-                        'shares': int(shares) if pd.notna(shares) else 0,
-                        'comments': int(comments) if pd.notna(comments) else 0,
-                        'likes': int(likes) if pd.notna(likes) else 0,
-                        'url': str(row['url']).strip() if pd.notna(row['url']) else "#",
-                        'profile_url': "#"
-                    }
-                    infos2_data.append(info)
-                    if len(infos2_data) >= 100:  # 限制显示数量
-                        break
-                except Exception as e:
-                    print(f"处理行数据时出错: {str(e)}")
-                    continue
-            print(f"成功处理数据，共{len(infos2_data)}条记录")
-            print(f"数据示例: {infos2_data[0] if infos2_data else '无数据'}")
-        else:
-            print(f"CSV文件不存在: {ready_path}")
-            infos2_data = []
-    except Exception as e:
-        print(f"获取爬取结果数据失败: {str(e)}")
-        print(f"错误详情: {str(e.__class__.__name__)}")
         infos2_data = []
-
-    try:
-        # 获取每日热点数据
-        current_date = datetime.now().strftime('%Y%m%d')
-        csv_file_name = f'{current_date}_pengpai.csv'
-        target_dir = os.path.join(root_dir, 'static', 'content')
-        images_dir = os.path.join(target_dir, csv_file_name)
-
-        if os.path.exists(images_dir):
-            print(f"文件 {csv_file_name} 存在，正在读取...")
-            daily_hotspots = []
-            with open(images_dir, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    daily_hotspots.append({
-                        'title': row['标题'],
-                        'cover_image': row['封面链接'],
-                        'source': row['发文者'],
-                        'link': row['链接'],
-                        'read_link': row['down_link']
-                    })
-        else:
-            print("热点数据文件不存在，尝试获取新数据...")
-            daily_hotspots = get_pengpai_list()
-    except Exception as e:
-        print(f"获取每日热点数据失败: {str(e)}")
         daily_hotspots = []
 
     return render_template('index.html',
@@ -320,9 +417,16 @@ def setting_spider():
 
             # 执行爬虫任务
             try:
+                # 更新任务状态为正在执行
+                spider_task_id = f"spider_{keyword}_{random.randint(100000, 999999)}"
+                task_status[spider_task_id] = f"正在爬取数据: {keyword}"
+
                 infos2, share_num, comment_num, like_num, sentiment_counts = dynamic_spider_task(
                     keyword, platforms, start_date, end_date, precision)
                 print(f"动态爬虫任务已启动: {keyword}")
+
+                # 更新任务状态为完成
+                task_status[spider_task_id] = "completed"
 
                 # 生成任务ID并添加词云生成任务
                 random_six_digit_number = random.randint(100000, 999999)
@@ -338,6 +442,7 @@ def setting_spider():
                     csv_path = get_temp_file_path('weibo',keyword)
                     print(f'平台读取有误，采用默认路径{csv_path}')
                 # 添加词云生成任务
+                ensure_scheduler_started()  # 确保调度器已启动
                 scheduler.add_job(
                     run_wordcloud_task,
                     args=[csv_path, task_id],
@@ -588,6 +693,7 @@ def get_realtime_monitoring():
 def stop_spider_task():
     """停止所有爬虫任务"""
     try:
+        ensure_scheduler_started()  # 确保调度器已启动
         jobs = scheduler.get_jobs()
         for job in jobs:
             scheduler.remove_job(job.id)
@@ -605,11 +711,55 @@ def stop_spider_task():
         }), 500
 
 
-@pb.route('/api/status')
+@pb.route('/api/cache/clear', methods=['POST'])
 @login_required
-def get_status():
-    """获取当前任务状态"""
+def clear_home_cache():
+    """清理主页数据缓存"""
+    global _home_data_cache
+    _home_data_cache['data'] = None
+    _home_data_cache['timestamp'] = 0
+    return jsonify({'message': '主页缓存已清理'})
+
+@pb.route('/api/hotspots/debug')
+def debug_hotspots():
+    """调试热点数据API"""
     try:
+        data = load_home_data_cached()
+        hotspots = data.get('daily_hotspots', [])
+
+        return jsonify({
+            'hotspots_count': len(hotspots),
+            'hotspots': hotspots[:3],  # 只返回前3条用于调试
+            'cache_info': {
+                'has_cache': _home_data_cache['data'] is not None,
+                'cache_timestamp': _home_data_cache['timestamp']
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@pb.route('/api/status')
+def get_status():
+    """获取当前任务状态（无需登录，快速响应）"""
+    try:
+        # 首先检查全局任务状态
+        if task_status:
+            # 检查是否有正在运行的任务
+            running_tasks = [task_id for task_id, status in task_status.items()
+                           if status not in ['completed', 'error']]
+            if running_tasks:
+                return jsonify({
+                    'status': 'working',
+                    'message': f'正在执行任务: {", ".join(running_tasks[:2])}'
+                })
+
+        # 检查调度器状态
+        if not _scheduler_started:
+            return jsonify({
+                'status': 'idle',
+                'message': '系统就绪 - 欢迎使用爬虫系统'
+            })
+
         jobs = scheduler.get_jobs()
         if not jobs:
             return jsonify({

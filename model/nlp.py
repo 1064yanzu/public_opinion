@@ -4,9 +4,14 @@ from snownlp import SnowNLP
 import pandas as pd
 from datetime import datetime
 import ast
+import gc
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from utils.common import update_persistent_file,get_persistent_file_path,get_temp_file_path
 from spiders.articles_spider import get_weibo_list
 from spiders.douyin import get_douyin_list
+from utils.cache_manager import cached, memory_cleanup
+from utils.csv_optimizer import csv_optimizer
+from config.settings import PERFORMANCE_CONFIG
 
 ready_path = get_persistent_file_path('all','any')
 def target_file():
@@ -129,28 +134,64 @@ def get_ip(csv_path =ready_path):
 
     return infos2_data, share_num, comment_num, like_num
 
+@cached(ttl=3600, key_prefix="sentiment")
 def analyze_sentiment(text):
     """
-    分析文本情感倾向
+    分析文本情感倾向（带缓存）
     :param text: 待分析的文本
     :return: 情感标签 (positive/negative/neutral)
     """
     try:
         if pd.isna(text) or not isinstance(text, str):
             return 'neutral'
-            
+
         sentiment_score = SnowNLP(str(text)).sentiments
-        
+
         if sentiment_score > 0.7:
             return 'positive'
         elif sentiment_score < 0.3:
             return 'negative'
         else:
             return 'neutral'
-            
+
     except Exception as e:
         print(f"情感分析出错: {str(e)}, 文本: {text}")
         return 'neutral'
+
+
+def batch_analyze_sentiment(texts, batch_size=None):
+    """
+    批量情感分析（优化版本）
+    :param texts: 文本列表
+    :param batch_size: 批处理大小
+    :return: 情感分析结果列表
+    """
+    if not texts:
+        return []
+
+    batch_size = batch_size or PERFORMANCE_CONFIG.get('batch_size', 100)
+    results = []
+
+    print(f"开始批量情感分析，文本数量: {len(texts)}, 批次大小: {batch_size}")
+
+    # 使用批处理
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        batch_results = []
+
+        for text in batch:
+            result = analyze_sentiment(text)
+            batch_results.append(result)
+
+        results.extend(batch_results)
+
+        # 内存管理
+        if i % (batch_size * 5) == 0 and i > 0:
+            print(f"已处理 {i}/{len(texts)} 条文本")
+            gc.collect()
+
+    print(f"批量情感分析完成，结果数量: {len(results)}")
+    return results
 
 def convert_sentiment_to_text(score):
     """
@@ -179,65 +220,102 @@ def convert_sentiment_to_text(score):
 
 def nlp_weibo(csv_path):
     """
-    处理微博数据的情感分析
+    处理微博数据的情感分析（优化版本）
     :param csv_path: CSV文件路径
     """
     print(f"开始处理微博数据: {csv_path}")
     try:
-        df = pd.read_csv(csv_path)
+        # 使用优化的CSV读取
+        df = csv_optimizer.read_csv_optimized(csv_path)
+        if df.empty:
+            print("警告: CSV文件为空或读取失败")
+            return
+
         print(f"数据形状: {df.shape}")
         print(f"列名: {df.columns.tolist()}")
 
-        def safe_sentiment(content):
-            if pd.isna(content) or not isinstance(content, str):
-                return 0.5  # 默认中性情感
-            try:
-                return SnowNLP(str(content)).sentiments
-            except Exception as e:
-                print(f"情感分析错误: {str(e)}, 内容: {content}")
-                return 0.5  # 出错时返回中性情感
+        # 检查必要的列是否存在
+        if '微博内容' not in df.columns:
+            print("错误: 找不到'微博内容'列")
+            return
 
-        # 进行情感分析
-        df['情感倾向'] = df['微博内容'].apply(safe_sentiment)
+        # 批量情感分析
+        content_list = df['微博内容'].fillna('').astype(str).tolist()
+        sentiment_results = batch_analyze_sentiment(content_list)
+
+        # 将结果转换为数值
+        sentiment_scores = []
+        for result in sentiment_results:
+            if result == 'positive':
+                sentiment_scores.append(0.8)
+            elif result == 'negative':
+                sentiment_scores.append(0.2)
+            else:
+                sentiment_scores.append(0.5)
+
+        df['情感倾向'] = sentiment_scores
         print("情感分析完成")
-        print(f"情感分析结果的前几行:\n{df['情感倾向'].head()}")
-        
-        # 保存结果
-        df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-        df.to_csv(ready_path, index=False, encoding='utf-8-sig')
+        print(f"情感分析结果统计:\n{pd.Series(sentiment_results).value_counts()}")
+
+        # 使用优化的CSV写入
+        csv_optimizer.write_csv_optimized(df, csv_path)
+        csv_optimizer.write_csv_optimized(df, ready_path)
         print(f"处理后的数据已保存到: {csv_path}")
-        
+
+        # 内存清理
+        del df, content_list, sentiment_results, sentiment_scores
+        gc.collect()
+
     except Exception as e:
         print(f"处理微博数据时出错: {str(e)}")
+        traceback.print_exc()
         raise
 
 def nlp_douyin(temp_file):
+    """
+    处理抖音数据的情感分析（优化版本）
+    :param temp_file: 临时文件路径
+    """
     print(f"开始处理抖音数据: {temp_file}")
     try:
-        df = pd.read_csv(temp_file)
+        # 使用优化的CSV读取
+        df = csv_optimizer.read_csv_optimized(temp_file)
+        if df.empty:
+            print("警告: CSV文件为空或读取失败")
+            return
+
         print(f"数据形状: {df.shape}")
         print(f"列名: {df.columns.tolist()}")
 
-        def safe_sentiment(content):
-            if pd.isna(content) or not isinstance(content, str):
-                print(f"警告: 无效的内容类型 - {type(content)}, 值: {content}")
-                return 0.5  # 默认中性情感
-            try:
-                return SnowNLP(str(content)).sentiments
-            except Exception as e:
-                print(f"情感分析错误: {str(e)}, 内容: {content}")
-                return 0.5  # 出错时返回中性情感
-
-        # 确保 '视频描述' 列存在
+        # 确定内容列
         content_column = '视频描述' if '视频描述' in df.columns else '内容'
         if content_column not in df.columns:
             print(f"警告: 找不到内容列 '{content_column}'")
             df['情感倾向'] = 0.5  # 如果找不到内容列，所有行都设置为中性
         else:
-            df['情感倾向'] = df[content_column].apply(safe_sentiment)
+            # 批量情感分析
+            content_list = df[content_column].fillna('').astype(str).tolist()
+            sentiment_results = batch_analyze_sentiment(content_list)
+
+            # 将结果转换为数值
+            sentiment_scores = []
+            for result in sentiment_results:
+                if result == 'positive':
+                    sentiment_scores.append(0.8)
+                elif result == 'negative':
+                    sentiment_scores.append(0.2)
+                else:
+                    sentiment_scores.append(0.5)
+
+            df['情感倾向'] = sentiment_scores
 
         print("情感分析完成")
-        print(f"情感分析结果的前几行:\n{df['情感倾向'].head()}")
+        if '情感倾向' in df.columns:
+            sentiment_counts = pd.Series([
+                'positive' if x > 0.6 else 'negative' if x < 0.4 else 'neutral'
+                for x in df['情感倾向']
+            ]).value_counts()
+            print(f"情感分析结果统计:\n{sentiment_counts}")
 
         # 确保数值列为整数类型
         numeric_columns = ['点赞数', '评论数', '收藏数', '分享数']
@@ -245,13 +323,20 @@ def nlp_douyin(temp_file):
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
 
-        df.to_csv(temp_file, index=False, encoding='utf-8-sig')
+        # 使用优化的CSV写入
+        csv_optimizer.write_csv_optimized(df, temp_file)
         print(f"处理后的数据已保存到: {temp_file}")
+
+        # 内存清理
+        del df
+        if 'content_list' in locals():
+            del content_list, sentiment_results, sentiment_scores
+        gc.collect()
         return
 
     except Exception as e:
         print(f"处理抖音数据时出错: {str(e)}")
-        print(traceback.format_exc())
+        traceback.print_exc()
 
 
 def main_weibo(keyword, max_page):
