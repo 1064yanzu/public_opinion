@@ -592,34 +592,73 @@ $(document).ready(function() {
         initStatusBadges();
     }
 
+    // 状态检查相关变量
+    let lastStatus = null;
+    let statusCheckInterval = 10000; // 默认10秒
+    let statusCheckTimer = null;
+
     // 定期检查状态
     function checkStatus() {
         $.ajax({
             url: '/page/api/status',
             method: 'GET',
+            timeout: 5000, // 5秒超时
             success: function(response) {
                 const $statusIcon = $('#status-icon');
                 const $statusMessage = $('#status-message');
-                
-                $statusIcon.removeClass('idle working error success scheduled')
-                    .addClass(response.status);
-                $statusMessage.text(response.message);
 
-                // 如果状态是scheduled，添加高亮动画
-                if (response.status === 'scheduled') {
-                    $statusMessage.addClass('highlight-animation');
-                    setTimeout(() => $statusMessage.removeClass('highlight-animation'), 1000);
+                // 只有状态真正改变时才更新UI
+                if (lastStatus !== response.message) {
+                    $statusIcon.removeClass('idle working error success scheduled')
+                        .addClass(response.status);
+
+                    // 平滑更新消息
+                    $statusMessage.fadeOut(200, function() {
+                        $(this).text(response.message).fadeIn(200);
+                    });
+
+                    // 根据状态调整检查频率
+                    if (response.status === 'working') {
+                        statusCheckInterval = 3000; // 工作中时3秒检查一次
+                    } else if (response.status === 'scheduled') {
+                        statusCheckInterval = 15000; // 定时任务15秒检查一次
+                    } else {
+                        statusCheckInterval = 30000; // 空闲时30秒检查一次
+                    }
+
+                    // 如果状态是scheduled，添加高亮动画
+                    if (response.status === 'scheduled') {
+                        $statusMessage.addClass('highlight-animation');
+                        setTimeout(() => $statusMessage.removeClass('highlight-animation'), 1000);
+                    }
+
+                    // 如果定时任务执行完成，获取并更新数据
+                    if (response.status === 'success' && lastStatus && lastStatus.includes('正在执行')) {
+                        fetchAndUpdateData();
+                    }
+
+                    lastStatus = response.message;
+                    console.log(`状态更新: ${response.status} - ${response.message}`);
                 }
 
-                // 如果定时任务执行完成，获取并更新数据
-                if (response.status === 'success' && response.task_completed) {
-                    fetchAndUpdateData();
-                }
+                // 重新设置定时器
+                resetStatusTimer();
             },
             error: function(xhr, status, error) {
                 console.error('状态检查失败:', error);
+                // 错误时延长检查间隔
+                statusCheckInterval = 20000;
+                resetStatusTimer();
             }
         });
+    }
+
+    // 重置状态检查定时器
+    function resetStatusTimer() {
+        if (statusCheckTimer) {
+            clearTimeout(statusCheckTimer);
+        }
+        statusCheckTimer = setTimeout(checkStatus, statusCheckInterval);
     }
 
     // 页面加载完成后初始化
@@ -627,10 +666,7 @@ $(document).ready(function() {
         // 获取初始数据
         fetchAndUpdateData();
 
-        // 开始定期检查状态（每5秒）
-        setInterval(checkStatus, 5000);
-
-        // 立即执行一次状态检查
+        // 立即执行一次状态检查，然后根据状态动态调整检查频率
         checkStatus();
     });
 });

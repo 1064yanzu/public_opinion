@@ -1,4 +1,5 @@
 import atexit
+import time
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, Blueprint, request, session, jsonify, Response, stream_with_context
@@ -209,6 +210,8 @@ pb = Blueprint('page',__name__,url_prefix='/page',template_folder='templates')
 ready_path = get_persistent_file_path('all','any')
 # 全局字典来存储每个任务的状态
 task_status = {}
+# 任务完成时间记录（用于自动清理）
+task_completion_time = {}
 # 初始化realtime_csv_path全局变量
 realtime_csv_path = ready_path  # 设置默认值为ready_path
 
@@ -227,13 +230,32 @@ _hotspots_cache = {
     'cache_duration': 3600  # 1小时缓存
 }
 
+def cleanup_old_task_status():
+    """清理超过5分钟的已完成任务状态"""
+    import time
+    current_time = time.time()
+    cleanup_threshold = 300  # 5分钟
+
+    tasks_to_remove = []
+    for task_id in list(task_status.keys()):
+        if task_id in task_completion_time:
+            if current_time - task_completion_time[task_id] > cleanup_threshold:
+                tasks_to_remove.append(task_id)
+
+    for task_id in tasks_to_remove:
+        task_status.pop(task_id, None)
+        task_completion_time.pop(task_id, None)
+        print(f"清理过期任务状态: {task_id}")
+
 def run_wordcloud_task(csv_path, task_id):
     try:
         get_wordcloud_csv(csv_path)
         task_status[task_id] = "completed"
+        task_completion_time[task_id] = time.time()  # 记录完成时间
         print(f"词云生成任务完成: {task_id}")
     except Exception as e:
         task_status[task_id] = f"error: {str(e)}"
+        task_completion_time[task_id] = time.time()  # 记录完成时间
         print(f"词云生成任务失败: {task_id}, 错误: {str(e)}")
     finally:
         try:
@@ -465,6 +487,7 @@ def setting_spider():
 
                 # 更新任务状态为完成
                 task_status[spider_task_id] = "completed"
+                task_completion_time[spider_task_id] = time.time()  # 记录完成时间
 
                 # 生成任务ID并添加词云生成任务
                 random_six_digit_number = random.randint(100000, 999999)
@@ -802,75 +825,126 @@ def debug_hotspots():
 def get_status():
     """获取当前任务状态（无需登录，快速响应）"""
     try:
-        # 首先检查全局任务状态
+        # 首先清理过期的任务状态
+        cleanup_old_task_status()
+
+        # 1. 优先检查正在运行的任务（非completed和error状态）
         if task_status:
-            # 检查是否有正在运行的任务
             running_tasks = [task_id for task_id, status in task_status.items()
-                           if status not in ['completed', 'error']]
+                           if status not in ['completed'] and not status.startswith('error')]
             if running_tasks:
+                task_name = running_tasks[0].replace('spider_job_', '').replace('wordcloud_', '').replace('spider_', '')
+                status_msg = task_status[running_tasks[0]]
                 return jsonify({
                     'status': 'working',
-                    'message': f'正在执行任务: {", ".join(running_tasks[:2])}'
+                    'message': status_msg if status_msg != 'running' else f'正在执行任务：{task_name}'
                 })
 
-        # 检查调度器状态
+        # 2. 检查调度器和定时任务（提前检查，确保定时任务状态能显示）
         if not _scheduler_started:
+            # 检查是否有错误任务需要显示
+            if task_status:
+                error_tasks = [task_id for task_id, status in task_status.items()
+                             if status.startswith('error')]
+                if error_tasks:
+                    error_msg = task_status[error_tasks[0]]
+                    return jsonify({
+                        'status': 'error',
+                        'message': error_msg
+                    })
+
             return jsonify({
                 'status': 'idle',
-                'message': '系统就绪 - 欢迎使用爬虫系统'
+                'message': '调度器未启动，请启动爬虫任务'
             })
 
         jobs = scheduler.get_jobs()
+
+        # 3. 检查即将执行的爬虫任务（优先显示定时任务）
+        spider_jobs = [job for job in jobs if job.id.startswith('spider_job_')]
+        if spider_jobs:
+            # 按下次执行时间排序
+            spider_jobs.sort(key=lambda x: x.next_run_time)
+            next_job = spider_jobs[0]
+            keyword = next_job.id.replace('spider_job_', '')
+
+            # 计算距离下次执行的时间
+            from datetime import datetime
+            now = datetime.now()
+            if next_job.next_run_time:
+                time_diff = next_job.next_run_time.replace(tzinfo=None) - now
+                if time_diff.total_seconds() < 60:  # 小于1分钟
+                    return jsonify({
+                        'status': 'scheduled',
+                        'message': f'即将执行爬取任务：{keyword}'
+                    })
+                elif time_diff.total_seconds() < 3600:  # 小于1小时
+                    minutes = int(time_diff.total_seconds() / 60)
+                    return jsonify({
+                        'status': 'scheduled',
+                        'message': f'{minutes}分钟后执行爬取任务：{keyword}'
+                    })
+                else:
+                    next_run_time = next_job.next_run_time.strftime('%m-%d %H:%M')
+                    return jsonify({
+                        'status': 'scheduled',
+                        'message': f'定时任务：{keyword}（{next_run_time}）'
+                    })
+
+        # 4. 检查其他类型任务
+        other_jobs = [job for job in jobs if not job.id.startswith('spider_job_')]
+        if other_jobs:
+            return jsonify({
+                'status': 'scheduled',
+                'message': f'系统任务运行中，共 {len(other_jobs)} 个后台任务'
+            })
+
+        # 5. 检查错误任务和最近完成的任务（在没有定时任务时才检查）
+        if task_status:
+            # 检查错误任务
+            error_tasks = [task_id for task_id, status in task_status.items()
+                         if status.startswith('error')]
+            if error_tasks:
+                error_msg = task_status[error_tasks[0]]
+                return jsonify({
+                    'status': 'error',
+                    'message': error_msg
+                })
+
+            # 检查最近完成的任务（仅在刚完成时短暂显示）
+            completed_tasks = [task_id for task_id, status in task_status.items()
+                             if status == 'completed']
+            if completed_tasks:
+                # 检查是否是刚完成的任务（2分钟内）
+                recent_completed = []
+                for task_id in completed_tasks:
+                    if task_id in task_completion_time:
+                        if time.time() - task_completion_time[task_id] < 120:  # 2分钟内
+                            recent_completed.append(task_id)
+
+                if recent_completed:
+                    return jsonify({
+                        'status': 'success',
+                        'message': f'任务执行完成'
+                    })
+
+        # 6. 默认空闲状态
         if not jobs:
             return jsonify({
                 'status': 'idle',
-                'message': '系统就绪 - 欢迎使用爬虫系统'
+                'message': '暂无定时任务，可以设置新的爬取任务'
             })
-
-        # 获取所有爬虫任务（以spider_job_开头的任务）
-        spider_jobs = [job for job in jobs if job.id.startswith('spider_job_')]
-        if spider_jobs:
-            next_job = spider_jobs[0]  # 获取最近的爬虫任务
-            keyword = next_job.id.replace('spider_job_', '')
-            next_run_time = next_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S')
-
+        else:
             return jsonify({
-                'status': 'scheduled',
-                'message': f'下一次任务将于 {next_run_time} 执行，关键词：{keyword}'
+                'status': 'idle',
+                'message': '系统空闲，可以设置新的爬取任务'
             })
-
-        # 检查词云任务
-        wordcloud_jobs = [job for job in jobs if job.id.startswith('wordcloud_')]
-        if wordcloud_jobs:
-            task_id = wordcloud_jobs[0].id
-            current_status = task_status.get(task_id, 'running')
-
-            if current_status == 'completed':
-                return jsonify({
-                    'status': 'success',
-                    'message': '任务已完成'
-                })
-            elif current_status.startswith('error'):
-                return jsonify({
-                    'status': 'error',
-                    'message': current_status
-                })
-            else:
-                return jsonify({
-                    'status': 'working',
-                    'message': '正在处理数据...'
-                })
-
-        return jsonify({
-            'status': 'idle',
-            'message': '系统就绪 - 欢迎使用爬虫系统'
-        })
 
     except Exception as e:
         print(f"获取状态时出错: {str(e)}")
         return jsonify({
             'status': 'error',
-            'message': f'获取状态失败: {str(e)}'
+            'message': f'状态获取异常'
         }), 500
 
 @pb.route('/api/stats')

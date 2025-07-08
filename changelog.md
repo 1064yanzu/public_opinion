@@ -909,6 +909,235 @@ if (error.message.includes('AI模型未配置')) {
 - 知道如何获取必要的资源
 - 明确后续操作步骤
 
+---
+
+### 2025-01-07 - requirements.txt文件重新生成（部署关键修复）
+**变更类型：** 依赖管理修复
+**影响范围：** 项目部署和依赖安装
+
+**问题描述：**
+原有的requirements.txt文件包含大量Anaconda环境的本地路径，导致：
+1. **无法在其他环境安装**：包含本地文件路径，其他用户无法使用
+2. **依赖版本不明确**：混合了开发环境的所有包，包括不必要的依赖
+3. **文件编码问题**：包含特殊字符，影响文件读取
+
+**根本原因：**
+- 使用`pip freeze`生成的requirements.txt包含了Anaconda环境的所有包
+- 包含了大量与项目无关的依赖包
+- 文件编码格式有问题
+
+**修复方案：**
+
+#### 1. **重新生成准确的requirements.txt**
+```txt
+# 核心Web框架
+Flask==3.0.0
+Werkzeug==3.0.1
+Jinja2==3.1.2
+
+# 数据处理
+pandas==2.1.3
+numpy==1.26.2
+
+# 网络请求
+requests==2.31.0
+
+# 数据库
+PyMySQL==1.1.1
+
+# 自然语言处理
+snownlp==0.12.3
+jieba==0.42.1
+
+# 图表可视化
+pyecharts==2.0.7
+
+# 网页爬虫
+beautifulsoup4==4.12.2
+
+# 任务调度
+APScheduler==3.11.0
+
+# AI模型接口
+openai==1.82.0
+zhipuai==2.1.5.20241108
+
+# 机器学习
+scikit-learn==1.3.2
+wordcloud==1.9.2
+```
+
+#### 2. **创建最小化版本**
+- `requirements-minimal.txt`：仅包含核心功能依赖
+- 注释掉可选功能的依赖包
+- 提供清晰的安装说明
+
+#### 3. **添加安装指导**
+```bash
+# 标准安装
+pip install -r requirements.txt
+
+# 中国大陆用户（使用镜像源）
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+# 最小化安装
+pip install -r requirements-minimal.txt
+```
+
+**修复的文件：**
+- `requirements.txt` - 完整依赖列表
+- `requirements-minimal.txt` - 最小化依赖列表
+
+**依赖包分类：**
+- ✅ **核心Web框架**：Flask, Werkzeug, Jinja2
+- ✅ **数据处理**：pandas, numpy
+- ✅ **网络请求**：requests, urllib3
+- ✅ **数据库**：PyMySQL, SQLAlchemy
+- ✅ **自然语言处理**：snownlp, jieba
+- ✅ **图表可视化**：pyecharts
+- ✅ **网页爬虫**：beautifulsoup4, lxml
+- ✅ **任务调度**：APScheduler
+- ✅ **AI模型接口**：openai, zhipuai
+- ✅ **机器学习**：scikit-learn, wordcloud
+- ✅ **系统工具**：psutil, python-dotenv
+
+**验证结果：**
+- ✅ 所有核心依赖包版本验证通过
+- ✅ 文件编码格式正确
+- ✅ 可在新环境中正常安装
+- ✅ 包含清晰的安装说明
+
+**部署改善：**
+- ✅ **跨平台兼容**：移除了本地路径依赖
+- ✅ **版本明确**：指定了具体的包版本
+- ✅ **安装简化**：提供了多种安装方式
+- ✅ **依赖精简**：移除了不必要的开发工具依赖
+
+**重要性：**
+这是项目部署的关键修复，确保：
+- 其他开发者可以正确安装依赖
+- 生产环境部署不会出现依赖问题
+- 新用户可以快速搭建开发环境
+- 支持不同的安装需求（完整版/最小版）
+
+---
+
+### 2025-01-07 - 爬取设置状态显示逻辑修复（用户体验关键修复）
+**变更类型：** 后端逻辑修复
+**影响范围：** 爬取设置页面的状态显示
+
+**问题描述：**
+用户反馈爬取设置页面的状态显示有逻辑问题：
+1. **状态跳跃**：一会显示"系统就绪 - 欢迎使用爬虫系统"，一会显示具体任务信息
+2. **状态持久化错误**：任务完成后状态永远显示"任务已完成"
+3. **状态优先级混乱**：已完成任务优先级高于当前任务状态
+
+**根本原因分析：**
+1. **`task_status`字典生命周期管理错误**：
+   - 任务完成后状态永远保留在字典中
+   - 只有手动停止任务时才清空状态
+   - 没有自动清理机制
+
+2. **状态检查逻辑错误**：
+   - 优先检查completed任务，导致即使没有任务运行也显示"任务已完成"
+   - 状态优先级设计不合理
+   - 缺少状态过期机制
+
+3. **前端请求频率问题**：
+   - 每5秒请求一次状态API
+   - 后端状态在不同条件间跳跃
+
+**修复方案：**
+
+#### 1. **添加任务状态自动清理机制**
+```python
+# 添加任务完成时间记录
+task_completion_time = {}
+
+def cleanup_old_task_status():
+    """清理超过5分钟的已完成任务状态"""
+    current_time = time.time()
+    cleanup_threshold = 300  # 5分钟
+
+    tasks_to_remove = []
+    for task_id in list(task_status.keys()):
+        if task_id in task_completion_time:
+            if current_time - task_completion_time[task_id] > cleanup_threshold:
+                tasks_to_remove.append(task_id)
+
+    for task_id in tasks_to_remove:
+        task_status.pop(task_id, None)
+        task_completion_time.pop(task_id, None)
+```
+
+#### 2. **重新设计状态检查优先级**
+```python
+@pb.route('/api/status')
+def get_status():
+    # 1. 首先清理过期状态
+    cleanup_old_task_status()
+
+    # 2. 优先检查正在运行的任务
+    running_tasks = [task_id for task_id, status in task_status.items()
+                   if status not in ['completed'] and not status.startswith('error')]
+
+    # 3. 其次检查错误任务
+    error_tasks = [task_id for task_id, status in task_status.items()
+                 if status.startswith('error')]
+
+    # 4. 最后检查最近完成的任务（仅2分钟内）
+    recent_completed = [task for task in completed_tasks
+                       if time.time() - task_completion_time[task] < 120]
+```
+
+#### 3. **改进任务状态记录**
+```python
+def run_wordcloud_task(csv_path, task_id):
+    try:
+        get_wordcloud_csv(csv_path)
+        task_status[task_id] = "completed"
+        task_completion_time[task_id] = time.time()  # 记录完成时间
+    except Exception as e:
+        task_status[task_id] = f"error: {str(e)}"
+        task_completion_time[task_id] = time.time()  # 记录完成时间
+```
+
+#### 4. **优化状态消息**
+- ✅ **空闲状态**：`"系统空闲，可以设置新的爬取任务"`
+- ✅ **工作状态**：`"正在执行任务：{task_name}"`
+- ✅ **完成状态**：`"任务执行完成"`（仅显示2分钟）
+- ✅ **错误状态**：显示具体错误信息
+- ✅ **定时任务**：`"定时任务：{keyword}（{time}）"`
+
+**修复的文件：**
+- `views/page/page.py` - 状态API逻辑和任务管理
+- `test_status_fix.py` - 状态修复验证测试
+
+**状态生命周期：**
+```
+任务启动 → 正在运行 → 完成(2分钟) → 自动清理(5分钟)
+         ↘ 错误 → 显示错误 → 自动清理(5分钟)
+```
+
+**用户体验改善：**
+- ✅ **状态一致性**：不再出现状态跳跃问题
+- ✅ **信息准确性**：状态反映真实的系统状态
+- ✅ **自动清理**：过期状态自动清理，避免混乱
+- ✅ **优先级合理**：当前任务优先于历史任务
+
+**验证方法：**
+1. 清理所有任务状态
+2. 连续检查状态API 5次，确保一致性
+3. 启动爬虫任务，观察状态转换
+4. 等待任务完成，验证自动清理
+
+**重要性：**
+这是关键的用户体验修复，解决了：
+- 状态显示的逻辑混乱问题
+- 用户对系统状态的困惑
+- 后端状态管理的内存泄漏
+- 前端状态显示的不一致性
+
 **下一步计划：**
 - 系统已达到高度优化状态
 - 可根据实际使用情况进行微调

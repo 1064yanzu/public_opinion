@@ -59,7 +59,7 @@ class ModernCSVEditor:
                 target = os.path.join(self.user_data_dir, file_name)
                 if os.path.exists(source) and not os.path.exists(target):
                     shutil.copy2(source, target)
-            messagebox.showinfo("初始化", "已在"文档"文件夹中创建数据文件")
+            messagebox.showinfo("初始化", "已在‘文档’文件夹中创建数据文件")
         except Exception as e:
             messagebox.showerror("错误", f"复制初始数据失败：{str(e)}")
     
