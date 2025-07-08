@@ -1,21 +1,25 @@
 import pandas as pd
-from zhipuai import ZhipuAI
 from datetime import datetime
 import traceback
 import re
 import jieba
 import jieba.posseg
 from collections import Counter
+from .ai_model_interface import create_ai_model
 
 class ReportGenerator:
     def __init__(self, csv_path):
         self.csv_path = csv_path
-        try:
-            from config.settings import ZHIPUAI_API_KEY
-            self.client = ZhipuAI(api_key=ZHIPUAI_API_KEY)
-        except Exception as e:
-            print(f"初始化API客户端失败: {str(e)}")
-            self.client = None
+        # 使用新的模型接口
+        self.ai_model = create_ai_model()
+        self.client = None  # 不再使用备用客户端
+
+        # 检查是否有可用的AI模型
+        if self.ai_model is None:
+            print("AI模型未配置或初始化失败")
+            print("请设置环境变量后使用报告生成功能")
+        else:
+            print(f"AI模型初始化成功: {type(self.ai_model).__name__}")
             
         self.data_cache = {}
         self.context = {
@@ -27,8 +31,51 @@ class ReportGenerator:
     def generate_stream(self, depth='standard'):
         """优化的报告生成流程"""
         try:
-            if self.client is None:
-                yield self.create_error_response("API客户端初始化失败")
+            # 检查AI模型是否可用
+            if self.ai_model is None:
+                error_msg = """
+# ⚠️ 报告生成功能不可用
+
+## 原因
+未检测到有效的AI模型配置。
+
+## 解决方案
+
+### 方法1：设置环境变量（推荐）
+```bash
+# Windows (命令提示符)
+set AI_MODEL_TYPE=zhipuai
+set AI_API_KEY=your_api_key_here
+
+# Windows (PowerShell)
+$env:AI_MODEL_TYPE="zhipuai"
+$env:AI_API_KEY="your_api_key_here"
+
+# Linux/Mac
+export AI_MODEL_TYPE=zhipuai
+export AI_API_KEY=your_api_key_here
+```
+
+### 方法2：创建.env文件
+在项目根目录创建`.env`文件：
+```
+AI_MODEL_TYPE=zhipuai
+AI_API_KEY=your_api_key_here
+AI_MODEL_ID=glm-4
+```
+
+## 支持的模型类型
+- `zhipuai`: 智谱AI (推荐)
+- `openai`: OpenAI
+- `custom`: 自定义API
+
+## 获取API Key
+- 智谱AI: https://open.bigmodel.cn/
+- OpenAI: https://platform.openai.com/
+
+配置完成后请重启应用并重新生成报告。
+"""
+                yield error_msg
                 return
                 
             # 1. 预处理数据
@@ -75,29 +122,28 @@ class ReportGenerator:
                 system_prompt = self._build_system_prompt(section, analysis_context)
                 user_prompt = self._build_section_prompt(section, analysis_context)
                 
-                # 生成内容
-                response = self.client.chat.completions.create(
-                    model="glm-4-flash",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    stream=True,
-                    temperature=0.7,
-                    max_tokens=4000
-                )
-                
+                # 生成内容 - 使用新的AI接口
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ]
+
                 # 处理响应
                 buffer = []
                 buffer_size = 50
-                
-                for chunk in response:
-                    if hasattr(chunk.choices[0], 'delta'):
-                        content = chunk.choices[0].delta.content
-                        if content:
-                            buffer.append(content)
-                            
-                            if len(buffer) >= buffer_size:
+
+                # 使用AI模型接口生成内容
+                response_stream = self.ai_model.generate_stream(
+                    messages,
+                    temperature=0.7,
+                    max_tokens=4000
+                )
+
+                for content in response_stream:
+                    if content:
+                        buffer.append(content)
+
+                        if len(buffer) >= buffer_size:
                                 yield {
                                     'code': 200,
                                     'data': {'text': ''.join(buffer)}

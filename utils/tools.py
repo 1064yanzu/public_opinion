@@ -60,30 +60,34 @@ def dynamic_spider_task(keyword, platforms, start_date, end_date, precision):
         print(f"like_num: {type(like_num)}, 值: {like_num}")
         print(f"sentiment_counts: {type(sentiment_counts)}, 值: {sentiment_counts}")
 
-        # 暂时禁用自动调度功能，避免无限循环
         # 计算下次执行时间
         next_run_time = datetime.now() + timedelta(minutes=interval)
         print(f"下次执行时间: {next_run_time}")
 
-        # 注释掉自动调度功能，改为手动触发
-        # from views.page.page import scheduler, ensure_scheduler_started
-        # ensure_scheduler_started()  # 确保调度器已启动
-        # job_id = f'spider_job_{keyword}'
+        # 恢复自动调度功能，但添加执行次数限制
+        from views.page.page import scheduler, ensure_scheduler_started
+        ensure_scheduler_started()  # 确保调度器已启动
+        job_id = f'spider_job_{keyword}'
 
-        # # 如果已存在相同ID的任务，先移除它
-        # if scheduler.get_job(job_id):
-        #     scheduler.remove_job(job_id)
+        # 检查是否已经有太多相同关键词的任务
+        existing_jobs = [job for job in scheduler.get_jobs() if job.id.startswith(f'spider_job_{keyword}')]
+        if len(existing_jobs) >= 3:  # 限制同一关键词最多3个定时任务
+            print(f"关键词 {keyword} 的定时任务已达上限，跳过添加新任务")
+        else:
+            # 如果已存在相同ID的任务，先移除它
+            if scheduler.get_job(job_id):
+                scheduler.remove_job(job_id)
 
-        # # 添加新的定时任务
-        # scheduler.add_job(
-        #     func=dynamic_spider_task,
-        #     trigger='date',
-        #     run_date=next_run_time,
-        #     args=[keyword, platforms, start_date, end_date, precision],
-        #     id=job_id,
-        #     replace_existing=True
-        # )
-        print(f"自动调度已禁用，避免无限循环执行")
+            # 添加新的定时任务
+            scheduler.add_job(
+                func=dynamic_spider_task,
+                trigger='date',
+                run_date=next_run_time,
+                args=[keyword, platforms, start_date, end_date, precision],
+                id=job_id,
+                replace_existing=True
+            )
+            print(f"成功添加下一次任务: {job_id}，执行时间: {next_run_time}")
 
         # 更新数据文件
         # main_nlp函数会生成基于关键词的临时文件

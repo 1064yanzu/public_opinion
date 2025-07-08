@@ -695,13 +695,22 @@ def stop_spider_task():
     try:
         ensure_scheduler_started()  # 确保调度器已启动
         jobs = scheduler.get_jobs()
+
+        # 统计任务类型
+        spider_jobs = [job for job in jobs if job.id.startswith('spider_job_')]
+        wordcloud_jobs = [job for job in jobs if job.id.startswith('wordcloud_')]
+
+        # 移除所有任务
+        removed_count = 0
         for job in jobs:
             scheduler.remove_job(job.id)
+            removed_count += 1
+
         task_status.clear()
 
         return jsonify({
             'status': 'success',
-            'message': '所有任务已停止'
+            'message': f'已停止 {removed_count} 个任务 (爬虫任务: {len(spider_jobs)}, 词云任务: {len(wordcloud_jobs)})'
         })
     except Exception as e:
         print(f"停止任务时出错: {str(e)}")
@@ -874,6 +883,18 @@ def generate_report():
             return jsonify({'error': 'CSV文件不存在'}), 404
 
         generator = ReportGenerator(realtime_csv_path)
+
+        # 检查AI模型是否可用
+        if generator.ai_model is None:
+            return jsonify({
+                'error': 'AI模型未配置',
+                'message': '请设置环境变量后使用报告生成功能',
+                'config_guide': {
+                    'method1': '设置环境变量: AI_MODEL_TYPE=zhipuai, AI_API_KEY=your_key',
+                    'method2': '创建.env文件并配置相关参数',
+                    'supported_models': ['zhipuai', 'openai', 'custom']
+                }
+            }), 400
 
         def generate():
             try:

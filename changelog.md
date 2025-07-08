@@ -617,6 +617,298 @@ python test_status_and_report.py
 curl http://localhost:5000/page/api/status
 ```
 
+---
+
+### 2025-01-07 - 报告生成解耦和主题聚类功能
+**变更类型：** 架构优化 + 新功能
+**影响范围：** 报告生成模块解耦 + 新增主题聚类功能
+
+**主要问题：**
+1. **状态栏不显示定时任务**：之前禁用了自动调度，导致无法看到下次执行时间
+2. **API Key硬编码问题**：未设置环境变量时仍尝试使用硬编码配置
+3. **缺少主题聚类功能**：需要对爬取内容进行主题分析
+
+**解决方案：**
+
+#### 1. **报告生成模块解耦**
+- ✅ **创建AI模型接口抽象类**：`utils/ai_model_interface.py`
+- ✅ **支持多种AI模型**：智谱AI、OpenAI、自定义API
+- ✅ **环境变量配置**：通过`.env`文件配置API Key和模型参数
+- ✅ **向后兼容**：保持对现有配置的支持
+
+**技术实现：**
+```python
+# 环境变量配置
+AI_MODEL_TYPE=zhipuai          # 模型类型
+AI_API_KEY=your_api_key        # API密钥
+AI_BASE_URL=custom_url         # 自定义URL
+AI_MODEL_ID=model_name         # 模型ID
+
+# 支持的模型类型
+- zhipuai: 智谱AI (默认)
+- openai: OpenAI
+- custom: 自定义API
+```
+
+#### 2. **恢复定时任务显示**
+- ✅ **重新启用自动调度**：恢复定时任务创建功能
+- ✅ **添加任务限制**：同一关键词最多3个定时任务，避免无限累积
+- ✅ **改进状态显示**：显示具体的下次执行时间和关键词
+- ✅ **任务管理优化**：改进停止任务功能，显示详细统计
+
+**技术实现：**
+```python
+# 任务限制逻辑
+existing_jobs = [job for job in scheduler.get_jobs()
+                if job.id.startswith(f'spider_job_{keyword}')]
+if len(existing_jobs) >= 3:
+    print(f"关键词 {keyword} 的定时任务已达上限")
+else:
+    # 添加新任务
+    scheduler.add_job(...)
+```
+
+#### 3. **轻量级主题聚类功能**
+- ✅ **多种聚类方案**：关键词聚类、K-means、LDA
+- ✅ **资源占用优化**：最低资源占用的关键词聚类为默认方案
+- ✅ **环境变量配置**：可配置聚类方法和参数
+- ✅ **中文优化**：针对中文文本的分词和停用词处理
+
+**聚类方案对比：**
+
+| 方案 | 资源占用 | 准确度 | 适用场景 |
+|------|----------|--------|----------|
+| keyword_based | 极低 | 中等 | 资源受限环境 |
+| kmeans | 低 | 较高 | 平衡性能和效果 |
+| lda | 中等 | 高 | 追求聚类质量 |
+
+**配置示例：**
+```bash
+# 轻量级配置（推荐）
+CLUSTERING_METHOD=keyword_based
+CLUSTERING_NUM_TOPICS=5
+CLUSTERING_MIN_SAMPLES=3
+
+# 高质量配置
+CLUSTERING_METHOD=lda
+CLUSTERING_NUM_TOPICS=8
+CLUSTERING_MIN_SAMPLES=5
+```
+
+**新增文件：**
+- `utils/ai_model_interface.py` - AI模型接口抽象
+- `utils/topic_clustering.py` - 主题聚类功能
+- `.env.example` - 环境变量配置示例
+- `test_status_and_clustering.py` - 功能测试脚本
+
+**修复的文件：**
+- `utils/report_generator.py` - 使用新的AI接口，修复硬编码问题
+- `utils/tools.py` - 恢复定时任务功能，添加任务限制
+- `views/page/page.py` - 改进任务停止功能
+
+**用户体验改善：**
+- ✅ **状态栏恢复正常**：显示下次执行时间和关键词
+- ✅ **配置更灵活**：支持多种AI模型和自定义配置
+- ✅ **新增聚类分析**：可对爬取内容进行主题分析
+- ✅ **资源占用可控**：提供多种聚类方案适应不同需求
+
+**验证方法：**
+```bash
+# 运行综合测试
+python test_status_and_clustering.py
+
+# 测试AI模型配置
+export AI_MODEL_TYPE=zhipuai
+export AI_API_KEY=your_key
+python -c "from utils.ai_model_interface import create_ai_model; print(create_ai_model())"
+
+# 测试主题聚类
+python -c "from utils.topic_clustering import create_topic_clustering; c=create_topic_clustering(); print(c.method)"
+```
+
+---
+
+### 2025-01-07 - AI配置逻辑修复（关键修复）
+**变更类型：** 逻辑修复
+**影响范围：** 报告生成功能的配置检查逻辑
+
+**问题描述：**
+用户反馈即使没有设置环境变量，系统仍然尝试使用备用方案，输出误导性警告：
+```
+警告: 未设置AI_API_KEY环境变量
+警告: AI模型初始化失败，将使用备用方案
+使用备用智谱AI客户端
+```
+
+**正确逻辑：**
+如果用户没有设置环境变量，应该直接提示不能使用该功能，而不是尝试备用方案。
+
+**修复方案：**
+
+#### 1. **移除备用方案逻辑**
+```python
+# 修复前（错误逻辑）
+if self.ai_model is None:
+    print("警告: AI模型初始化失败，将使用备用方案")
+    # 尝试使用硬编码配置...
+
+# 修复后（正确逻辑）
+if self.ai_model is None:
+    print("AI模型未配置或初始化失败")
+    print("请设置环境变量后使用报告生成功能")
+```
+
+#### 2. **清理误导性警告**
+```python
+# 修复前
+if not api_key:
+    print("警告: 未设置AI_API_KEY环境变量")
+    return None
+
+# 修复后
+if not api_key:
+    # 不输出警告，让调用方处理
+    return None
+```
+
+#### 3. **改进用户提示**
+当没有配置时，显示详细的配置指南：
+```markdown
+# ⚠️ 报告生成功能不可用
+
+## 原因
+未检测到有效的AI模型配置。
+
+## 解决方案
+### 方法1：设置环境变量（推荐）
+# Windows (PowerShell)
+$env:AI_MODEL_TYPE="zhipuai"
+$env:AI_API_KEY="your_api_key_here"
+
+### 方法2：创建.env文件
+AI_MODEL_TYPE=zhipuai
+AI_API_KEY=your_api_key_here
+```
+
+**修复的文件：**
+- `utils/report_generator.py` - 移除备用方案逻辑，改进错误提示
+- `utils/ai_model_interface.py` - 移除误导性警告
+- `test_ai_config_fix.py` - 验证修复效果的测试脚本
+
+**验证结果：**
+✅ **无环境变量时**：正确提示用户配置，不尝试备用方案
+✅ **有环境变量时**：正常创建AI模型实例
+✅ **用户体验**：清晰的配置指导，无误导性信息
+
+**测试验证：**
+```bash
+# 运行修复验证测试
+python test_ai_config_fix.py
+
+# 预期结果：
+# ✅ 无环境变量时正确提示用户配置
+# ✅ 有环境变量时正常创建AI模型
+```
+
+**重要性：**
+这是一个关键的用户体验修复，确保用户在未配置时得到清晰的指导，而不是混乱的错误信息。
+
+---
+
+### 2025-01-07 - 前端配置提醒修复（用户体验关键修复）
+**变更类型：** 前端用户体验修复
+**影响范围：** 报告生成页面的用户提醒机制
+
+**问题描述：**
+用户反馈虽然后端逻辑修复了，但前端用户界面没有显示配置提醒，用户不知道需要配置环境变量。
+
+**根本原因：**
+1. **后端返回格式不匹配**：后端返回Markdown格式，前端期望JSON格式
+2. **前端错误处理不完善**：没有针对配置错误的特殊处理
+3. **用户提示不够友好**：缺少详细的配置指导
+
+**修复方案：**
+
+#### 1. **后端API修复**
+```python
+# 在报告生成API中添加配置检查
+if generator.ai_model is None:
+    return jsonify({
+        'error': 'AI模型未配置',
+        'message': '请设置环境变量后使用报告生成功能',
+        'config_guide': {
+            'method1': '设置环境变量: AI_MODEL_TYPE=zhipuai, AI_API_KEY=your_key',
+            'method2': '创建.env文件并配置相关参数',
+            'supported_models': ['zhipuai', 'openai', 'custom']
+        }
+    }), 400
+```
+
+#### 2. **前端错误处理增强**
+```javascript
+// 检查400错误（配置问题）
+if (response.status === 400) {
+    const errorData = await response.json();
+    throw new Error('AI模型未配置: ' + (errorData.message || '请检查环境变量配置'));
+}
+
+// 显示友好的配置指导
+if (error.message.includes('AI模型未配置')) {
+    // 显示详细的配置指导界面
+    errorMessage = `详细的配置指导HTML...`;
+}
+```
+
+#### 3. **用户界面改进**
+- ✅ **友好的警告样式**：黄色警告框而不是红色错误框
+- ✅ **详细配置指导**：包含Windows/Linux命令示例
+- ✅ **外部链接**：直接链接到API Key获取页面
+- ✅ **重启提醒**：明确告知需要重启应用
+
+**修复的文件：**
+- `views/page/page.py` - API错误响应格式修复
+- `views/page/templates/settle.html` - 前端错误处理和用户界面
+- `test_frontend_config_warning.py` - 前端提醒功能测试
+
+**用户界面效果：**
+```html
+⚠️ 报告生成功能不可用
+
+原因：未检测到有效的AI模型配置
+
+解决方案：
+方法1：设置环境变量（推荐）
+  set AI_MODEL_TYPE=zhipuai
+  set AI_API_KEY=your_api_key_here
+
+方法2：创建.env文件
+  AI_MODEL_TYPE=zhipuai
+  AI_API_KEY=your_api_key_here
+
+获取API Key：智谱AI官网
+
+ℹ️ 配置完成后请重启应用并重新生成报告
+```
+
+**用户体验改善：**
+- ✅ **清晰的问题说明**：用户知道为什么功能不可用
+- ✅ **具体的解决步骤**：提供多种配置方法
+- ✅ **外部资源链接**：直接获取API Key
+- ✅ **操作指导**：明确下一步操作
+
+**验证方法：**
+1. 清除所有AI相关环境变量
+2. 访问报告生成页面：`http://localhost:5000/page/settle`
+3. 点击"生成报告"按钮
+4. 应该看到友好的配置指导界面
+
+**重要性：**
+这是关键的用户体验修复，确保用户在未配置时能够：
+- 立即了解问题原因
+- 获得详细的解决方案
+- 知道如何获取必要的资源
+- 明确后续操作步骤
+
 **下一步计划：**
 - 系统已达到高度优化状态
 - 可根据实际使用情况进行微调
