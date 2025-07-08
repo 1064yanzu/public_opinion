@@ -1,7 +1,6 @@
 import csv
 import requests
 import os
-from urllib.parse import urlparse
 from datetime import datetime
 
 # 获取当前日期并格式化
@@ -15,23 +14,23 @@ headers = {
     'client-type': '2'
 }
 
-def download_image(url, path):
-    """下载图片并保存到指定路径"""
-    try:
-        response = requests.get(url, stream=True, headers=headers)
-        if response.status_code == 200:
-            with open(path, 'wb') as file:
-                for chunk in response.iter_content(1024):
-                    file.write(chunk)
-            return True
-    except Exception as e:
-        print(f"Error downloading image from {url}: {e}")
-    return False
+# 移除图片下载功能，专注于数据获取
 
 def spider(url):
-    response = requests.get(url, headers=headers)
-    response.encoding = 'utf-8'
-    return response.json()
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()  # 检查HTTP错误
+        response.encoding = 'utf-8'
+        return response.json()
+    except requests.exceptions.Timeout:
+        print(f"请求超时: {url}")
+        raise
+    except requests.exceptions.RequestException as e:
+        print(f"网络请求失败: {e}")
+        raise
+    except Exception as e:
+        print(f"解析JSON失败: {e}")
+        raise
 
 def get_pengpai_list(save_folder='content'):
     url = 'https://cache.thepaper.cn/contentapi/contVisit/hotNews'
@@ -62,26 +61,22 @@ def get_pengpai_list(save_folder='content'):
             writer_name = data['nodeInfo']['name']
             cover_image = data['voiceInfo']['imgSrc']
             link = f'https://m.thepaper.cn/newsDetail_forward_{contid}'
-            filename = f'{title}.jpg'  # 清理标题作为文件名
-            save_path = os.path.join(images_dir, filename)
-            read_link = f'/content/{filename}'
+            # 直接保存数据，不下载图片
+            writer.writerow({
+                '发文者': writer_name,
+                '标题': title,
+                '封面链接': cover_image,  # 保存原始图片链接
+                '链接': link,
+                'down_link': link  # 使用原始链接
+            })
 
-            # 下载并保存图片
-            if download_image(cover_image, save_path):
-                writer.writerow({
-                    '发文者': writer_name,
-                    '标题': title,
-                    '封面链接': save_path,
-                    '链接': link,
-                    'down_link': read_link
-                })
-                daily_hotspots.append({
-                    'title': title,
-                    'cover_image': cover_image,  # 保存相对路径
-                    'source': writer_name,
-                    'link': link,
-                    'read_link': read_link
-                })
+            daily_hotspots.append({
+                'title': title,
+                'cover_image': cover_image,  # 使用原始图片链接
+                'source': writer_name,
+                'link': link,
+                'read_link': link
+            })
 
     return daily_hotspots
 

@@ -40,6 +40,80 @@ def ensure_scheduler_started():
         _scheduler_started = True
         print("调度器已启动")
 
+def load_hotspots_cached():
+    """加载热点数据（带专用缓存）"""
+    global _hotspots_cache
+    import time
+
+    current_time = time.time()
+    current_date = datetime.now().strftime('%Y%m%d')
+
+    # 检查缓存是否有效（同一天且未过期）
+    if (_hotspots_cache['data'] is not None and
+        _hotspots_cache['date'] == current_date and
+        current_time - _hotspots_cache['timestamp'] < _hotspots_cache['cache_duration']):
+        print("✅ 使用缓存的热点数据")
+        return _hotspots_cache['data']
+
+    print("🔄 重新加载热点数据...")
+
+    # 加载每日热点数据
+    daily_hotspots = []
+    try:
+        csv_file_name = f'{current_date}_pengpai.csv'
+        target_dir = os.path.join(root_dir, 'static', 'content')
+        csv_file_path = os.path.join(target_dir, csv_file_name)
+
+        print(f"查找热点文件: {csv_file_path}")
+
+        if os.path.exists(csv_file_path):
+            print(f"✅ 找到热点文件: {csv_file_name}")
+            with open(csv_file_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                count = 0
+                for row in reader:
+                    if count >= 8:  # 加载8条热点数据
+                        break
+                    try:
+                        hotspot = {
+                            'title': row.get('标题', '无标题')[:100],  # 限制标题长度
+                            'cover_image': row.get('封面链接', ''),
+                            'link': row.get('链接', '#'),
+                            'source': row.get('发文者', '未知来源'),
+                            'read_link': row.get('down_link', '#')
+                        }
+                        daily_hotspots.append(hotspot)
+                        count += 1
+                    except Exception as e:
+                        print(f"处理热点数据行时出错: {str(e)}")
+                        continue
+            print(f"✅ 成功加载 {len(daily_hotspots)} 条热点数据")
+        else:
+            print(f"⚠️ 热点文件不存在: {csv_file_name}")
+            print("尝试获取新的热点数据...")
+            # 如果文件不存在，尝试获取新数据
+            try:
+                from spiders.pengpai import get_pengpai_list
+                daily_hotspots = get_pengpai_list()
+                print(f"✅ 从网络获取到 {len(daily_hotspots)} 条热点数据")
+            except Exception as e:
+                print(f"❌ 获取网络热点数据失败: {str(e)}")
+                daily_hotspots = []
+    except Exception as e:
+        print(f"❌ 加载热点数据失败: {str(e)}")
+        daily_hotspots = []
+
+    # 缓存热点数据
+    _hotspots_cache['data'] = daily_hotspots
+    _hotspots_cache['timestamp'] = current_time
+    _hotspots_cache['date'] = current_date
+
+    print(f"📊 热点数据加载完成，已缓存。数据: {len(daily_hotspots)}条")
+    if daily_hotspots:
+        print(f"   - 热点示例: {daily_hotspots[0]['title'][:50]}...")
+
+    return daily_hotspots
+
 def load_home_data_cached():
     """加载主页数据（带缓存）"""
     global _home_data_cache
@@ -103,52 +177,8 @@ def load_home_data_cached():
         print(f"快速加载数据失败: {str(e)}")
         infos2_data = []
 
-    # 加载每日热点数据（恢复完整功能）
-    daily_hotspots = []
-    try:
-        current_date = datetime.now().strftime('%Y%m%d')
-        csv_file_name = f'{current_date}_pengpai.csv'
-        target_dir = os.path.join(root_dir, 'static', 'content')
-        images_dir = os.path.join(target_dir, csv_file_name)
-
-        print(f"查找热点文件: {images_dir}")
-
-        if os.path.exists(images_dir):
-            print(f"✅ 找到热点文件: {csv_file_name}")
-            with open(images_dir, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                count = 0
-                for row in reader:
-                    if count >= 8:  # 加载8条热点数据
-                        break
-                    try:
-                        hotspot = {
-                            'title': row.get('标题', '无标题')[:100],  # 限制标题长度
-                            'cover_image': row.get('封面链接', ''),
-                            'link': row.get('链接', '#'),  # 使用link而不是url
-                            'source': row.get('发文者', '未知来源'),
-                            'read_link': row.get('down_link', '#')
-                        }
-                        daily_hotspots.append(hotspot)
-                        count += 1
-                    except Exception as e:
-                        print(f"处理热点数据行时出错: {str(e)}")
-                        continue
-            print(f"✅ 成功加载 {len(daily_hotspots)} 条热点数据")
-        else:
-            print(f"⚠️ 热点文件不存在: {csv_file_name}")
-            print("尝试获取新的热点数据...")
-            # 如果文件不存在，尝试获取新数据
-            try:
-                from spiders.pengpai import get_pengpai_list
-                daily_hotspots = get_pengpai_list()
-                print(f"✅ 从网络获取到 {len(daily_hotspots)} 条热点数据")
-            except Exception as e:
-                print(f"❌ 获取网络热点数据失败: {str(e)}")
-                daily_hotspots = []
-    except Exception as e:
-        print(f"❌ 加载热点数据失败: {str(e)}")
-        daily_hotspots = []
+    # 使用专用缓存加载热点数据
+    daily_hotspots = load_hotspots_cached()
 
     # 缓存数据
     data = {
@@ -172,8 +202,8 @@ def load_home_data_cached():
     return data
 # 获取当前文件的绝对路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# 获取项目根目录
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+# 获取项目根目录 (views/page -> views -> flaskProject)
+root_dir = os.path.dirname(os.path.dirname(current_dir))
 
 pb = Blueprint('page',__name__,url_prefix='/page',template_folder='templates')
 ready_path = get_persistent_file_path('all','any')
@@ -187,6 +217,14 @@ _home_data_cache = {
     'data': None,
     'timestamp': 0,
     'cache_duration': 300  # 5分钟缓存
+}
+
+# 添加热点数据专用缓存（更长的缓存时间）
+_hotspots_cache = {
+    'data': None,
+    'timestamp': 0,
+    'date': None,  # 记录数据日期
+    'cache_duration': 3600  # 1小时缓存
 }
 
 def run_wordcloud_task(csv_path, task_id):
@@ -724,10 +762,23 @@ def stop_spider_task():
 @login_required
 def clear_home_cache():
     """清理主页数据缓存"""
-    global _home_data_cache
+    global _home_data_cache, _hotspots_cache
     _home_data_cache['data'] = None
     _home_data_cache['timestamp'] = 0
-    return jsonify({'message': '主页缓存已清理'})
+    _hotspots_cache['data'] = None
+    _hotspots_cache['timestamp'] = 0
+    _hotspots_cache['date'] = None
+    return jsonify({'message': '主页和热点缓存已清理'})
+
+@pb.route('/api/cache/hotspots/clear', methods=['POST'])
+@login_required
+def clear_hotspots_cache():
+    """清理热点数据缓存"""
+    global _hotspots_cache
+    _hotspots_cache['data'] = None
+    _hotspots_cache['timestamp'] = 0
+    _hotspots_cache['date'] = None
+    return jsonify({'message': '热点缓存已清理'})
 
 @pb.route('/api/hotspots/debug')
 def debug_hotspots():
