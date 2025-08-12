@@ -41,6 +41,63 @@ def ensure_scheduler_started():
         _scheduler_started = True
         print("调度器已启动")
 
+
+def warmup_home_cache():
+    """预热主页缓存任务"""
+    try:
+        print("🔥 开始预热主页缓存...")
+        data = load_home_data_cached()
+        print(f"✨ 主页缓存预热完成 - 微博:{len(data['infos2_data'])}条, 热点:{len(data['daily_hotspots'])}条")
+    except Exception as e:
+        print(f"❌ 主页缓存预热失败: {str(e)}")
+
+
+def warmup_hotspots_cache():
+    """预热热点缓存任务"""
+    try:
+        print("🔥 开始预热热点缓存...")
+        hotspots = load_hotspots_cached()
+        print(f"✨ 热点缓存预热完成 - {len(hotspots)}条热点")
+    except Exception as e:
+        print(f"❌ 热点缓存预热失败: {str(e)}")
+
+
+def ensure_cache_warmup_scheduled():
+    """确保缓存预热任务已调度"""
+    ensure_scheduler_started()
+    
+    # 检查是否已存在预热任务
+    job_ids = [job.id for job in scheduler.get_jobs()]
+    
+    if 'warmup_home_cache' not in job_ids:
+        # 每5分钟预热一次主页缓存
+        scheduler.add_job(
+            warmup_home_cache,
+            'interval',
+            minutes=5,
+            id='warmup_home_cache',
+            replace_existing=True
+        )
+        print("📅 主页缓存预热任务已调度 (每5分钟)")
+    
+    if 'warmup_hotspots_cache' not in job_ids:
+        # 每30分钟预热一次热点缓存
+        scheduler.add_job(
+            warmup_hotspots_cache,
+            'interval', 
+            minutes=30,
+            id='warmup_hotspots_cache',
+            replace_existing=True
+        )
+        print("📅 热点缓存预热任务已调度 (每30分钟)")
+    
+    # 立即执行一次预热
+    try:
+        warmup_home_cache()
+        warmup_hotspots_cache()
+    except Exception as e:
+        print(f"⚠️ 立即预热执行失败: {str(e)}")
+
 def load_hotspots_cached():
     """加载热点数据（带专用缓存）"""
     global _hotspots_cache
@@ -307,40 +364,63 @@ def get_data_file():
 @pb.route('/home')
 @login_required
 def home():
-    """主页 - 使用缓存优化加载速度"""
+    """主页 - 快速加载骨架页面，数据异步加载"""
+    try:
+        # 启动预热缓存任务（如果尚未启动）
+        ensure_cache_warmup_scheduled()
+        
+        # 快速返回骨架页面，不等待数据加载
+        print("🚀 首页快速加载 - 骨架页面模式")
+        return render_template('index.html', skeleton_mode=True)
+
+    except Exception as e:
+        print(f"❌ 首页加载失败: {str(e)}")
+        return render_template('index.html', skeleton_mode=True, error=str(e))
+
+
+@pb.route('/api/home-data')
+@login_required
+def get_home_data():
+    """首页数据异步API接口"""
     try:
         # 使用缓存数据快速加载
         data = load_home_data_cached()
 
-        unique_user_count = data['unique_user_count']
-        total_heat_value = data['total_heat_value']
-        unique_ip_count = data['unique_ip_count']
-        row_count = data['row_count']
-        infos2_data = data['infos2_data']
-        daily_hotspots = data['daily_hotspots']
+        response_data = {
+            'success': True,
+            'data': {
+                'unique_user_count': data['unique_user_count'],
+                'total_heat_value': data['total_heat_value'],
+                'unique_ip_count': data['unique_ip_count'],
+                'row_count': data['row_count'],
+                'infos2_data': data['infos2_data'],
+                'daily_hotspots': data['daily_hotspots']
+            }
+        }
 
         # 调试信息
-        print(f"🏠 主页数据准备完成:")
-        print(f"   - 微博数据: {len(infos2_data)}条")
-        print(f"   - 热点数据: {len(daily_hotspots)}条")
+        print(f"📊 API返回主页数据:")
+        print(f"   - 微博数据: {len(data['infos2_data'])}条")
+        print(f"   - 热点数据: {len(data['daily_hotspots'])}条")
+
+        return jsonify(response_data)
 
     except Exception as e:
-        print(f"❌ 加载主页数据失败: {str(e)}")
+        print(f"❌ 获取主页数据失败: {str(e)}")
         import traceback
         traceback.print_exc()
-        # 提供默认值
-        unique_user_count = total_heat_value = unique_ip_count = row_count = 0
-        infos2_data = []
-        daily_hotspots = []
-
-    return render_template('index.html',
-                         row_count=row_count,
-                         unique_user_count=unique_user_count,
-                         total_heat_value=total_heat_value,
-                         unique_ip_count=unique_ip_count,
-                         infos2_data=infos2_data,
-                         daily_hotspots=daily_hotspots
-                         )
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'data': {
+                'unique_user_count': 0,
+                'total_heat_value': 0,
+                'unique_ip_count': 0,
+                'row_count': 0,
+                'infos2_data': [],
+                'daily_hotspots': []
+            }
+        }), 500
 
 @pb.route('/case_study')
 @login_required
@@ -488,6 +568,47 @@ def setting_spider():
                 # 更新任务状态为完成
                 task_status[spider_task_id] = "completed"
                 task_completion_time[spider_task_id] = time.time()  # 记录完成时间
+
+                # 🆕 爬取完成后：聚合到主数据文件并清理缓存
+                try:
+                    keyword_csv = get_temp_file_path('weibo', keyword)  # 爬虫临时数据
+                    if os.path.exists(keyword_csv):
+                        print(f"🔄 聚合新数据到主文件: {keyword_csv} -> {ready_path}")
+                        new_df = pd.read_csv(keyword_csv, encoding='utf-8')
+                        
+                        # 数据标准化
+                        required_columns = ['微博作者', '微博内容', '发布时间', '转发数', '评论数', '点赞数', '省份', 'url']
+                        for col in required_columns:
+                            if col not in new_df.columns:
+                                if col == '省份':
+                                    new_df[col] = '未知'
+                                elif col == 'url':
+                                    new_df[col] = '#'
+                                else:
+                                    new_df[col] = 'N/A'
+                        
+                        new_df_filtered = new_df[required_columns].copy()
+                        
+                        # 合并到主文件
+                        if os.path.exists(ready_path):
+                            existing_df = pd.read_csv(ready_path, encoding='utf-8')
+                            combined_df = pd.concat([existing_df, new_df_filtered], ignore_index=True)
+                            combined_df.drop_duplicates(subset=['微博内容', '发布时间'], keep='last', inplace=True)
+                        else:
+                            combined_df = new_df_filtered
+                        
+                        combined_df.to_csv(ready_path, index=False, encoding='utf-8')
+                        print(f"✅ 数据聚合完成，主文件现有 {len(combined_df)} 条记录")
+                        
+                        # 清理首页缓存并预热
+                        global _home_data_cache
+                        _home_data_cache['data'] = None
+                        _home_data_cache['timestamp'] = 0
+                        print("🗑️ 已清理主页缓存，将触发最新数据加载")
+                        warmup_home_cache()
+                        
+                except Exception as e:
+                    print(f"⚠️ 数据聚合/缓存刷新失败: {str(e)}")
 
                 # 生成任务ID并添加词云生成任务
                 random_six_digit_number = random.randint(100000, 999999)
@@ -958,10 +1079,14 @@ def get_stats():
         if not os.path.exists(data_file):
             print(f"数据文件不存在：{data_file}")
             return jsonify({
-                'todayMonitor': 0,
-                'totalComments': 0,
-                'heatIndex': 0,
-                'riskLevel': '低'
+                'success': True,
+                'data': {
+                    'todayMonitor': 0,
+                    'totalComments': 0,
+                    'heatIndex': 0,
+                    'riskLevel': '低'
+                },
+                'message': '数据文件不存在，返回默认值'
             })
 
         df = pd.read_csv(data_file, encoding='utf-8')
@@ -979,20 +1104,28 @@ def get_stats():
                          df['点赞数'].sum() * 0.3) / 100)
 
         return jsonify({
-            'todayMonitor': len(today_data),
-            'totalComments': int(total_comments),
-            'heatIndex': heat_index,
-            'riskLevel': '低'
+            'success': True,
+            'data': {
+                'todayMonitor': len(today_data),
+                'totalComments': int(total_comments),
+                'heatIndex': heat_index,
+                'riskLevel': '低'
+            },
+            'message': '统计数据获取成功'
         })
 
     except Exception as e:
         print(f"获取统计数据出错: {str(e)}")
         return jsonify({
-            'todayMonitor': 0,
-            'totalComments': 0,
-            'heatIndex': 0,
-            'riskLevel': '低'
-        })
+            'success': False,
+            'data': {
+                'todayMonitor': 0,
+                'totalComments': 0,
+                'heatIndex': 0,
+                'riskLevel': '低'
+            },
+            'error': f'统计数据获取失败: {str(e)}'
+        }), 500
 
 @pb.route('/api/generate_report', methods=['POST'])
 @login_required
@@ -1090,12 +1223,16 @@ def get_realtime_data():
         if not os.path.exists(data_file):
             print(f"数据文件不存在: {data_file}")
             return jsonify({
-                'latestComment': "暂无数据",
-                'commentTime': "暂无数据",
-                'provinceCount': "0个",
-                'spreadRange': "暂无数据",
-                'keywords': ["暂无数据"],
-                'sentiment': 50
+                'success': True,
+                'data': {
+                    'latestComment': "暂无数据",
+                    'commentTime': "暂无数据",
+                    'provinceCount': "0个",
+                    'spreadRange': "暂无数据",
+                    'keywords': ["暂无数据"],
+                    'sentiment': 50
+                },
+                'message': '数据文件不存在，返回默认值'
             })
 
         # 尝试不同编码读取文件
@@ -1110,25 +1247,33 @@ def get_realtime_data():
         else:
             print("所有编码尝试均失败")
             return jsonify({
-                'latestComment': "数据读取失败",
-                'commentTime': "暂无数据",
-                'provinceCount': "0个",
-                'spreadRange': "暂无数据",
-                'keywords': ["数据读取失败"],
-                'sentiment': 50
-            })
+                'success': False,
+                'data': {
+                    'latestComment': "数据读取失败",
+                    'commentTime': "暂无数据",
+                    'provinceCount': "0个",
+                    'spreadRange': "暂无数据",
+                    'keywords': ["数据读取失败"],
+                    'sentiment': 50
+                },
+                'error': '所有编码尝试均失败'
+            }), 500
 
         print(f"成功读取数据文件，行数：{len(df)}")
         print(f"列名：{df.columns.tolist()}")
 
         if len(df) == 0:
             return jsonify({
-                'latestComment': "暂无数据",
-                'commentTime': "暂无数据",
-                'provinceCount': "0个",
-                'spreadRange': "暂无数据",
-                'keywords': ["暂无数据"],
-                'sentiment': 50
+                'success': True,
+                'data': {
+                    'latestComment': "暂无数据",
+                    'commentTime': "暂无数据",
+                    'provinceCount': "0个",
+                    'spreadRange': "暂无数据",
+                    'keywords': ["暂无数据"],
+                    'sentiment': 50
+                },
+                'message': '数据为空'
             })
 
         # 定义可能的列名映射
@@ -1189,20 +1334,28 @@ def get_realtime_data():
         }
 
         print(f"返回数据：{json.dumps(response_data, ensure_ascii=False)}")
-        return jsonify(response_data)
+        return jsonify({
+            'success': True,
+            'data': response_data,
+            'message': '实时数据获取成功'
+        })
 
     except Exception as e:
         print(f"获取实时数据出错: {str(e)}")
         print(f"错误类型: {type(e).__name__}")
         print(f"错误详情: {traceback.format_exc()}")
         return jsonify({
-            'latestComment': "数据获取失败",
-            'commentTime': "暂无数据",
-            'provinceCount': "0个",
-            'spreadRange': "暂无数据",
-            'keywords': ["数据获取失败"],
-            'sentiment': 50
-        })
+            'success': False,
+            'data': {
+                'latestComment': "数据获取失败",
+                'commentTime': "暂无数据",
+                'provinceCount': "0个",
+                'spreadRange': "暂无数据",
+                'keywords': ["数据获取失败"],
+                'sentiment': 50
+            },
+            'error': '实时数据获取失败'
+        }), 500
 
 def extract_keywords_from_df(df, top_n=5):
     """从DataFrame中提取关键词

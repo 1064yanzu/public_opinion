@@ -485,12 +485,17 @@
     async function updateStats() {
         try {
             const response = await fetch('/page/api/stats');
-            const data = await response.json();
+            const json = await response.json();
             
-            document.getElementById('todayMonitor').textContent = data.todayMonitor;
-            document.getElementById('totalComments').textContent = data.totalComments;
-            document.getElementById('heatIndex').textContent = data.heatIndex;
-            document.getElementById('riskLevel').textContent = data.riskLevel;
+            if (json.success && json.data) {
+                const data = json.data;
+                document.getElementById('todayMonitor').textContent = data.todayMonitor;
+                document.getElementById('totalComments').textContent = data.totalComments;
+                document.getElementById('heatIndex').textContent = data.heatIndex;
+                document.getElementById('riskLevel').textContent = data.riskLevel;
+            } else {
+                console.warn('统计数据格式异常:', json);
+            }
         } catch (error) {
             console.error('更新统计数据失败:', error);
         }
@@ -500,24 +505,29 @@
     async function updateRealtimeData() {
         try {
             const response = await fetch('/page/api/realtime_data');
-            const data = await response.json();
+            const json = await response.json();
             
-            document.getElementById('latestComment').textContent = data.latestComment;
-            document.getElementById('commentTime').textContent = data.commentTime;
-            document.getElementById('provinceCount').textContent = data.provinceCount;
-            document.getElementById('spreadRange').textContent = data.spreadRange;
-            
-            // 更新关键词列表
-            const keywordsList = document.getElementById('keywordsList');
-            keywordsList.innerHTML = data.keywords.map(keyword => 
-                `<span class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm">${keyword}</span>`
-            ).join('');
-            
-            // 更新情感指标
-            const sentimentBar = document.querySelector('#sentimentIndicator .bg-indigo-500');
-            const sentimentText = document.querySelector('#sentimentIndicator span');
-            sentimentBar.style.width = `${data.sentiment}%`;
-            sentimentText.textContent = `${data.sentiment}%`;
+            if (json.success && json.data) {
+                const data = json.data;
+                document.getElementById('latestComment').textContent = data.latestComment;
+                document.getElementById('commentTime').textContent = data.commentTime;
+                document.getElementById('provinceCount').textContent = data.provinceCount;
+                document.getElementById('spreadRange').textContent = data.spreadRange;
+                
+                // 更新关键词列表
+                const keywordsList = document.getElementById('keywordsList');
+                keywordsList.innerHTML = data.keywords.map(keyword => 
+                    `<span class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm">${keyword}</span>`
+                ).join('');
+                
+                // 更新情感指标
+                const sentimentBar = document.querySelector('#sentimentIndicator .bg-indigo-500');
+                const sentimentText = document.querySelector('#sentimentIndicator span');
+                sentimentBar.style.width = `${data.sentiment}%`;
+                sentimentText.textContent = `${data.sentiment}%`;
+            } else {
+                console.warn('实时数据格式异常:', json);
+            }
         } catch (error) {
             console.error('更新实时数据失败:', error);
         }
