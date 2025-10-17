@@ -24,13 +24,37 @@ class DataSetUpdate(BaseModel):
     description: Optional[str] = None
 
 
-class DataSetRead(DataSetBase):
+class DataSetRead(BaseModel):
     """Schema for reading dataset data"""
     id: int
     user_id: int
+    name: str
+    description: Optional[str] = None
+    source: DataSource
+    source_type: str  # For frontend compatibility
+    keyword: Optional[str] = None
     total_records: int
+    record_count: int  # For frontend compatibility
     created_at: datetime
     updated_at: Optional[datetime] = None
+    
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom ORM conversion to include computed fields"""
+        data = {
+            'id': obj.id,
+            'user_id': obj.user_id,
+            'name': obj.name,
+            'description': obj.description,
+            'source': obj.source,
+            'source_type': obj.source.value,
+            'keyword': obj.keyword,
+            'total_records': obj.total_records,
+            'record_count': obj.total_records,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+        }
+        return cls(**data)
     
     class Config:
         from_attributes = True

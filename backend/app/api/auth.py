@@ -19,8 +19,8 @@ settings = get_settings()
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register(
     user_in: UserCreate,
-    db: Session = Depends(get_db),
     request: Request,
+    db: Session = Depends(get_db),
 ):
     """Register a new user"""
     existing_user = (
@@ -42,7 +42,8 @@ def register(
     db.commit()
     db.refresh(user)
     
-    log_activity(db, user, "register", request=request)
+    if request:
+        log_activity(db, user, "register", request=request)
     return user
 
 
@@ -50,7 +51,7 @@ def register(
 def login(
     credentials: LoginRequest,
     db: Session = Depends(get_db),
-    request: Request,
+    request: Request = None,
 ):
     """Login and get access token"""
     user = db.query(User).filter(User.username == credentials.username).first()
@@ -60,8 +61,9 @@ def login(
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(user.id, expires_delta=access_token_expires)
     
-    log_activity(db, user, "login", request=request)
-    return Token(access_token=access_token)
+    if request:
+        log_activity(db, user, "login", request=request)
+    return Token(access_token=access_token, user=user)
 
 
 @router.get("/me", response_model=UserRead)

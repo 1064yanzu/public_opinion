@@ -58,7 +58,16 @@ def create_records_bulk(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
     
-    records_data = [record.dict() for record in data.records]
+    # Handle both formats: records list or contents list
+    if data.contents:
+        # Simple string list format
+        records_data = [{'content': content} for content in data.contents]
+    elif data.records:
+        # Full record objects
+        records_data = [record.dict() for record in data.records]
+    else:
+        raise HTTPException(status_code=400, detail="Either 'contents' or 'records' must be provided")
+    
     background_tasks.add_task(ingest_records_task, data.dataset_id, records_data)
     
     log_activity(db, current_user, "bulk_create_records", resource="dataset", resource_id=data.dataset_id, details=f"{len(records_data)} records")

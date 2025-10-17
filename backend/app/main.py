@@ -43,7 +43,11 @@ Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
-    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "frontend-assets" / "assets")), name="frontend-assets")
+    # Mount frontend assets
+    assets_dir = frontend_dist / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+    # Mount frontend root (must be last)
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
 
 

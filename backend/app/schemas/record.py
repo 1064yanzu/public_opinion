@@ -26,7 +26,32 @@ class DataRecordRead(DataRecordBase):
     dataset_id: int
     sentiment_score: Optional[float] = None
     sentiment_label: Optional[str] = None
+    sentiment: Optional[str] = None  # For frontend compatibility
+    source_url: Optional[str] = None  # For frontend compatibility
+    published_at: Optional[datetime] = None  # For frontend compatibility
     created_at: datetime
+    
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom ORM conversion to include computed fields"""
+        data = {
+            'id': obj.id,
+            'dataset_id': obj.dataset_id,
+            'post_id': obj.post_id,
+            'content': obj.content,
+            'author': obj.author,
+            'publish_time': obj.publish_time,
+            'published_at': obj.publish_time,  # Alias
+            'likes': obj.likes,
+            'shares': obj.shares,
+            'comments': obj.comments,
+            'sentiment_score': obj.sentiment_score,
+            'sentiment_label': obj.sentiment_label,
+            'sentiment': obj.sentiment_label,  # Alias
+            'source_url': None,  # Not stored currently
+            'created_at': obj.created_at,
+        }
+        return cls(**data)
     
     class Config:
         from_attributes = True
@@ -35,7 +60,8 @@ class DataRecordRead(DataRecordBase):
 class DataRecordBulkCreate(BaseModel):
     """Schema for bulk creating records"""
     dataset_id: int
-    records: List[DataRecordBase]
+    records: Optional[List[DataRecordBase]] = None
+    contents: Optional[List[str]] = None  # Alternative: just list of strings
 
 
 class DataRecordBulkResponse(BaseModel):

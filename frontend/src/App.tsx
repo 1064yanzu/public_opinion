@@ -11,7 +11,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import Layout from './components/Layout';
 
 const App: React.FC = () => {
-  const { token } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
 
   return (
     <ConfigProvider
@@ -21,6 +21,7 @@ const App: React.FC = () => {
         token: {
           colorPrimary: '#6366f1',
           borderRadius: 12,
+          fontSize: 14,
         },
       }}
     >
