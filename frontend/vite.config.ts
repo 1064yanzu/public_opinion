@@ -10,6 +10,7 @@ export default defineConfig({
     }
   },
   server: {
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -18,7 +19,8 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'dist/frontend-assets',
-    emptyOutDir: true
+    outDir: 'dist',
+    emptyOutDir: true,
+    assetsDir: 'assets'
   }
 });

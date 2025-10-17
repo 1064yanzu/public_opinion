@@ -1,6 +1,6 @@
 """Analytics schemas"""
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime
 
 
@@ -12,23 +12,32 @@ class SentimentDistribution(BaseModel):
     total: int = 0
 
 
-class ActivityTrend(BaseModel):
-    """Activity trend data point"""
+class TimeSeriesPoint(BaseModel):
+    """Time series data point"""
     date: str
     count: int
-    likes: int
-    shares: int
-    comments: int
+    avg_sentiment: float = 0.5
+
+
+class KeywordData(BaseModel):
+    """Keyword frequency data"""
+    word: str
+    count: int
 
 
 class AnalyticsSummary(BaseModel):
     """Analytics summary for a dataset"""
-    dataset_id: int
+    dataset_id: Optional[int] = None
     total_records: int
-    sentiment: SentimentDistribution
-    total_likes: int
-    total_shares: int
-    total_comments: int
-    avg_sentiment: float
-    trends: List[ActivityTrend]
-    top_keywords: List[Dict[str, int]]
+    sentiment_distribution: SentimentDistribution
+    avg_sentiment_score: float = 0.5
+    time_series: List[TimeSeriesPoint] = []
+    top_keywords: List[KeywordData] = []
+    
+    # Legacy fields for backward compatibility
+    sentiment: Optional[SentimentDistribution] = None
+    total_likes: int = 0
+    total_shares: int = 0
+    total_comments: int = 0
+    avg_sentiment: Optional[float] = None
+    trends: List[TimeSeriesPoint] = []

@@ -56,6 +56,7 @@ class Token(BaseModel):
     """Token response"""
     access_token: str
     token_type: str = "bearer"
+    user: 'UserRead'
 
 
 class TokenPayload(BaseModel):

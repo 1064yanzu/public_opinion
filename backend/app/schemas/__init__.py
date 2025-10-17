@@ -25,5 +25,6 @@ from .record import (
 from .analytics import (
     AnalyticsSummary,
     SentimentDistribution,
-    ActivityTrend,
+    TimeSeriesPoint,
+    KeywordData,
 )
