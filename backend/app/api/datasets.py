@@ -1,7 +1,9 @@
 """Dataset routes"""
 from typing import List
 from pathlib import Path
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import pandas as pd
@@ -15,6 +17,7 @@ from ..core.deps import get_current_active_user
 from ..config import get_settings
 from ..services.nlp_service import NLPService
 from ..utils.activity_logger import log_activity
+from ..utils.storage import export_dataset_to_csv
 
 router = APIRouter()
 settings = get_settings()
@@ -204,3 +207,56 @@ def list_records(
         .all()
     )
     return records
+
+
+@router.get("/{dataset_id}/export")
+def export_dataset_csv(
+    dataset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Export dataset records to CSV file
+    
+    Returns a downloadable CSV file with all records
+    """
+    dataset = db.query(DataSet).filter(
+        DataSet.id == dataset_id,
+        DataSet.user_id == current_user.id
+    ).first()
+    
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    records = (
+        db.query(DataRecord)
+        .filter(DataRecord.dataset_id == dataset_id)
+        .order_by(DataRecord.created_at.asc())
+        .all()
+    )
+    
+    if not records:
+        raise HTTPException(status_code=400, detail="Dataset has no records to export")
+    
+    try:
+        file_path = export_dataset_to_csv(db, dataset, records)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{dataset.name}_{timestamp}.csv"
+        
+        log_activity(
+            db, current_user,
+            "export_dataset",
+            resource="dataset",
+            resource_id=dataset_id,
+            details=f"Exported to {filename}"
+        )
+        
+        return FileResponse(
+            path=str(file_path),
+            filename=filename,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
