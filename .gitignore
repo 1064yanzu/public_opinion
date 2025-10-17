@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.env.*
+venv/
+.venv/
+ENV/
+
+# SQLite
+*.db
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+logs/
+
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/frontend-assets/assets/*.map
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Data
+persistent_data/
+data/uploads/
+data/users/
+
+# Misc
+backups/

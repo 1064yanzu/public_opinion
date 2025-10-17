@@ -1,32 +1,19 @@
 #!/bin/bash
+# Data Analysis System - Unix Launcher
+# Supports Linux and macOS
 
-# 设置环境变量
-export PYTHONPATH=/www/wwwroot/flask
-export FLASK_APP=app.py
-export FLASK_ENV=production
-export PYTHONUNBUFFERED=1  # 禁用Python输出缓冲
-export PYTHONDONTWRITEBYTECODE=1  # 不生成pyc文件
+set -e
 
-# 激活虚拟环境
-# source /www/server/pyporject_evn/versions/3.11.11/bin
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+  echo "Usage: ./start.sh [command]"
+  echo
+  echo "Commands:"
+  echo "  setup    - Run initial setup"
+  echo "  start    - Start the server"
+  echo "  test     - Run tests"
+  echo "  status   - Check system status"
+  echo "  help     - Show this help message"
+  exit 0
+fi
 
-# 确保目录存在
-mkdir -p /www/wwwroot/flask/logs
-
-# 清理旧的日志文件
-echo "" > /www/wwwroot/flask/logs/error.log
-echo "" > /www/wwwroot/flask/logs/access.log
-
-# 启动应用
-cd /www/wwwroot/flask
-gunicorn app:app \
-    --workers 2 \
-    --threads 2 \
-    --bind 0.0.0.0:8000 \
-    --access-logfile /www/wwwroot/flask/logs/access.log \
-    --error-logfile /www/wwwroot/flask/logs/error.log \
-    --capture-output \
-    --log-level debug \
-    --timeout 120 \
-    --reload \
-    2>&1 | tee -a /www/wwwroot/flask/logs/startup.log 
+python3 launcher.py "$@"
