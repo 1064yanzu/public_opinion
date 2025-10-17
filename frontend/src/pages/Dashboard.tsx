@@ -26,6 +26,20 @@ import { useAuthStore } from '../store/authStore';
 
 const { Title, Text } = Typography;
 
+const SOURCE_LABELS: Record<string, string> = {
+  manual: '手动录入',
+  import: '文件导入',
+  weibo: '微博爬虫',
+  douyin: '抖音爬虫',
+};
+
+const SOURCE_COLORS: Record<string, string> = {
+  manual: 'blue',
+  import: 'purple',
+  weibo: 'orange',
+  douyin: 'magenta',
+};
+
 interface DashboardStats {
   total_datasets: number;
   total_records: number;
@@ -53,9 +67,8 @@ const Dashboard: React.FC = () => {
       
       let totalRecords = 0;
       for (const dataset of datasets) {
-        if (dataset.record_count) {
-          totalRecords += dataset.record_count;
-        }
+        const count = dataset.record_count ?? dataset.total_records ?? 0;
+        totalRecords += count;
       }
 
       setStats({
@@ -186,7 +199,9 @@ const Dashboard: React.FC = () => {
                     title={dataset.name}
                     description={
                       <Space>
-                        <Tag color="blue">{dataset.source_type}</Tag>
+                        <Tag color={SOURCE_COLORS[dataset.source] || 'blue'}>
+                          {SOURCE_LABELS[dataset.source] || dataset.source_type}
+                        </Tag>
                         {dataset.record_count !== undefined && (
                           <Text type="secondary">{dataset.record_count} 条记录</Text>
                         )}

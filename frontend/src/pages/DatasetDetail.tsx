@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -12,10 +12,10 @@ import {
   Upload,
   message,
   Descriptions,
-  Tabs,
-  Popconfirm,
   Typography,
   Progress,
+  Popconfirm,
+  Tooltip,
 } from 'antd';
 import {
   UploadOutlined,
@@ -26,22 +26,40 @@ import {
   SmileOutlined,
   MehOutlined,
   FrownOutlined,
+  CloudOutlined,
+  RobotOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import api from '../services/api';
 import type { Dataset, DataRecord } from '../types';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
+
+const SENTIMENT_TAG_MAP: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
+  positive: { color: 'success', label: '正面', icon: <SmileOutlined style={{ color: '#22c55e' }} /> },
+  neutral: { color: 'warning', label: '中性', icon: <MehOutlined style={{ color: '#faad14' }} /> },
+  negative: { color: 'error', label: '负面', icon: <FrownOutlined style={{ color: '#ff4d4f' }} /> },
+};
+
+const SOURCE_TEXT: Record<string, string> = {
+  manual: '手动录入',
+  import: '文件导入',
+  weibo: '微博爬虫',
+  douyin: '抖音爬虫',
+};
 
 const DatasetDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [dataset, setDataset] = useState<Dataset | null>(null);
   const [records, setRecords] = useState<DataRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [bulkModalVisible, setBulkModalVisible] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [form] = Form.useForm();
   const [bulkForm] = Form.useForm();
 
@@ -53,6 +71,7 @@ const DatasetDetail: React.FC = () => {
   }, [id]);
 
   const fetchDataset = async () => {
+    if (!id) return;
     try {
       const { data } = await api.get<Dataset>(`/datasets/${id}`);
       setDataset(data);
@@ -62,6 +81,7 @@ const DatasetDetail: React.FC = () => {
   };
 
   const fetchRecords = async () => {
+    if (!id) return;
     setLoading(true);
     try {
       const { data } = await api.get<DataRecord[]>(`/datasets/${id}/records`);
@@ -74,11 +94,15 @@ const DatasetDetail: React.FC = () => {
   };
 
   const handleCreateRecord = async (values: any) => {
+    if (!id) return;
     try {
-      await api.post('/records/', {
-        ...values,
-        dataset_id: parseInt(id!),
-      });
+      const payload = {
+        dataset_id: Number(id),
+        content: values.content,
+        author: values.author,
+      };
+
+      await api.post('/records/', payload);
       message.success('创建成功');
       setModalVisible(false);
       form.resetFields();
@@ -90,10 +114,20 @@ const DatasetDetail: React.FC = () => {
   };
 
   const handleBulkCreate = async (values: any) => {
+    if (!id) return;
     try {
-      const lines = values.content.split('\n').filter((line: string) => line.trim());
+      const lines = values.content
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter(Boolean);
+
+      if (!lines.length) {
+        message.warning('请输入至少一条记录');
+        return;
+      }
+
       await api.post('/records/bulk', {
-        dataset_id: parseInt(id!),
+        dataset_id: Number(id),
         contents: lines,
       });
       message.success('批量创建成功，正在后台处理');
@@ -120,6 +154,7 @@ const DatasetDetail: React.FC = () => {
   };
 
   const handleUpload = async (file: File) => {
+    if (!id) return false;
     const formData = new FormData();
     formData.append('file', file);
 
@@ -134,108 +169,148 @@ const DatasetDetail: React.FC = () => {
         fetchRecords();
         fetchDataset();
       }, 2000);
-    } catch (error) {
-      message.error('上传失败');
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || '上传失败';
+      message.error(detail);
     }
 
     return false;
   };
 
-  const getSentimentIcon = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive':
-        return <SmileOutlined style={{ color: '#52c41a' }} />;
-      case 'negative':
-        return <FrownOutlined style={{ color: '#ff4d4f' }} />;
-      case 'neutral':
-      default:
-        return <MehOutlined style={{ color: '#faad14' }} />;
+  const handleExport = async () => {
+    if (!id) return;
+    setExporting(true);
+    try {
+      const response = await api.get(`/datasets/${id}/export`, { responseType: 'blob' });
+      const disposition = response.headers['content-disposition'] as string | undefined;
+      let filename = dataset?.name ? `${dataset.name}.csv` : `dataset-${id}.csv`;
+      if (disposition) {
+        const match = disposition.match(/filename="?([^";]+)"?/);
+        if (match && match[1]) {
+          filename = decodeURIComponent(match[1]);
+        }
+      }
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      message.success('已导出CSV文件');
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || '导出失败';
+      message.error(detail);
+    } finally {
+      setExporting(false);
     }
   };
 
-  const getSentimentColor = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive':
-        return 'success';
-      case 'negative':
-        return 'error';
-      case 'neutral':
-      default:
-        return 'warning';
-    }
+  const navigateToWordcloud = () => {
+    if (!dataset) return;
+    navigate(`/wordcloud?dataset=${dataset.id}`);
   };
 
-  const columns: ColumnsType<DataRecord> = [
-    {
-      title: '内容',
-      dataIndex: 'content',
-      key: 'content',
-      ellipsis: true,
-      width: 400,
-    },
-    {
-      title: '情感',
-      dataIndex: 'sentiment',
-      key: 'sentiment',
-      width: 100,
-      render: (sentiment) => (
-        <Space>
-          {getSentimentIcon(sentiment)}
-          <Tag color={getSentimentColor(sentiment)}>
-            {sentiment === 'positive' ? '正面' : sentiment === 'negative' ? '负面' : '中性'}
-          </Tag>
-        </Space>
-      ),
-    },
-    {
-      title: '情感得分',
-      dataIndex: 'sentiment_score',
-      key: 'sentiment_score',
-      width: 150,
-      render: (score) => (
-        score !== null && score !== undefined ? (
-          <Progress
-            percent={Math.round(score * 100)}
-            size="small"
-            status={score > 0.6 ? 'success' : score < 0.4 ? 'exception' : 'normal'}
-          />
-        ) : '-'
-      ),
-    },
-    {
-      title: '作者',
-      dataIndex: 'author',
-      key: 'author',
-      width: 120,
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 180,
-      render: (date) => new Date(date).toLocaleString(),
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 100,
-      render: (_, record) => (
-        <Popconfirm
-          title="确定要删除这条记录吗？"
-          onConfirm={() => handleDelete(record.id)}
-          okText="确定"
-          cancelText="取消"
-        >
-          <Button type="link" danger size="small" icon={<DeleteOutlined />}>
-            删除
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
+  const navigateToAI = () => {
+    if (!dataset) return;
+    navigate(`/ai?dataset=${dataset.id}`);
+  };
+
+  const sentimentColumnRender = (sentiment?: string) => {
+    const info = sentiment ? SENTIMENT_TAG_MAP[sentiment] : undefined;
+    if (!info) {
+      return <Tag>未知</Tag>;
+    }
+    return (
+      <Space size={6}>
+        {info.icon}
+        <Tag color={info.color}>{info.label}</Tag>
+      </Space>
+    );
+  };
+
+  const columns: ColumnsType<DataRecord> = useMemo(
+    () => [
+      {
+        title: '内容',
+        dataIndex: 'content',
+        key: 'content',
+        ellipsis: true,
+        width: 420,
+      },
+      {
+        title: '情感',
+        dataIndex: 'sentiment',
+        key: 'sentiment',
+        width: 140,
+        render: sentimentColumnRender,
+      },
+      {
+        title: '情感得分',
+        dataIndex: 'sentiment_score',
+        key: 'sentiment_score',
+        width: 160,
+        render: (score) =>
+          score !== null && score !== undefined ? (
+            <Progress
+              percent={Math.round(score * 100)}
+              size="small"
+              status={score > 0.6 ? 'success' : score < 0.4 ? 'exception' : 'normal'}
+            />
+          ) : (
+            '—'
+          ),
+      },
+      {
+        title: '作者',
+        dataIndex: 'author',
+        key: 'author',
+        width: 140,
+        render: (author?: string) => author || '—',
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'created_at',
+        key: 'created_at',
+        width: 190,
+        render: (date) => new Date(date).toLocaleString(),
+      },
+      {
+        title: '操作',
+        key: 'actions',
+        width: 100,
+        render: (_, record) => (
+          <Popconfirm
+            title="确定要删除这条记录吗？"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="link" danger size="small" icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        ),
+      },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const autoOpenModal = searchParams.get('create');
+    if (autoOpenModal === '1') {
+      setModalVisible(true);
+    }
+  }, [searchParams]);
 
   if (!dataset) {
-    return <div>Loading...</div>;
+    return (
+      <Card style={{ borderRadius: 12 }}>
+        <Space direction="vertical" style={{ width: '100%', alignItems: 'center', padding: '60px 0' }}>
+          <Typography.Title level={4}>正在加载数据集...</Typography.Title>
+        </Space>
+      </Card>
+    );
   }
 
   return (
@@ -260,60 +335,77 @@ const DatasetDetail: React.FC = () => {
         >
           返回
         </Button>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <Title level={2} style={{ color: 'white', margin: 0 }}>
               {dataset.name}
             </Title>
-            <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.9)' }}>
+            <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.85)' }}>
               {dataset.description || '暂无描述'}
             </p>
           </div>
-          <Space>
-            <Button
-              icon={<BarChartOutlined />}
-              onClick={() => navigate(`/analytics/${id}`)}
-              size="large"
-              style={{
-                background: 'white',
-                color: '#667eea',
-                border: 'none',
-              }}
-            >
-              查看分析
-            </Button>
+          <Space size="middle" wrap>
+            <Tooltip title="转到分析页查看图表洞察">
+              <Button
+                icon={<BarChartOutlined />}
+                onClick={() => navigate(`/analytics/${dataset.id}`)}
+              >
+                查看分析
+              </Button>
+            </Tooltip>
+            <Tooltip title="一键生成高颜值词云图">
+              <Button
+                icon={<CloudOutlined />}
+                onClick={navigateToWordcloud}
+              >
+                词云分析
+              </Button>
+            </Tooltip>
+            <Tooltip title="调用大模型快速生成洞察与报告">
+              <Button
+                icon={<RobotOutlined />}
+                onClick={navigateToAI}
+              >
+                AI助手
+              </Button>
+            </Tooltip>
+            <Tooltip title="导出全部记录为CSV文件">
+              <Button
+                icon={<DownloadOutlined />}
+                loading={exporting}
+                onClick={handleExport}
+              >
+                导出CSV
+              </Button>
+            </Tooltip>
           </Space>
         </div>
       </Card>
 
       <Card style={{ borderRadius: 12 }}>
-        <Descriptions column={3}>
-          <Descriptions.Item label="数据源">{dataset.source_type}</Descriptions.Item>
-          <Descriptions.Item label="记录数">{dataset.record_count || 0}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
-            {new Date(dataset.created_at).toLocaleString()}
+        <Descriptions column={3} layout="horizontal">
+          <Descriptions.Item label="数据源">
+            <Tag color="processing">{SOURCE_TEXT[dataset.source] || dataset.source_type || '未知'}</Tag>
           </Descriptions.Item>
+          <Descriptions.Item label="记录数">{dataset.record_count ?? dataset.total_records ?? 0}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">{new Date(dataset.created_at).toLocaleString()}</Descriptions.Item>
+          <Descriptions.Item label="关键字">{dataset.keyword || '—'}</Descriptions.Item>
+          <Descriptions.Item label="最近更新">{dataset.updated_at ? new Date(dataset.updated_at).toLocaleString() : '—'}</Descriptions.Item>
+          <Descriptions.Item label="数据集ID">{dataset.id}</Descriptions.Item>
         </Descriptions>
       </Card>
 
       <Card
         title="数据记录"
         extra={
-          <Space>
-            <Upload beforeUpload={handleUpload} showUploadList={false}>
+          <Space size="middle">
+            <Upload beforeUpload={handleUpload} showUploadList={false} accept=".csv,.xlsx">
               <Button icon={<UploadOutlined />}>上传文件</Button>
             </Upload>
-            <Button
-              icon={<PlusOutlined />}
-              onClick={() => setBulkModalVisible(true)}
-            >
+            <Button icon={<PlusOutlined />} onClick={() => setBulkModalVisible(true)}>
               批量添加
             </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setModalVisible(true)}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
               添加记录
             </Button>
           </Space>
@@ -338,7 +430,7 @@ const DatasetDetail: React.FC = () => {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
-        width={600}
+        width={640}
       >
         <Form form={form} layout="vertical" onFinish={handleCreateRecord}>
           <Form.Item
@@ -346,15 +438,11 @@ const DatasetDetail: React.FC = () => {
             label="内容"
             rules={[{ required: true, message: '请输入内容' }]}
           >
-            <TextArea rows={4} placeholder="输入数据内容" />
+            <TextArea rows={4} placeholder="输入数据内容" allowClear />
           </Form.Item>
 
           <Form.Item name="author" label="作者">
-            <Input placeholder="作者名称（可选）" />
-          </Form.Item>
-
-          <Form.Item name="source_url" label="来源URL">
-            <Input placeholder="数据来源链接（可选）" />
+            <Input placeholder="作者名称（可选）" allowClear />
           </Form.Item>
         </Form>
       </Modal>
@@ -364,18 +452,19 @@ const DatasetDetail: React.FC = () => {
         open={bulkModalVisible}
         onCancel={() => setBulkModalVisible(false)}
         onOk={() => bulkForm.submit()}
-        width={600}
+        width={640}
       >
         <Form form={bulkForm} layout="vertical" onFinish={handleBulkCreate}>
           <Form.Item
             name="content"
             label="批量内容"
             rules={[{ required: true, message: '请输入内容' }]}
-            extra="每行一条记录"
+            extra="每行一条记录，系统会自动进行情感分析"
           >
             <TextArea
               rows={10}
               placeholder="输入多条数据，每行一条记录"
+              allowClear
             />
           </Form.Item>
         </Form>

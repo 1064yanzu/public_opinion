@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import DatasetsPage from './pages/DatasetsPage';
 import DatasetDetail from './pages/DatasetDetail';
 import AnalyticsPage from './pages/AnalyticsPage';
+import SpiderPage from './pages/SpiderPage';
+import WordCloudPage from './pages/WordCloudPage';
+import AIAssistantPage from './pages/AIAssistantPage';
 import Layout from './components/Layout';
 
 const App: React.FC = () => {
@@ -35,6 +38,9 @@ const App: React.FC = () => {
               <Route path="datasets" element={<DatasetsPage />} />
               <Route path="datasets/:id" element={<DatasetDetail />} />
               <Route path="analytics/:id" element={<AnalyticsPage />} />
+              <Route path="spider" element={<SpiderPage />} />
+              <Route path="wordcloud" element={<WordCloudPage />} />
+              <Route path="ai" element={<AIAssistantPage />} />
             </Route>
           ) : (
             <Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Layout as AntLayout,
@@ -7,16 +7,18 @@ import {
   Avatar,
   Typography,
   Space,
-  theme
+  theme,
 } from 'antd';
 import {
   DashboardOutlined,
   DatabaseOutlined,
-  BarChartOutlined,
-  UserOutlined,
+  CloudOutlined,
+  RobotOutlined,
+  GlobalOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import type { MenuProps } from 'antd';
@@ -29,26 +31,56 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
 
-  const menuItems: MenuProps['items'] = [
-    {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: '仪表盘',
-    },
-    {
-      key: '/datasets',
-      icon: <DatabaseOutlined />,
-      label: '数据集',
-    },
-  ];
+  const menuItems: MenuProps['items'] = useMemo(
+    () => [
+      {
+        key: '/dashboard',
+        icon: <DashboardOutlined />,
+        label: '仪表盘',
+      },
+      {
+        key: '/datasets',
+        icon: <DatabaseOutlined />,
+        label: '数据集',
+      },
+      {
+        key: '/spider',
+        icon: <GlobalOutlined />,
+        label: '智能爬虫',
+      },
+      {
+        key: '/wordcloud',
+        icon: <CloudOutlined />,
+        label: '词云分析',
+      },
+      {
+        key: '/ai',
+        icon: <RobotOutlined />,
+        label: 'AI助手',
+      },
+    ],
+    []
+  );
+
+  const selectedKeys = useMemo(() => {
+    const path = location.pathname;
+    const keys = (menuItems || [])
+      .map((item) => (typeof item?.key === 'string' ? item.key : undefined))
+      .filter((key): key is string => Boolean(key));
+    const match = keys.find((key) => path === key || path.startsWith(`${key}/`));
+    return match ? [match] : [];
+  }, [location.pathname, menuItems]);
 
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: '个人信息',
+      label: '个人信息（即将上线）',
+      disabled: true,
     },
     {
       type: 'divider',
@@ -69,8 +101,6 @@ const Layout: React.FC = () => {
     if (key === 'logout') {
       logout();
       navigate('/login');
-    } else if (key === 'profile') {
-      // TODO: 实现个人信息页
     }
   };
 
@@ -84,21 +114,23 @@ const Layout: React.FC = () => {
           background: 'linear-gradient(180deg, #6366f1 0%, #4f46e5 100%)',
         }}
       >
-        <div style={{
-          height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontSize: collapsed ? 18 : 20,
-          fontWeight: 'bold',
-          transition: 'all 0.3s',
-        }}>
-          {collapsed ? '数' : '数据分析平台'}
+        <div
+          style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: collapsed ? 18 : 20,
+            fontWeight: 'bold',
+            transition: 'all 0.3s',
+          }}
+        >
+          {collapsed ? '数' : '数据智能平台'}
         </div>
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={selectedKeys}
           items={menuItems}
           onClick={handleMenuClick}
           style={{
