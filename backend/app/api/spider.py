@@ -1,197 +1,185 @@
-"""Spider API endpoints"""
+"""Spider routes - Web scraping and data collection"""
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import Dict
+import os
+import csv
+import pandas as pd
+from datetime import datetime
+import random
+import traceback
+
 from ..database import get_db
 from ..models.user import User
-from ..models.dataset import DataSet, DataSource
 from ..core.deps import get_current_active_user
+from ..schemas.spider import (
+    SpiderTaskCreate,
+    SpiderTaskHistory,
+    SpiderTaskStatus,
+    SpiderDataRecord,
+    HotTopicItem
+)
 from ..services.spider_service import SpiderService
-from ..services.nlp_service import NLPService
-from ..schemas.spider import CrawlRequest
 from ..utils.activity_logger import log_activity
-from ..models.record import DataRecord
-from ..utils.storage import export_dataset_to_csv
-from datetime import datetime
 
 router = APIRouter()
+spider_service = SpiderService()
 
 
-def parse_publish_time(value):
-    """Parse publish time string to datetime"""
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value
-    
-    formats = [
-        "%Y-%m-%d %H:%M:%S",
-        "%Y/%m/%d %H:%M:%S",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d %H:%M",
-    ]
-    
-    for fmt in formats:
-        try:
-            return datetime.strptime(value, fmt)
-        except ValueError:
-            continue
-    
-    return None
-
-
-def crawl_and_save_task(
-    dataset_id: int,
-    source: str,
-    keyword: str,
-    max_pages: int,
-):
-    """Background task for crawling and saving data"""
-    from ..database import SessionLocal
-    
-    db = SessionLocal()
-    try:
-        spider_service = SpiderService()
-        nlp_service = NLPService()
-        
-        # Crawl data
-        raw_data = spider_service.crawl_data(source, keyword, max_pages)
-        
-        if not raw_data:
-            print(f"No data crawled for keyword: {keyword}")
-            return
-        
-        # Process and save records
-        dataset = db.query(DataSet).filter(DataSet.id == dataset_id).first()
-        if not dataset:
-            return
-        
-        created_count = 0
-        for item in raw_data:
-            try:
-                content = item.get('content', '')
-                score, label = nlp_service.analyze_sentiment(content)
-                
-                post_id = item.get('post_id')
-                if post_id:
-                    exists = (
-                        db.query(DataRecord)
-                        .filter(
-                            DataRecord.dataset_id == dataset_id,
-                            DataRecord.post_id == post_id
-                        )
-                        .first()
-                    )
-                    if exists:
-                        continue
-                
-                record = DataRecord(
-                    dataset_id=dataset_id,
-                    post_id=item.get('post_id'),
-                    content=content,
-                    author=item.get('author'),
-                    publish_time=parse_publish_time(item.get('publish_time')),
-                    likes=item.get('likes', 0),
-                    shares=item.get('shares', 0),
-                    comments=item.get('comments', 0),
-                    sentiment_score=score,
-                    sentiment_label=label,
-                )
-                db.add(record)
-                created_count += 1
-            except Exception as e:
-                print(f"Error processing record: {e}")
-                continue
-        
-        # Update dataset
-        dataset.total_records += created_count
-        db.commit()
-        
-        # Export to CSV for compatibility with legacy features
-        try:
-            export_dataset_to_csv(db, dataset)
-            print(f"Exported dataset to CSV")
-        except Exception as e:
-            print(f"CSV export failed: {e}")
-        
-        print(f"Successfully crawled and saved {created_count} records")
-    except Exception as e:
-        print(f"Error in crawl task: {e}")
-        db.rollback()
-    finally:
-        db.close()
-
-
-@router.post("/crawl")
-def start_crawl(
-    request: CrawlRequest,
+@router.post("/task", response_model=SpiderTaskStatus)
+async def create_spider_task(
+    task: SpiderTaskCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Start a spider crawl task
+    创建爬虫任务
     
-    Creates a new dataset or uses existing one, then crawls data in background
+    支持的平台：
+    - weibo: 微博
+    - douyin: 抖音
+    - bilibili: B站
     """
-    # Get or create dataset
-    if request.dataset_id:
-        dataset = db.query(DataSet).filter(
-            DataSet.id == request.dataset_id,
-            DataSet.user_id == current_user.id
-        ).first()
-        if not dataset:
-            raise HTTPException(status_code=404, detail="Dataset not found")
-    else:
-        # Create new dataset
-        dataset = DataSet(
+    try:
+        # 保存任务历史
+        task_id = f"spider_{current_user.id}_{int(datetime.now().timestamp())}"
+        
+        # 启动爬虫任务
+        result = await spider_service.execute_spider_task(
+            keyword=task.keyword,
+            platforms=task.platforms,
+            start_date=task.start_date,
+            end_date=task.end_date,
+            precision=task.precision,
             user_id=current_user.id,
-            name=request.dataset_name or f"{request.source.value}-{request.keyword}",
-            description=request.description,
-            source=request.source,
-            keyword=request.keyword,
-            total_records=0,
+            task_id=task_id
         )
-        db.add(dataset)
-        db.commit()
-        db.refresh(dataset)
-    
-    # Start background crawl task
-    background_tasks.add_task(
-        crawl_and_save_task,
-        dataset.id,
-        request.source.value,
-        request.keyword,
-        request.max_pages
-    )
-    
-    log_activity(
-        db,
-        current_user,
-        "start_crawl",
-        resource="dataset",
-        resource_id=dataset.id,
-        details=f"{request.source.value}:{request.keyword}"
-    )
-    
-    return {
-        "message": "Crawl task started",
-        "dataset_id": dataset.id,
-        "dataset_name": dataset.name,
-        "estimated_records": request.max_pages * 10,  # Rough estimate
-    }
+        
+        # 记录活动日志
+        log_activity(
+            db,
+            current_user,
+            "spider_task",
+            details=f"关键词: {task.keyword}, 平台: {', '.join(task.platforms)}"
+        )
+        
+        # 如果有后台任务需求，添加到后台
+        if result.get('background_task'):
+            background_tasks.add_task(
+                spider_service.process_spider_results,
+                task_id,
+                current_user.id
+            )
+        
+        return SpiderTaskStatus(
+            status="success",
+            message="爬虫任务已启动",
+            task_id=task_id,
+            data=result.get('data')
+        )
+        
+    except Exception as e:
+        print(f"创建爬虫任务失败: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"爬虫任务失败: {str(e)}")
 
 
-@router.get("/sources")
-def list_sources():
-    """List available spider sources"""
-    spider_service = SpiderService()
-    sources = spider_service.available_sources()
+@router.get("/history", response_model=List[SpiderTaskHistory])
+def get_spider_history(
+    limit: int = 20,
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取爬虫任务历史记录"""
+    try:
+        history = spider_service.get_task_history(current_user.id, limit)
+        return history
+    except Exception as e:
+        print(f"获取历史记录失败: {str(e)}")
+        return []
+
+
+@router.get("/status/{task_id}", response_model=SpiderTaskStatus)
+def get_task_status(
+    task_id: str,
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取爬虫任务状态"""
+    try:
+        status = spider_service.get_task_status(task_id, current_user.id)
+        return status
+    except Exception as e:
+        print(f"获取任务状态失败: {str(e)}")
+        raise HTTPException(status_code=404, detail="任务不存在")
+
+
+@router.post("/stop/{task_id}")
+def stop_spider_task(
+    task_id: str,
+    current_user: User = Depends(get_current_active_user),
+):
+    """停止爬虫任务"""
+    try:
+        spider_service.stop_task(task_id, current_user.id)
+        return {"status": "success", "message": "任务已停止"}
+    except Exception as e:
+        print(f"停止任务失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"停止任务失败: {str(e)}")
+
+
+@router.get("/hot-topics", response_model=List[HotTopicItem])
+def get_hot_topics(
+    platform: str = "douyin",
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    获取热点话题
     
-    return {
-        "sources": sources,
-        "descriptions": {
-            "weibo": "微博搜索爬虫",
-            "douyin": "抖音搜索爬虫（开发中）",
+    支持的平台：
+    - douyin: 抖音热榜
+    - weibo: 微博热搜
+    - bilibili: B站热门
+    """
+    try:
+        topics = spider_service.get_hot_topics(platform)
+        return topics
+    except Exception as e:
+        print(f"获取热点话题失败: {str(e)}")
+        return []
+
+
+@router.get("/realtime-data")
+def get_realtime_spider_data(
+    task_id: str = None,
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取实时爬取数据"""
+    try:
+        if task_id:
+            data = spider_service.get_realtime_data(task_id, current_user.id)
+        else:
+            # 获取最新的数据
+            data = spider_service.get_latest_data(current_user.id)
+        return data
+    except Exception as e:
+        print(f"获取实时数据失败: {str(e)}")
+        return []
+
+
+@router.get("/chart-data")
+def get_spider_chart_data(
+    task_id: str = None,
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取爬虫数据的图表统计信息"""
+    try:
+        chart_data = spider_service.get_chart_data(task_id, current_user.id)
+        return chart_data
+    except Exception as e:
+        print(f"获取图表数据失败: {str(e)}")
+        return {
+            'heatmapData': [],
+            'sentimentData': {'positive': 0, 'negative': 0, 'neutral': 0},
+            'genderData': {'male': 0, 'female': 0}
         }
-    }
