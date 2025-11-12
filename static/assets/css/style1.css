@@ -1,0 +1,197 @@
+/* 全局样式 */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7fa;
+}
+
+/* 卡片样式 */
+.card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* 信息概览卡片 */
+.info-box {
+    text-align: center;
+    padding: 20px;
+}
+
+.info-box-content i {
+    font-size: 48px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.info-box-content p {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.info-box-content span {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* 词云图和放大图预览 */
+.row .card {
+    height: 100%;
+}
+
+.image-crop, .img-preview {
+    height: 600px; /* 设置固定高度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.image-crop img, .img-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* 放大图预览卡片 */
+.preview-card {
+    height: 800px; /* 设置固定高度 */
+}
+
+.preview-card .card-body {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 56px); /* 减去卡片头部的高度 */
+}
+
+.preview-card .img-preview {
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+
+/* 词云图卡片 */
+.wordcloud-card {
+    height: 800px; /* 设置固定高度，与放大图预览卡片一致 */
+}
+
+.wordcloud-card .card-body {
+    height: calc(100% - 56px); /* 减去卡片头部的高度 */
+    padding: 0; /* 移除内边距以充分利用空间 */
+}
+
+.wordcloud-card .image-crop {
+    height: 100%; /* 使图片容器填满卡片主体 */
+}
+
+/* 按钮样式 */
+.btn {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+/* 表格样式 */
+.table-responsive {
+    margin-top: 20px;
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* 每日热点样式 */
+.news-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-image {
+    height: 300px; /* 增加图片高度 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.news-card .card-body {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card .card-title {
+    font-size: 16px;
+    margin-bottom: 10px;
+    flex-grow: 1;
+}
+
+.news-card .card-text {
+    font-size: 12px;
+    margin-top: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .col-md-3 {
+        margin-bottom: 20px;
+    }
+
+    .image-crop, .img-preview {
+        height: 400px;
+    }
+
+    .preview-card, .wordcloud-card {
+        height: auto; /* 在小屏幕上自适应高度 */
+    }
+
+    .news-image {
+        height: 200px;
+    }
+}
+
+/* 确保每日热点卡片等高 */
+.daily-hotspots .row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.daily-hotspots .col-md-3 {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.daily-hotspots .card {
+    width: 100%;
+}
