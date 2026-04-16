@@ -1,0 +1,147 @@
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.title {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.1;
+  color: #173228;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: #5a6f65;
+}
+
+.meta {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #7f8e87;
+  word-break: break-all;
+}
+
+.articleCard {
+  background:
+    radial-gradient(circle at top right, rgba(217, 108, 79, 0.08), transparent 22%),
+    linear-gradient(180deg, #fffefb 0%, #fcfaf4 100%);
+  border-radius: 24px;
+  box-shadow: 0 24px 48px rgba(27, 47, 38, 0.06);
+}
+
+.article {
+  max-width: 900px;
+  margin: 0 auto;
+  color: #31463c;
+  font-size: 17px;
+  line-height: 1.9;
+}
+
+.article :global(h1),
+.article :global(h2),
+.article :global(h3),
+.article :global(h4) {
+  margin: 2.2em 0 0.8em;
+  color: #153126;
+  line-height: 1.25;
+}
+
+.article :global(h1) {
+  font-size: 34px;
+}
+
+.article :global(h2) {
+  font-size: 28px;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid rgba(27, 58, 44, 0.12);
+}
+
+.article :global(h3) {
+  font-size: 22px;
+}
+
+.article :global(p),
+.article :global(ul),
+.article :global(ol),
+.article :global(blockquote),
+.article :global(table) {
+  margin: 0 0 1.2em;
+}
+
+.article :global(ul),
+.article :global(ol) {
+  padding-left: 1.4em;
+}
+
+.article :global(li) {
+  margin-bottom: 0.45em;
+}
+
+.article :global(a) {
+  color: #b85a40;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 90, 64, 0.28);
+}
+
+.article :global(blockquote) {
+  padding: 1em 1.2em;
+  border-left: 4px solid #d96c4f;
+  background: rgba(217, 108, 79, 0.06);
+  color: #4f6459;
+  border-radius: 0 14px 14px 0;
+}
+
+.article :global(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  background: #f2efe8;
+}
+
+.article :global(pre) {
+  padding: 1.1em 1.2em;
+  border-radius: 16px;
+  overflow: auto;
+  background: #1b221f;
+  color: #ecf6f1;
+}
+
+.article :global(pre code) {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.article :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(28, 58, 46, 0.1);
+}
+
+.article :global(th),
+.article :global(td) {
+  padding: 0.9em 1em;
+  text-align: left;
+  border-bottom: 1px solid rgba(28, 58, 46, 0.08);
+}
+
+.article :global(th) {
+  background: rgba(21, 49, 38, 0.06);
+  color: #173228;
+}
+
+.article :global(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 14px 32px rgba(24, 49, 38, 0.12);
+}

@@ -1,0 +1,297 @@
+.page {
+    background-color: #f0f2f5;
+    color: #333333;
+    font-family: 'Noto Sans SC', sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 100px);
+    box-sizing: border-box;
+}
+
+.card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-5px);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.cardHeader h2 {
+    color: #1890ff;
+    font-size: 18px;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #1890ff;
+}
+
+.cardBody {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.chinaHeatmap {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.sentimentAnalysis, .genderDistribution {
+    grid-column: span 1;
+}
+
+.alertcard, .realtimeMonitoring, .hotTopics {
+    grid-column: span 2;
+}
+
+.header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+    position: relative;
+    margin: 0;
+}
+
+.header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1890ff;
+    margin: 0;
+    text-align: center;
+}
+
+.returnButton {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.returnButton:hover {
+    background-color: #40a9ff;
+    transform: scale(1.1);
+}
+
+.realTimeClock {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: #333333;
+}
+
+.warningBox {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.warningBox.normal {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+
+.warningBox.warning {
+    background-color: #fffbe6;
+    color: #faad14;
+}
+
+.warningBox.danger {
+    background-color: #fff1f0;
+    color: #f5222d;
+}
+
+.realtimeList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.realtimeList li {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    background-color: rgba(24, 144, 255, 0.03);
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+.realtimeList li:hover {
+    background-color: rgba(24, 144, 255, 0.08);
+}
+
+.realtimeList .author {
+    font-weight: 600;
+    color: #1890ff;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.realtimeList .content {
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.5;
+    display: block;
+}
+
+.realtimeList a {
+    color: #1890ff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.realtimeList a:hover {
+    text-decoration: underline;
+}
+
+.hotTopicsBody {
+    padding: 10px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.hotTopicsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding-right: 10px;
+}
+
+.hotTopicItem {
+    background-color: rgba(24, 144, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.hotTopicItem:hover {
+    background-color: rgba(24, 144, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+.hotTopicItem a {
+    color: #333333;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.4;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hotTopicItem a:hover {
+    color: #1890ff;
+}
+
+.chartContainer {
+    width: 100%;
+    height: 100%;
+}
+
+.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        height: auto;
+        gap: 15px;
+    }
+    .chinaHeatmap, .sentimentAnalysis, .genderDistribution, .alertcard, .realtimeMonitoring, .hotTopics {
+        grid-column: span 1;
+    }
+    .card {
+        min-height: 300px;
+        height: auto;
+    }
+    .header h1 {
+        font-size: 1.5rem;
+        padding: 0 50px;
+    }
+    .returnButton {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        top: 15px;
+        left: 15px;
+    }
+    .realTimeClock {
+        font-size: 0.9rem;
+        top: 15px;
+        right: 15px;
+    }
+    .hotTopicsGrid { grid-template-columns: 1fr; gap: 10px; }
+}

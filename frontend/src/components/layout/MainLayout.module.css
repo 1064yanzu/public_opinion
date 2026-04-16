@@ -1,0 +1,14 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    margin-left: 260px;
+    /* Width of sidebar */
+    padding: var(--spacing-xl);
+    max-width: 1600px;
+    margin-right: auto;
+    width: calc(100% - 260px);
+}

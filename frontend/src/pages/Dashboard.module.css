@@ -1,0 +1,158 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.heading {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.subheading {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.summaryCard {
+    display: flex !important;
+    flex-direction: row !important;
+    /* Force row layout for this card variant */
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+}
+
+.summaryIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summaryValue {
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-family: var(--font-serif);
+    line-height: 1.2;
+}
+
+.summaryLabel {
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+    grid-template-areas:
+        "main side"
+        "tasks tasks";
+}
+
+.mainCard {
+    grid-area: main;
+    min-height: 400px;
+}
+
+.sideCard {
+    grid-area: side;
+    min-height: 400px;
+}
+
+.tasksCard {
+    grid-area: tasks;
+}
+
+.chartWrapper {
+    padding-top: var(--spacing-md);
+    height: 100%;
+}
+
+.chartWrapperPie {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.taskList {
+    display: flex;
+    flex-direction: column;
+}
+
+.taskItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.taskItem:last-child {
+    border-bottom: none;
+}
+
+.taskItem:hover {
+    background-color: var(--bg-hover);
+}
+
+.taskInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.taskName {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.taskTime {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.taskStatus {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+}
+
+.completed {
+    background-color: #E6F4EA;
+    color: var(--status-success);
+}
+
+.processing {
+    background-color: #E8F0FE;
+    color: var(--status-info);
+}
+
+.failed {
+    background-color: #FCE8E8;
+    color: var(--status-error);
+}
+
+.pending {
+    background-color: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+.emptyTasks {
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--text-tertiary);
+}

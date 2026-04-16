@@ -1,0 +1,180 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.title {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+}
+
+.searchCard {
+    margin-bottom: var(--spacing-xl);
+    overflow: visible;
+    /* To allow focus rings or dropdowns if needed */
+}
+
+.searchForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.platformSelector {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.platformBtn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.platformBtn:hover {
+    background-color: var(--bg-hover);
+}
+
+.platformBtn.active {
+    background-color: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.inputWrapper {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.searchInput {
+    flex: 1;
+    height: 40px;
+    padding: 0 var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(217, 108, 79, 0.1);
+}
+
+.loadingState {
+    padding: var(--spacing-xl);
+    display: flex;
+    justify-content: center;
+}
+
+.errorBanner {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: #FCE8E8;
+    color: var(--status-error);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.statCard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.statLabel {
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.statValue {
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.statValue.negative {
+    color: var(--status-error);
+}
+
+.statSub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.statTrend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--status-success);
+}
+
+.chartsGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.riskList {
+    list-style: none;
+}
+
+.riskItem {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--bg-hover);
+}
+
+.riskItem:last-child {
+    border-bottom: none;
+}
+
+.riskIcon {
+    color: var(--status-warning);
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

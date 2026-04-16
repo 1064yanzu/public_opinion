@@ -1,5 +1,896 @@
 # 项目更新日志
 
+## 整理并完善 .gitignore 忽略规则 - 2026-04-16
+
+### 变更类型
+**配置优化 / 代码库清理**
+
+### 本次修改
+- 全面补充和整理了 `.gitignore` 文件内的忽略规则，避免将不必要的文件提交到代码库。
+- **Node.js与前端**：新增了对 `node_modules`、`.npm`、各类包管理器 debug 日志文件、`.eslintcache` 等缓存文件的忽略。
+- **Python开发环境**：新增了 `.mypy_cache`、`.pytest_cache`、`.tox`、`.coverage` 等测试和类型检查工具生成的临时文件忽略。
+- **操作系统与IDE**：新增了 macOS `.DS_Store`、`.Trashes`、Windows `Thumbs.db` 以及各常见IDE（VSCode, Cursor, Vim 临时文件等）的忽略。
+- **业务数据缓存**：去除了之前错误添加到忽略列表的 `docs` 目录（以确保接口文档被正常迭代追踪），并完善了临时文件如 `temp_data`、`reports`、测试脚本、打包缓存日志等的忽略拦截。
+
+### 本次验证
+- 确认 `git status` 能够剔除本地临时产生的各种没必要提交的干扰文件。
+- 保证重要的开发文档 `docs/` 和业务代码文件正常被Git管理。
+
+## 大数据看板完全还原原版视觉设计 - 2026-04-16
+
+### 变更类型
+**体验修复 / 视觉还原**
+
+### 本次目标
+原本的大数据看板在重构 Tauri 版本的过程中采用了新版设计语言，但用户觉得不够美观。本次目标是将大数据看板在保留 React/Tauri 架构数据接口的基础上，完全用前端组件化的方式解耦并还原成原本的 HTML/CSS 视觉和布局。
+
+### 本次修改
+- 剥离布局：取消了 `BigData` 根组件的 `MainLayout` 全局侧边栏嵌套，使其重新成为支持沉浸式浏览的独立全屏监控视图。
+- 返回能力重写：将原来的 `&larr;` 返回首页按钮替换为前端路由跳转，通过 `useNavigate` 平滑返回 Dashboard，实现闭环。
+- 彻底抽离并重写样式（解耦）：
+  - 修改 `BigData.module.css`，精准调配原有的 `#f0f2f5` 浅色风格与卡片流光背景 `linear-gradient` 和发光动画，解决之前暗色模式强行堆叠导致的视觉冲突。
+  - 恢复四列三行的经典网格布局结构：还原中国热力图占据 2×2 卡片位的高度比例；同时复位情感分析、性别分布等组件卡片的位置。
+- 各组件使用独立的作用域封装类名，彻底实现 CSS 与逻辑解耦以方便后续单独维护升级。
+- **后端接口重构补偿**：发现重构后的 `backend/app/routers/page.py` 的 `/hot-topics` 接口直接去读了一个永远为空的 `hotspots` 数据库表，导致大屏热点数据白板。我已经把原版直接调用 `douyin` 实时 API 接口的防风控逻辑（`httpx/aiohttp` 异步模式）用新版架构复刻进去了，现在就算数据库为空，它也能实时抓取展示最新的社会热搜数据！
+- **空数据容错渲染**：强制让 ECharts 的 React 包装器在后端返回空地点数据时也渲染地图的灰色基底和边框线（不显示白板），并且全面补全了饼图图表的所有颜色的映射。
+
+### 本次验证
+- 所有的图表（中国地图、饼图等）仍然使用并适配了本地 React `echarts` 包装器的数据结构，样式自动匹配父容器宽高，效果丝滑。
+- 大数据看板组件已全面还原原版视觉体验。
+
+## 微博请求头中文编码修复 - 2026-04-16
+
+### 变更类型
+**缺陷修复 / 登录 Cookie 模式恢复**
+
+### 问题现象
+
+设置页测试微博连接时显示：
+
+- `登录 Cookie 模式：微博爬取异常: 'latin-1' codec can't encode characters ...`
+
+### 根因
+
+- 微博爬虫构造请求头时，将中文关键词直接拼进了 `Referer`
+- `requests` 发送 HTTP 头部时按 `latin-1` 编码
+- 中文字符因此触发编码异常
+
+### 本次修改
+
+- 修改：
+  - [weibo_spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/weibo_spider.py)
+
+修复方式：
+
+- 对 `Referer` 中的关键词做 URL 编码
+
+### 本次验证
+
+- 使用完整微博 Cookie header 做最小测试：
+  - 关键词：`小米`
+  - 第 1 页成功获取 `15` 条数据
+  - 首条结果用户：`数码闲聊站`
+
+## 微博连接测试 UI 闭环与看板视觉升级 - 2026-04-16
+
+### 变更类型
+**体验优化 / 设置闭环 / 大屏视觉升级**
+
+### 本次修改
+
+- 设置页新增微博连接测试能力：
+  - [system.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/system.py)
+  - [system.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/services/system.ts)
+  - [index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+  - [SystemSettingsPanel.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/settings/SystemSettingsPanel.tsx)
+  - [SettingsPanels.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/settings/SettingsPanels.module.css)
+- 设置页现在会明确提示：
+  - 默认自动访客模式
+  - 若微博接口仍要求登录态，再粘贴完整 Cookie header
+- 新增“测试微博连接”按钮，直接展示：
+  - 当前模式
+  - 当前错误原因
+  - 是否能拿到样本
+- 爬虫页新增顶部模式提示条：
+  - [Spider.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - [Spider.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.module.css)
+- 大数据看板继续视觉升级：
+  - [BigData.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+  - [BigData.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.module.css)
+  - 增加 eyebrow、顶部指标带、卡片层级、视觉反馈和整体成品感
+
+### 本次验证
+
+- `./.venv/bin/python -m compileall backend/app`：通过
+- `cd frontend && npm run build`：通过
+
+## 微博访客链补齐与手册 Markdown 真渲染 - 2026-04-16
+
+### 变更类型
+**接口兼容 / 页面修复 / 可用性增强**
+
+### 本次结论
+
+根据你新提供的抓包文件，本轮对微博搜索接口做了反向验证，结果是：
+
+- 旧版 `spiders/articles_spider.py` 当前环境下同样拿不到数据
+- 最小请求直接返回：
+  - `HTTP 432`
+- 补齐最新访客链后，请求不再返回 `432`
+- 但微博搜索接口真实返回：
+  - `ok: -100`
+  - 并跳转 `passport.weibo.com/sso/signin`
+
+这说明当前官方搜索接口在本机环境下已经要求登录态，访客态不足以直接拿到搜索卡片数据。
+
+### 本次修改
+
+- 微博爬虫补齐最新访客初始化流程：
+  - [weibo_spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/weibo_spider.py)
+  - 新增流程：
+    - `passport.weibo.com/visitor/genvisitor`
+    - `passport.weibo.com/visitor/visitor`
+    - `m.weibo.cn/search` 预热
+  - 若官方仍返回 `ok:-100`，会明确提示必须填写有效微博 Cookie
+- 手册页改为真实 Markdown 渲染：
+  - [Manual.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Manual.tsx)
+  - [Manual.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Manual.module.css)
+- 新增前端依赖：
+  - `react-markdown`
+  - `remark-gfm`
+  - `rehype-raw`
+- 大数据看板继续重做视觉层级并接入真实中国地图组件：
+  - [BigData.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+  - [BigData.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.module.css)
+  - [ChinaHeatmap.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/charts/ChinaHeatmap.tsx)
+
+### 本次验证
+
+- 新微博爬虫最小测试结果：
+  - `count=0`
+  - `last_error=微博搜索接口当前要求登录态。自动访客态已完成，但官方仍返回 signin，请在设置页填写有效微博 Cookie。`
+- `./.venv/bin/python -m compileall backend/app`：通过
+- `cd frontend && npm run build`：通过
+
+### 当前说明
+
+- 微博爬虫现在不会再误报“没反应”，而会准确指出官方接口已要求登录态
+- 手册页现在已经是标准 Markdown 正文渲染，不再是伪渲染
+- 看板视觉和中国地图都已继续推进，但要出现真实热区，仍依赖后续成功抓到带省份字段的数据
+
+## 微博旧脚本复核与中国热力图可视化补齐 - 2026-04-16
+
+### 变更类型
+**根因核验 / 数据链路补齐 / 大屏增强**
+
+### 本次结论
+
+为了确认“微博原 Python 脚本是否真的不需要 Cookie”，本轮直接验证了旧版：
+
+- [articles_spider.py](/Volumes/external%20disk/develop/public_opinion/spiders/articles_spider.py)
+
+结果是：
+
+- 旧脚本当前环境下同样无法拿到微博数据
+- 最小原始请求测试对 `m.weibo.cn/api/container/getIndex` 直接返回：
+  - `HTTP 432`
+
+这说明：
+
+- 当前问题不是桌面后端改坏了旧逻辑
+- 而是微博接口环境变化后，无 Cookie 请求在当前环境下已不可用
+
+### 本次修改
+
+- 补齐微博/抖音模型中的地域与画像字段：
+  - [weibo.py](/Volumes/external%20disk/develop/public_opinion/backend/app/models/weibo.py)
+  - [douyin.py](/Volumes/external%20disk/develop/public_opinion/backend/app/models/douyin.py)
+- 给桌面 SQLite 老库增加自动补列逻辑：
+  - [database.py](/Volumes/external%20disk/develop/public_opinion/backend/app/database.py)
+- 爬虫写入省份/城市/性别等字段：
+  - [weibo_spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/weibo_spider.py)
+  - [douyin_spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/douyin_spider.py)
+- `/api/page/chart-data` 改为返回真实省份热力数据：
+  - [page.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/page.py)
+- 新增中国地图热力图组件：
+  - [ChinaHeatmap.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/charts/ChinaHeatmap.tsx)
+  - [index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/charts/index.ts)
+- 大数据看板接入真实中国地图可视化：
+  - [BigData.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+
+### 本次验证
+
+- 旧版微博脚本直接测试：0 条数据
+- 原始请求测试：`HTTP 432`
+- `./.venv/bin/python -m compileall backend/app backend/run_desktop.py`：通过
+- `cd frontend && npm run build`：通过
+
+### 当前说明
+
+- 中国热力图现在已经是“真正的地图可视化”，不再是占位列表
+- 但地图是否出现热区，取决于后续新采集数据是否成功写入 `province`
+- 在微博接口继续返回 `HTTP 432` 的前提下，仍需要在设置页填写有效微博 Cookie 后再采集
+
+## 爬虫失败状态修复与大数据看板回退适配 - 2026-04-16
+
+### 变更类型
+**缺陷修复 / 体验修复 / 旧版页面对齐**
+
+### 问题结论
+
+桌面版“爬虫没有任何反应”并不是前端没发请求，而是后端真实执行后被微博接口风控拦截：
+
+- 日志位置：
+  - `~/Library/Application Support/com.publicopinion.desktop/logs/backend.log`
+- 实际错误：
+  - 微博接口连续返回 `HTTP 432`
+
+原先的问题在于：
+
+- 0 条数据也会把任务标记成 `completed`
+- 前端没有拿到明确失败原因
+
+### 本次修改
+
+- 微博爬虫失败链路修复：
+  - [weibo_spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/weibo_spider.py)
+  - 遇到 `HTTP 432` 会写入明确错误
+  - 无数据时不再伪装成成功完成
+- 新增微博 Cookie 配置闭环：
+  - [system.py](/Volumes/external%20disk/develop/public_opinion/backend/app/schemas/system.py)
+  - [runtime_config.py](/Volumes/external%20disk/develop/public_opinion/backend/app/core/runtime_config.py)
+  - [config.py](/Volumes/external%20disk/develop/public_opinion/backend/app/config.py)
+  - [index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+  - [SystemSettingsPanel.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/settings/SystemSettingsPanel.tsx)
+- 爬虫页状态展示增强：
+  - [Spider.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - 失败任务现在显示中文状态和明确错误信息
+- 大数据看板回退到旧版结构：
+  - [BigData.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+  - [BigData.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.module.css)
+  - 布局已按旧版 `bigdata.html` 六块结构重做，仅做接口适配
+
+### 本次验证
+
+- `./.venv/bin/python -m compileall backend/app backend/run_desktop.py`：通过
+- `cd frontend && npm run build`：通过
+
+### 当前说明
+
+- 如果微博未提供有效 Cookie，任务现在会明确失败，而不会再表现成“没反应”
+- 使用前请在设置页填写微博 Cookie，再重新发起采集任务
+
+## Tauri 资源扫描故障修复 - 2026-04-15
+
+### 变更类型
+**构建修复 / 开发态与打包态配置拆分**
+
+### 问题现象
+
+- `npm run tauri:dev`
+- `npm run tauri:build`
+
+在 `public_opinion_desktop` 的 `custom build command` 阶段报错：
+
+- `Not a directory (os error 20)`
+
+错误路径落在：
+
+- `frontend/src-tauri/resources/backend/public_opinion_backend/_internal/...`
+
+### 根因
+
+- 当前 sidecar 使用 `PyInstaller --onedir`
+- `frontend/src-tauri/resources/backend` 内含大量 `.so`、`.dylib`、符号链接和 Python 运行时目录
+- `tauri-build` 在开发态扫描 `bundle.resources` 时与这类目录结构不兼容
+
+这说明问题不是单个字体文件，而是默认配置下不该让 Tauri 在开发态递归扫描整个 sidecar 目录。
+
+### 本次修改
+
+- 拆分 Tauri 配置：
+  - [tauri.conf.json](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/tauri.conf.json)
+  - [tauri.bundle.conf.json](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/tauri.bundle.conf.json)
+- 调整前端脚本：
+  - [package.json](/Volumes/external%20disk/develop/public_opinion/frontend/package.json)
+- 修复 sidecar 字体资源名：
+  - [build_desktop_backend.sh](/Volumes/external%20disk/develop/public_opinion/backend/scripts/build_desktop_backend.sh)
+  - [wordcloud_generator.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/wordcloud_generator.py)
+
+### 修改结果
+
+- `tauri dev` 不再扫描 `resources/backend`
+- `tauri build` 仅在正式打包时通过额外配置带上 sidecar
+- sidecar 内字体已由中文文件名改为：
+  - `sanjipomoti.ttf`
+
+### 本次验证
+
+- `npm run tauri:build:backend`：通过
+- sidecar 资源确认存在：
+  - `frontend/src-tauri/resources/backend/public_opinion_backend/_internal/sanjipomoti.ttf`
+- `npm run tauri:dev`：
+  - 已验证不再在 `custom build command` 阶段报 `Not a directory (os error 20)`
+  - 已进入正常 Rust 编译阶段
+
+## Tauri React 前端功能补齐 - 2026-04-15
+
+### 变更类型
+**功能补齐 / 桌面前端对齐旧版能力**
+
+### 本次目标
+
+排查 Tauri 版 React 前端为何相比旧版 `views` 页面功能不全，并将缺失的核心页面、接口能力与数据映射补齐到可运行状态。
+
+### 本次修改
+
+- 后端新增页面内容服务：
+  - [page_content.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/page_content.py)
+  - 补齐：
+    - `GET /api/page/cases/{case_id}`
+    - `GET /api/page/manual-content`
+- React 新增旧版对应页面：
+  - [Spider.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - [BigData.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+  - [Cases.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Cases.tsx)
+  - [Manual.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Manual.tsx)
+- 新增页面服务层：
+  - [page.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/services/page.ts)
+- 补齐路由与侧边导航：
+  - [App.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/App.tsx)
+  - [Sidebar.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/layout/Sidebar.tsx)
+- 修正已有页面的数据契约问题：
+  - [Analysis.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Analysis.tsx)
+  - [Dashboard.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Dashboard.tsx)
+  - [Reports.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Reports.tsx)
+  - [Advanced.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Advanced.tsx)
+  - [index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+- 同步接口文档：
+  - [api_documentation.md](/Volumes/external%20disk/develop/public_opinion/docs/api_documentation.md)
+
+### 功能结果
+
+- 现在桌面 React 前端已补齐以下旧版核心能力入口：
+  - 爬虫控制
+  - 数据看板
+  - 案例库
+  - 舆情应对手册
+- 案例详情与手册正文均来自真实后端接口，不再依赖前端假数据
+- 分析页、仪表盘和报告页的数据展示逻辑已与当前 FastAPI 返回结构对齐
+
+### 本次验证
+
+- `cd frontend && npm run build`：通过
+- `./.venv/bin/python -m compileall backend/app backend/run_desktop.py`：通过
+- 从 `backend` 目录启动后端后验证：
+  - `GET /health`：200
+  - `GET /api/page/manual-content`：200
+  - `GET /api/page/cases`：200
+
+### 备注
+
+- 直接在项目根目录执行 `uvicorn app.main:app` 会被旧版根目录 `app.py` 抢占模块名，导致导入串到 Flask 代码；开发态后端启动应从 `backend` 目录执行。
+
+## Tauri macOS 安装包生成 - 2026-04-15
+
+### 变更类型
+**构建交付 / 桌面端打包**
+
+### 本次目标
+
+生成可分发的 macOS 桌面安装包，并验证安装包内确实包含目录化 Python sidecar。
+
+### 本次执行
+
+- 执行桌面后端构建：
+  - `npm run tauri:build:backend`
+- 执行 Tauri 正式构建：
+  - `npm run tauri:build`
+
+### 构建产物
+
+- 原始 `.app`：
+  - [舆情洞察.app](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/target/release/bundle/macos/舆情洞察.app)
+- Tauri 原始 `.dmg`：
+  - [舆情洞察_0.1.0_aarch64.dmg](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/target/release/bundle/dmg/舆情洞察_0.1.0_aarch64.dmg)
+- 修复后的可交付 `.dmg`：
+  - [舆情洞察_0.1.0_aarch64_fixed.dmg](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/target/release/bundle/dmg/舆情洞察_0.1.0_aarch64_fixed.dmg)
+
+### 发现的问题
+
+- Tauri 构建完成后，`.app` 初始产物中未自动生成 `Contents/Resources/backend`
+- 这意味着目录化 sidecar 虽然存在于：
+  - `frontend/src-tauri/target/release/resources/backend`
+  - 但没有被自动带进 `.app` 包体
+
+### 本次修复
+
+- 手动将以下目录复制进 `.app`：
+  - `frontend/src-tauri/target/release/resources/backend`
+  - → `舆情洞察.app/Contents/Resources/backend`
+- 对修复后的 `.app` 执行：
+  - `codesign --force --deep -s -`
+- 基于修复后的 `.app` 重新生成：
+  - `舆情洞察_0.1.0_aarch64_fixed.dmg`
+
+### 本次验证
+
+- 已验证从以下可执行文件直接启动：
+  - `舆情洞察.app/Contents/MacOS/public_opinion_desktop`
+- 启动后 sidecar 实际从包内路径拉起：
+  - `舆情洞察.app/Contents/Resources/backend/public_opinion_backend`
+
+### 当前可交付结论
+
+- 建议优先使用修复后的：
+  - [舆情洞察_0.1.0_aarch64_fixed.dmg](/Volumes/external%20disk/develop/public_opinion/frontend/src-tauri/target/release/bundle/dmg/舆情洞察_0.1.0_aarch64_fixed.dmg)
+- 该产物已经包含桌面端所需的 Python sidecar 资源
+
+## Tauri 启动过渡体验完善 - 2026-04-15
+
+### 变更类型
+**体验优化 / 桌面端启动闭环**
+
+### 本次目标
+
+在 sidecar 启动链路稳定后，补齐桌面端“启动中”可感知状态，避免应用在后端就绪前长时间空白；同时在设置页补齐日志入口，形成排障闭环。
+
+### 本次修改
+
+- 新增独立启动壳层：
+  - [BootstrapApp.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/bootstrap/BootstrapApp.tsx)
+  - [BootstrapScreen.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/bootstrap/BootstrapScreen.tsx)
+  - [BootstrapScreen.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/bootstrap/BootstrapScreen.module.css)
+- 调整前端入口：
+  - [main.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/main.tsx)
+  - React 现在会先渲染启动壳，再异步装载运行时与路由，不再在启动阶段保持空白
+- 补齐桌面运行时日志目录字段：
+  - [system.py](/Volumes/external%20disk/develop/public_opinion/backend/app/schemas/system.py)
+  - [system.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/system.py)
+  - [index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+- 设置页新增排障入口：
+  - [SystemSettingsPanel.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/settings/SystemSettingsPanel.tsx)
+  - 支持直接打开：
+    - 日志目录
+    - `backend.log`
+
+### 体验结果
+
+- 桌面版启动时现在会明确展示：
+  - 正在唤起本地后端
+  - 正在装载分析能力
+  - 首次冷启动会更慢
+- 用户不再面对空白页面等待
+- 若后端异常，后续可以直接从设置页打开日志定位问题
+
+### 本次验证
+
+- `npm run build`：通过
+- `./.venv/bin/python -m compileall backend/app`：通过
+
+## Tauri Sidecar 启动体验优化 - 2026-04-15
+
+### 变更类型
+**性能优化 / 桌面端打包策略调整**
+
+### 本次目标
+
+在已修复桌面端启动崩溃的前提下，继续优化内置 Python sidecar 的启动体验，减少 `PyInstaller --onefile` 带来的冷启动额外开销。
+
+### 本次修改
+
+- 调整桌面后端打包模式：
+  - [backend/scripts/build_desktop_backend.sh](/Volumes/external disk/develop/public_opinion/backend/scripts/build_desktop_backend.sh)
+  - 从 `PyInstaller --onefile` 切换为 `PyInstaller --onedir`
+- 兼容新的 sidecar 目录布局：
+  - [frontend/src-tauri/src/main.rs](/Volumes/external disk/develop/public_opinion/frontend/src-tauri/src/main.rs)
+  - `packaged_backend_path()` 现在同时支持：
+    - 单文件布局 `resources/backend/public_opinion_backend`
+    - 目录布局 `resources/backend/public_opinion_backend/public_opinion_backend`
+
+### 本次验证
+
+- `backend/scripts/build_desktop_backend.sh`：通过
+- `cargo build --release`：通过
+- 新 sidecar 目录结构验证：
+  - `frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend`
+  - `_internal/` 依赖目录已正确生成
+- 目录化 sidecar 冷启动验证：
+  - 首次启动约 `56s` 返回 `/health`
+- 目录化 sidecar 重复启动验证：
+  - 两次连续启动均约 `5s` 返回 `/health`
+- `./target/release/public_opinion_desktop`：
+  - 已验证能从 `target/release/resources/backend/public_opinion_backend` 成功拉起 sidecar
+
+### 结论
+
+- `onedir` 方案已可用，且更适合作为桌面 sidecar 分发形态
+- 当前瓶颈不只是 `onefile` 解包，仍包含 Python 运行时与科学计算依赖初始化成本
+- 但在资源已就绪的情况下，重复启动时间已显著收敛到约 `5s`
+- 后续若要继续提升“首次启动”体验，优先方向应是：
+  - 做前端启动中状态页
+  - 延迟加载部分重依赖分析能力
+  - 进一步拆分 sidecar 能力，而不是继续增加启动超时
+
+## Tauri 桌面端启动崩溃修复 - 2026-04-15
+
+### 变更类型
+**缺陷修复 / 桌面端启动链路加固**
+
+### 问题现象
+
+- macOS 下启动 `舆情洞察.app` 后立即崩溃
+- 崩溃栈表面显示为：
+  - `tao::platform_impl::platform::app_delegate::did_finish_launching`
+  - `panic_cannot_unwind`
+  - `EXC_CRASH (SIGABRT)`
+
+### 根因定位
+
+- 直接根因不是 `tao` 窗口层异常，而是 `Tauri setup` 阶段返回错误，Rust 在 macOS 的 `applicationDidFinishLaunching` 回调里无法正常 unwind，最终表现为原生崩溃
+- 桌面后端 sidecar 初始打包存在两类问题：
+  - `backend/run_desktop.py` 使用 `uvicorn.run("app.main:app", ...)`，导致 `PyInstaller` 未自动收集 `app.main`
+  - `SQLAlchemy async sqlite` 与 `passlib` 存在动态导入链，`PyInstaller` 未默认收集 `aiosqlite` 与部分 `passlib.handlers`
+- 即便补齐缺失模块，`PyInstaller --onefile` 在当前科学计算依赖组合下冷启动明显偏慢，原来的 15 秒等待窗口不足
+- Rust 侧此前将后端 `stdout/stderr` 重定向到空设备，导致桌面壳只看到“后端启动超时”，无法直接看到真实异常
+
+### 本次修复
+
+- 显式修复桌面后端入口：
+  - `backend/run_desktop.py`
+  - 改为显式 `from app.main import app`
+  - 改为 `uvicorn.run(app, ...)`
+- 加固 PyInstaller 打包脚本：
+  - `backend/scripts/build_desktop_backend.sh`
+  - 增加 `--hidden-import aiosqlite`
+  - 增加 `--collect-submodules passlib.handlers`
+- 加固桌面端后端日志链路：
+  - `frontend/src-tauri/src/main.rs`
+  - 将 sidecar `stdout/stderr` 输出到应用数据目录 `logs/backend.log`
+- 放宽桌面端后端等待窗口：
+  - 从 15 秒提升到 120 秒
+  - 超时时错误信息中明确提示检查 `logs/backend.log`
+
+### 本次验证
+
+- `./.venv/bin/python -m compileall backend/app backend/run_desktop.py`：通过
+- `backend/scripts/build_desktop_backend.sh`：通过
+- 打包后端二进制独立启动验证：
+  - `frontend/src-tauri/resources/backend/public_opinion_backend`
+  - `48s` 内成功返回 `/health`
+- `npm run build`：通过
+- `cargo build --release`：通过
+- `./target/release/public_opinion_desktop`：已验证不再在启动阶段立即崩溃，能持续运行并成功拉起 sidecar
+
+### 当前说明
+
+- 当前桌面端已修复“启动即崩”问题
+- 由于仍采用 `PyInstaller --onefile`，首次冷启动偏慢属于当前打包策略特性，不再会被 15 秒超时误判为崩溃
+- 若后续还要继续优化启动体验，优先方向应是评估从 `onefile` 切换到更适合 sidecar 的 `onedir`
+
+## Tauri 桌面化可行性评估 - 2026-04-15
+
+### 变更类型
+**架构评估 / 迁移施工规划**
+
+### 本次目标
+
+评估当前项目是否适合迁移为 `Tauri` 桌面应用，以实现“用户直接安装打包产物即可使用，无需手动安装复杂前后端依赖”。
+
+### 本次完成
+
+- 梳理了当前项目的实际架构现状：
+  - 前端为 `React + Vite + TypeScript`
+  - 后端为 `FastAPI + SQLite + 本地文件存储`
+  - 旧 `Flask` 代码仍在根目录保留，但新结构已具备独立后端能力
+- 确认项目**可以迁移到 Tauri**
+- 明确不建议当前阶段直接改成“纯 Tauri + 纯 Rust 后端”
+- 给出推荐方案：
+  - `Tauri Shell + React 前端 + 内置 Python FastAPI Sidecar + SQLite/本地文件`
+- 识别出桌面化前必须先处理的关键问题：
+  - 运行路径和输出目录统一收口
+  - 前端 API 基地址运行时抽象
+  - 设置页从“只读环境变量”升级为“桌面配置闭环”
+  - Python runtime / sidecar 打包方案
+  - 中文字体与词云生成兼容性
+- 新增正式施工文档：
+  - `docs/tauri_migration_construction.md`
+
+### 结论摘要
+
+当前项目**适合做成 Tauri 桌面应用**，但正确方向是“桌面壳 + 内置 Python 后端”，不是立刻重写后端。
+
+### 下一步建议
+
+1. 初始化 `src-tauri`
+2. 抽象前端 API 基地址
+3. 收口后端路径配置
+4. 设计系统配置读写接口
+5. 在设置页补齐桌面运行配置能力
+
+---
+
+## Tauri 桌面化迁移实施 - 2026-04-15
+
+### 变更类型
+**架构实现 / 桌面端迁移**
+
+### 本次完成
+
+- 后端新增运行时路径与配置模块：
+  - `backend/app/core/paths.py`
+  - `backend/app/core/runtime_config.py`
+- 后端配置系统改造为稳定代理：
+  - `backend/app/config.py`
+- 后端新增桌面系统接口：
+  - `GET /api/system/config`
+  - `PUT /api/system/config`
+  - `GET /api/system/runtime`
+- 后端主应用已切换到运行时路径挂载静态目录和报告目录
+- 词云与报告生成已切换到统一的桌面路径系统
+- 新增桌面后端启动入口：
+  - `backend/run_desktop.py`
+- 新增桌面后端打包脚本：
+  - `backend/scripts/build_desktop_backend.sh`
+- 前端新增运行时抽象：
+  - `frontend/src/services/runtime.ts`
+  - `frontend/src/services/system.ts`
+  - `frontend/src/hooks/useAppRuntime.ts`
+- 前端 `main.tsx` 已支持在启动阶段切换 Web / Desktop 路由模式
+- 前端设置页完成重构：
+  - 账户信息面板
+  - 密码修改面板
+  - 桌面系统配置面板
+- 前端修复了一批现有接口对接问题：
+  - `AI 助手`
+  - `报告下载`
+  - `系统监控`
+  - `仪表盘任务列表`
+- 初始化 `Tauri v2` 工程：
+  - `frontend/src-tauri/Cargo.toml`
+  - `frontend/src-tauri/src/main.rs`
+  - `frontend/src-tauri/tauri.conf.json`
+  - `frontend/src-tauri/capabilities/default.json`
+- 文档同步更新：
+  - `docs/desktop_development.md`
+  - `docs/api_documentation.md`
+  - `docs/tauri_migration_construction.md`
+  - `frontend/README.md`
+
+### 本次验证
+
+- `python -m compileall app run_desktop.py`：通过
+- `npm run build`：通过
+- `cargo check`：已启动，首次依赖下载较重，仍在验证中
+
+### 当前剩余风险
+
+1. `Tauri` 首次 `cargo check/build` 依赖下载量大，对磁盘空间敏感
+2. 生产打包前必须先执行 `npm run tauri:build:backend`
+3. 修改数据库路径、报告目录、静态目录后需要重启内置后端
+
+---
+
+## 技术栈迁移计划 - 2025-12-26
+
+### 变更类型
+**架构升级** - 从 Flask + Jinja2 模板迁移到 React + FastAPI 现代化架构
+
+### 迁移背景
+
+为了提升开发效率、用户体验和系统可维护性，决定将项目从传统的服务端渲染架构升级为前后端分离的现代化架构。
+
+**当前技术栈（v1.x）**：
+- 后端：Flask 3.0.0 + Jinja2 模板
+- 前端：服务端渲染 + 传统 HTML/CSS/JS
+- 部署：单体应用
+
+**目标技术栈（v2.0）**：
+- 后端：FastAPI（异步、自动文档、类型检查）
+- 前端：React 18 + Vite + TypeScript
+- UI 组件：Shadcn UI / Ant Design
+- 状态管理：Zustand
+- 数据请求：TanStack Query (React Query)
+- 路由：React Router v6
+- 图表：Recharts / ECharts for React
+- 部署：前后端分离部署
+
+### 迁移目标
+
+1. **前后端分离**：清晰的职责划分，独立开发和部署
+2. **现代化技术栈**：使用业界最佳实践和工具
+3. **提升开发效率**：组件化开发、热更新、TypeScript 类型安全
+4. **优化用户体验**：单页应用、无刷新页面切换、更流畅的交互
+5. **提高可维护性**：代码解耦、模块化、易于扩展
+6. **保持功能完整**：不改变现有任何业务功能
+
+### 已完成工作
+
+#### 1. 规划文档（2025-12-26）
+
+创建了完整的技术迁移文档体系：
+
+**核心规划文档**：
+- ✅ `task.md` - 详细任务清单，包含 7 个阶段、60+ 任务项
+- ✅ `implementation_plan.md` - 实施计划，包含架构设计、技术选型、验证方案
+- ✅ `docs/migration_guide.md` - 迁移指南，包含完整代码示例和步骤说明
+- ✅ `docs/development.md` - 开发指南，详细的开发环境和规范
+- ✅ `docs/deployment.md` - 部署文档，生产环境部署完整流程
+- ✅ `docs/api_documentation.md` - API 接口文档，所有端点规范
+
+**架构设计**：
+- 📋 完整的目录结构设计
+- 📋 前后端分离架构图（Mermaid）
+- 📋 API 路由映射方案
+- 📋 数据迁移策略
+- 📋 部署方案（支持 Docker）
+
+**技术选型确认**：
+根据用户反馈确认的关键决策：
+1. **数据库**：SQLite 3（替代 CSV 文件系统）
+   - 零配置，文件型数据库
+   - 完整 SQL 支持，性能优异
+   - 使用 SQLAlchemy 2.0 ORM
+   - Alembic 数据库迁移工具
+2. **前端技术栈**：React 19 + Vite 6（最新版本）
+3. **UI 组件库**：shadcn/ui + Radix UI（更现代化、高级审美）
+   - 完全可定制，复制到项目源码
+   - 无运行时依赖，性能最优
+   - 内置暗黑模式支持
+4. **样式方案**：Tailwind CSS v4（最新版本）
+5. **部署方式**：前后端分离部署
+
+**新增文档**：
+- ✅ `docs/database_design.md` - SQLite 数据库设计文档
+  - 完整的数据模型和 ER 图
+  - SQLAlchemy 模型定义
+  - CSV 到 SQLite 迁移脚本
+  - 性能优化建议
+
+
+### 迁移计划
+
+项目将分 7 个阶段进行：
+
+#### 阶段一：需求分析和架构设计 ✅
+- [x] 分析现有项目结构和功能
+- [x] 设计新的前后端分离架构
+- [x] 制定数据模型和 API 规范
+- [x] 编写技术迁移实施计划文档
+- [x] **用户审核迁移计划** ✅
+
+#### 阶段二：后端 FastAPI 重构 ✅
+- [x] 数据库模型设计（5个核心表）
+- [x] 初始化 FastAPI 项目结构
+- [x] 配置数据库连接（SQLite + SQLAlchemy）
+- [x] 创建所有 SQLAlchemy 模型
+- [x] 创建 Pydantic Schemas（用户/任务/数据/通用）
+- [x] 认证依赖模块（JWT + 密码加密）
+- [x] 认证 API 路由（注册/登录/用户信息）
+- [x] 爬虫 API 路由（任务创建/查询/数据获取）
+- [x] 分析 API 路由（统计/情感分析/词云/报告）
+- [x] 监控 API 路由（健康检查/性能/缓存/告警）
+- [x] 更新详细 API 接口文档
+
+**创建的文件**:
+- `app/schemas/` - Pydantic 数据模式（4个文件）
+- `app/routers/` - API 路由（7个文件：auth, spider, analysis, monitor, page, ai, advanced）
+- `app/services/` - 服务层模块（5个文件）
+- `app/dependencies.py` - 认证和依赖注入
+- `docs/api_documentation.md` - 完整 API 文档（1400+行）
+
+#### 阶段二续：服务层和高级分析（新增）✅
+- [x] 独立实现微博爬虫服务（`weibo_spider.py`）
+- [x] 独立实现抖音爬虫服务（`douyin_spider.py`）
+- [x] 实现 NLP 分析服务（情感分析、关键词提取）
+- [x] 实现词云生成服务
+- [x] 实现高级分析服务：
+  - 关键传播主体识别（多维度影响力评估）
+  - 简化版主题聚类（基于词频的轻量级 LDA 替代）
+  - 趋势分析（时间序列分析）
+  - 情感演化分析
+  - 正负面关键词对比
+  - 地域分析
+- [x] 创建高级分析 API 路由（`/api/advanced/*`）
+- [x] 更新 API 文档
+
+**服务层文件**:
+- `app/services/weibo_spider.py` - 微博爬虫（异步 aiohttp）
+- `app/services/douyin_spider.py` - 抖音爬虫（异步 aiohttp）
+- `app/services/nlp_analyzer.py` - NLP 分析（情感/关键词/摘要）
+- `app/services/wordcloud_generator.py` - 词云生成
+- `app/services/advanced_analyzer.py` - 高级分析（传播主体/主题聚类/趋势）
+
+#### 阶段三：前端 React 重构 (已完成 - 2025-12-26)
+- [x] 初始化 React + Vite 项目 (TypeScript)
+- [x] 搭建核心架构（路由、状态、API）
+- [x] 创建 Claude 风格设计系统（Warm Knowledge Theme）
+- [x] 实现基础组件（Sidebar, Card, Button, Loading, Badge, Charts）
+- [x] 实现登录页面（集成 JWT 认证）
+- [x] 实现仪表盘页面 (Dashboard)
+- [x] 实现舆情分析页面 (Analysis)
+- [x] 实现高级洞察页面 (Advanced)
+- [x] 实现系统监控页面 (Monitor)
+- [x] 实现 AI 助手页面 (AiAssistant)
+- [x] 实现报告中心页面 (Reports)
+- [x] 实现设置页面 (Settings)
+- [x] 数据可视化集成 (Recharts)
+
+#### 阶段四：数据和配置迁移
+- [ ] 迁移环境变量配置
+- [ ] 迁移数据文件
+- [ ] 迁移静态资源
+
+#### 阶段五：文档更新
+- [ ] 更新部署文档
+- [ ] 更新 API 文档
+- [ ] 更新用户手册
+
+#### 阶段六：测试和验证
+- [ ] 后端单元测试
+- [ ] 前端组件测试
+- [ ] 端到端集成测试
+- [ ] 性能测试
+
+#### 阶段七：部署和交付
+- [ ] 配置生产环境
+- [ ] 编写部署脚本
+- [ ] 生产环境部署
+- [ ] 用户验收测试
+
+### 预计时间
+
+- **总时间**：14-21 天
+- **当前进度**：阶段一完成（规划阶段）
+- **下一步**：等待用户审核确认后开始后端迁移
+
+### 技术亮点
+
+1. **FastAPI 优势**：
+   - 自动生成 OpenAPI 文档（Swagger UI）
+   - 原生异步支持，性能更优
+   - Pydantic 数据验证
+   - 类型提示和 IDE 支持
+
+2. **React 生态**：
+   - Vite 极速开发体验
+   - TypeScript 类型安全
+   - TanStack Query 智能数据缓存
+   - 组件化开发，高度复用
+
+3. **开发体验提升**：
+   - 热更新（HMR）
+   - 完整的开发工具链
+   - 现代化的代码规范
+   - 自动化测试
+
+### 风险控制
+
+- ✅ 完整备份现有代码和数据
+- ✅ 保留原 Flask 应用作为备份
+- ✅ 分阶段迁移，每阶段充分测试
+- ✅ 详细的回滚方案
+- ✅ 用户验收测试确认
+
+### 文档资源
+
+所有文档位于 `docs/` 目录：
+- [迁移指南](docs/migration_guide.md) - 完整迁移步骤
+- [开发指南](docs/development.md) - 开发环境和规范
+- [部署文档](docs/deployment.md) - 生产部署流程
+- [API 文档](docs/api_documentation.md) - 接口规范
+
+### 下一步行动
+
+等待用户审核确认以下内容：
+1. 技术选型（UI 组件库、TypeScript 等）
+2. 实施计划和时间安排
+3. 任务优先级
+
+审核通过后将立即开始后端 FastAPI 重构工作。
+
+---
+
 ## 性能优化专项 - 2025-01-07
 
 ### 优化目标
