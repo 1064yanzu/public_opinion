@@ -58,6 +58,7 @@
     gap: var(--spacing-lg);
     grid-template-areas:
         "main side"
+        "wordcloud wordcloud"
         "tasks tasks";
 }
 
@@ -69,6 +70,20 @@
 .sideCard {
     grid-area: side;
     min-height: 400px;
+}
+
+.wordcloudCard {
+    grid-area: wordcloud;
+    min-height: 300px;
+}
+
+.wordcloudImg {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: var(--border-radius-md);
+    display: block;
+    margin: 0 auto;
 }
 
 .tasksCard {

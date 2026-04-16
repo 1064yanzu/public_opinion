@@ -90,3 +90,13 @@ export async function fetchCaseDetail(caseId: number) {
   const response = await api.get<CaseDetailResponse>(`/page/cases/${caseId}`);
   return response.data;
 }
+
+export async function generateWordcloud(payload?: { keyword?: string; task_id?: number }) {
+  const response = await api.get<{ image_url: string; word_freq: Record<string, number>; message: string }>('/page/wordcloud');
+  return response.data;
+}
+
+export async function forceGenerateWordcloud(payload?: { keyword?: string; task_id?: number }) {
+  const response = await api.post<{ image_url: string; word_freq: Record<string, number>; message: string }>('/page/wordcloud', payload || {});
+  return response.data;
+}

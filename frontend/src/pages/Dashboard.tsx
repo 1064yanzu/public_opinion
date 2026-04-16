@@ -7,6 +7,8 @@ import { TrendChart, SentimentPieChart } from '@/components/charts';
 import { useAuth } from '@/context/AuthContext';
 import styles from './Dashboard.module.css';
 import api from '@/services/api';
+import { generateWordcloud } from '@/services/page';
+import { resolveBackendUrl } from '@/services/runtime';
 import { Link } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
@@ -16,6 +18,8 @@ export const Dashboard: React.FC = () => {
     const [trendData, setTrendData] = useState<any[]>([]);
     const [sentiments, setSentiments] = useState<any[]>([]);
     const [tasks, setTasks] = useState<any[]>([]);
+    const [wordcloudUrl, setWordcloudUrl] = useState<string | null>(null);
+    const [wordcloudGenerating, setWordcloudGenerating] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,7 +45,18 @@ export const Dashboard: React.FC = () => {
                 const tasksRes = await api.get('/spider/tasks?page_size=5');
                 setTasks(tasksRes.data.tasks || []);
 
-                // 4. Sentiment (Already handled in stats)
+                // 4. WordCloud Generation
+                setWordcloudGenerating(true);
+                generateWordcloud().then((res) => {
+                    if (res.image_url) {
+                        setWordcloudUrl(resolveBackendUrl(res.image_url));
+                    }
+                }).catch((err) => {
+                    console.error("Failed to generate wordcloud", err);
+                }).finally(() => {
+                    setWordcloudGenerating(false);
+                });
+
             } catch (error) {
                 console.error("Failed to load dashboard data", error);
             } finally {
@@ -119,10 +134,22 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card title="最近监测任务" className={styles.tasksCard} noPadding>
+                <Card title="全网舆情词云" subtitle="提取最新全网数据高频关键词" action={wordcloudGenerating ? <span style={{fontSize: '0.85em', color: 'var(--text-tertiary)'}}>正在提取...</span> : null} className={styles.wordcloudCard}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                        {wordcloudUrl ? (
+                            <img src={wordcloudUrl} alt="全网舆情词云" className={styles.wordcloudImg} />
+                        ) : wordcloudGenerating ? (
+                            <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', color: '#9ca3af' }}>正在绘制词图轮廓...</div>
+                        ) : (
+                            <div style={{ color: '#9ca3af' }}>暂无词云数据</div>
+                        )}
+                    </div>
+                </Card>
+
+                <Card title="最近采集记录" className={styles.tasksCard} noPadding>
                     <div className={styles.taskList}>
                         {tasks.length === 0 ? (
-                            <div className={styles.emptyTasks}>暂无活跃任务</div>
+                            <div className={styles.emptyTasks}>暂无采集记录</div>
                         ) : (
                             tasks.map((task) => (
                                 <div key={task.id} className={styles.taskItem}>

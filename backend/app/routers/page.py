@@ -464,34 +464,117 @@ async def get_status(db: AsyncSession = Depends(get_db)):
     }
 
 
-@router.post("/wordcloud", summary="生成词云", description="根据数据生成词云图片")
+WORDCLOUD_META_FILE = "wordcloud_meta.json"
+
+
+def _get_meta_path() -> Path:
+    return Path(settings.WORDCLOUD_DIR) / WORDCLOUD_META_FILE
+
+
+def _read_meta() -> dict:
+    meta_path = _get_meta_path()
+    if meta_path.exists():
+        try:
+            import json as _json
+            return _json.loads(meta_path.read_text(encoding='utf-8'))
+        except Exception:
+            pass
+    return {}
+
+
+def _write_meta(data_count: int, image_name: str):
+    import json as _json
+    meta_path = _get_meta_path()
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+    meta_path.write_text(_json.dumps({
+        "data_count": data_count,
+        "image_name": image_name,
+    }), encoding='utf-8')
+
+
+@router.get("/wordcloud", summary="获取词云", description="获取最新词云图，无新数据时直接返回缓存")
+async def get_wordcloud(db: AsyncSession = Depends(get_db)):
+    """智能词云接口：有新数据才重新生成，否则返回已有的图片"""
+    # 查询当前数据量
+    total_count = (await db.execute(select(func.count()).select_from(WeiboData))).scalar() or 0
+    total_count += (await db.execute(select(func.count()).select_from(DouyinData))).scalar() or 0
+
+    meta = _read_meta()
+    cached_count = meta.get("data_count", -1)
+    cached_image = meta.get("image_name", "")
+    cached_image_path = Path(settings.WORDCLOUD_DIR) / cached_image if cached_image else None
+
+    # 如果数据量没有变化且已有图片，直接返回缓存
+    if (
+        total_count > 0
+        and total_count == cached_count
+        and cached_image_path
+        and cached_image_path.exists()
+    ):
+        return {
+            "image_url": f"/static/wordcloud/{cached_image}",
+            "word_freq": {},
+            "message": "使用缓存词云",
+        }
+
+    if total_count == 0:
+        return {"image_url": "", "word_freq": {}, "message": "暂无数据"}
+
+    # 有新数据，重新生成
+    weibo_result = await db.execute(select(WeiboData.content).limit(500))
+    weibo_contents = [r[0] for r in weibo_result.all() if r[0]]
+    douyin_result = await db.execute(select(DouyinData.content).limit(200))
+    douyin_contents = [r[0] for r in douyin_result.all() if r[0]]
+    contents = weibo_contents + douyin_contents
+
+    if not contents:
+        return {"image_url": "", "word_freq": {}, "message": "没有找到相关数据"}
+
+    generator = WordCloudGenerator()
+    image_name = "latest_wordcloud.png"  # 固定文件名，始终覆盖
+    image_path, word_freq = generator.generate(contents, filename=image_name)
+
+    if image_path:
+        _write_meta(total_count, image_name)
+
+    return {
+        "image_url": f"/static/wordcloud/{image_name}" if image_path else "",
+        "word_freq": dict(list(word_freq.items())[:100]),
+        "message": "词云已更新" if image_path else "词云图片生成失败",
+    }
+
+
+@router.post("/wordcloud", summary="强制重新生成词云", description="无论数据是否变化，强制重新生成词云图片")
 async def generate_wordcloud(
     request: WordCloudRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
-    """生成词云"""
-    # 获取文本数据
+    """强制生成词云（忽略缓存）"""
     query = select(WeiboData.content)
-    
+
     if request.task_id:
         query = query.where(WeiboData.task_id == request.task_id)
     elif request.keyword:
         query = query.where(WeiboData.content.contains(request.keyword))
-    
+
     query = query.limit(500)
     result = await db.execute(query)
     contents = [row[0] for row in result.all() if row[0]]
-    
+
     if not contents:
         return {"image_url": "", "word_freq": {}, "message": "没有找到相关数据"}
-    
+
     generator = WordCloudGenerator()
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    image_path, word_freq = generator.generate(contents, filename=f"wordcloud_{timestamp}.png")
+    image_name = "latest_wordcloud.png"
+    image_path, word_freq = generator.generate(contents, filename=image_name)
+
+    if image_path:
+        total_count = (await db.execute(select(func.count()).select_from(WeiboData))).scalar() or 0
+        _write_meta(total_count, image_name)
 
     return {
-        "image_url": f"/static/wordcloud/{Path(image_path).name}" if image_path else "",
+        "image_url": f"/static/wordcloud/{image_name}" if image_path else "",
         "word_freq": dict(list(word_freq.items())[:100]),
         "message": "词云生成成功" if image_path else "词云图片生成失败，但词频统计成功",
     }

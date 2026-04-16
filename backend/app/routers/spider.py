@@ -168,7 +168,8 @@ async def get_tasks(
     query = select(Task)
     
     if current_user:
-        query = query.where(Task.user_id == current_user.id)
+        from sqlalchemy import or_
+        query = query.where(or_(Task.user_id == current_user.id, Task.user_id.is_(None)))
     
     if status:
         query = query.where(Task.status == status.value)
@@ -176,7 +177,7 @@ async def get_tasks(
     # 统计总数
     count_query = select(func.count()).select_from(Task)
     if current_user:
-        count_query = count_query.where(Task.user_id == current_user.id)
+        count_query = count_query.where(or_(Task.user_id == current_user.id, Task.user_id.is_(None)))
     if status:
         count_query = count_query.where(Task.status == status.value)
     

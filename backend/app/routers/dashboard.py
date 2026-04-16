@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.task import Task
 from app.models.weibo import WeiboData
 from app.models.douyin import DouyinData
+from app.models.scheduled_job import ScheduledJob
 
 router = APIRouter(
     tags=["dashboard"],
@@ -23,7 +24,7 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
     try:
         # 1. 任务统计
         total_tasks = await db.scalar(select(func.count(Task.id))) or 0
-        active_tasks = await db.scalar(select(func.count(Task.id)).where(Task.status == "processing")) or 0
+        active_tasks = await db.scalar(select(func.count(ScheduledJob.id)).where(ScheduledJob.is_active == True)) or 0
         completed_tasks = await db.scalar(select(func.count(Task.id)).where(Task.status == "completed")) or 0
         failed_tasks = await db.scalar(select(func.count(Task.id)).where(Task.status == "failed")) or 0
         
