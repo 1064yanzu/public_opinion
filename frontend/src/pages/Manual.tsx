@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
 import { Loading } from '@/components/common/Loading';
@@ -50,7 +51,30 @@ export function Manual() {
           <article className={styles.article}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
+              rehypePlugins={[rehypeRaw, rehypeSlug]}
+              components={{
+                a: ({ node, href, children, ...props }) => {
+                  if (href?.startsWith('#')) {
+                    return (
+                      <a
+                        {...props}
+                        href={href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const id = decodeURIComponent(href.slice(1));
+                          const target = document.getElementById(id);
+                          if (target) {
+                            target.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                      >
+                        {children}
+                      </a>
+                    );
+                  }
+                  return <a href={href} {...props}>{children}</a>;
+                }
+              }}
             >
               {markdown}
             </ReactMarkdown>

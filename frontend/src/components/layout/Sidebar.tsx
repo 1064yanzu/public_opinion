@@ -12,8 +12,7 @@ import {
     LogOut,
     DatabaseZap,
     Radar,
-    BookOpen,
-    LibraryBig
+    BookOpen
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/context/AuthContext';
@@ -21,10 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 const NAV_ITEMS = [
     { path: '/', label: '概览', icon: LayoutDashboard },
     { path: '/spider', label: '爬虫控制', icon: DatabaseZap },
-    { path: '/analysis', label: '舆情分析', icon: Search },
-    { path: '/advanced', label: '高级洞察', icon: BarChart },
     { path: '/bigdata', label: '数据看板', icon: Radar },
-    { path: '/cases', label: '案例库', icon: LibraryBig },
     { path: '/manual', label: '应对手册', icon: BookOpen },
     { path: '/reports', label: '报告生成', icon: FileText },
     { path: '/monitor', label: '系统监控', icon: Activity },

@@ -75,7 +75,7 @@ async def init_db():
     """创建所有数据库表"""
     async with async_engine.begin() as conn:
         # 导入所有模型
-        from app.models import user, task, weibo, douyin, hotspot
+        from app.models import user, task, weibo, douyin, hotspot, scheduled_job  # noqa: F401
         
         # 创建表
         await conn.run_sync(Base.metadata.create_all)
@@ -101,6 +101,9 @@ async def _ensure_runtime_columns(conn):
             "province": "TEXT",
             "city": "TEXT",
             "gender": "TEXT",
+        },
+        "scheduled_jobs": {
+            "use_smart_schedule": "BOOLEAN NOT NULL DEFAULT 1",
         },
     }
 

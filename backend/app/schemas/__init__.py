@@ -24,6 +24,13 @@ from app.schemas.system import (
     SystemConfigResponse,
     DesktopRuntimeResponse,
 )
+from app.schemas.scheduler import (
+    ScheduledJobCreate,
+    ScheduledJobUpdate,
+    ScheduledJobResponse,
+    ScheduledJobListResponse,
+    SchedulerStatusResponse,
+)
 
 __all__ = [
     # User

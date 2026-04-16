@@ -2,12 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
+import { createSpiderTask, deleteSpiderTask, fetchSpiderData, fetchSpiderTask, fetchSpiderTasks } from '@/services/page';
+import { createScheduledJob } from '@/services/scheduler';
+import api from '@/services/api';
 import { Badge } from '@/components/common/Badge';
 import { Loading } from '@/components/common/Loading';
-import { createSpiderTask, fetchSpiderData, fetchSpiderTask, fetchSpiderTasks } from '@/services/page';
-import api from '@/services/api';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { ScheduledJobsPanel } from '@/components/spider/ScheduledJobsPanel';
 import type { SpiderDataItem, SpiderTaskSummary } from '@/types';
 import styles from './Spider.module.css';
+
 
 function mapSentimentLabel(label?: string | null) {
   if (label === 'positive') {
@@ -52,6 +56,8 @@ export function Spider() {
   const [rows, setRows] = useState<SpiderDataItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [tableLoading, setTableLoading] = useState(false);
+  const [scheduleRefreshKey, setScheduleRefreshKey] = useState(0);
+  const [confirmTaskId, setConfirmTaskId] = useState<number | null>(null);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? null,
@@ -62,15 +68,15 @@ export function Spider() {
     ? '当前微博搜索接口要求登录态。请到设置页粘贴完整微博 Cookie header，再重启内置后端后重试。'
     : '如果微博未配置 Cookie，系统会默认先尝试自动访客模式。';
 
-  const loadTasks = async (preferredTaskId?: number | null) => {
+  const loadTasks = async (preferredTaskId?: number | null, ignoreSelected?: boolean) => {
     const response = await fetchSpiderTasks({ page_size: 10 });
     setTasks(response.tasks);
 
-    const nextTaskId = preferredTaskId
-      ?? selectedTaskId
-      ?? response.tasks.find((task) => task.status === 'processing')?.id
-      ?? response.tasks[0]?.id
-      ?? null;
+    const nextTaskId = preferredTaskId !== undefined ? preferredTaskId
+      : (ignoreSelected ? null : selectedTaskId)
+        ?? response.tasks.find((task) => task.status === 'processing')?.id
+        ?? response.tasks[0]?.id
+        ?? null;
 
     setSelectedTaskId(nextTaskId);
     return nextTaskId;
@@ -151,16 +157,21 @@ export function Spider() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const task = await createSpiderTask({
+      await createScheduledJob({
         task_type: platform,
         keyword: keyword.trim(),
         max_page: maxPage,
-        async_mode: true,
+        use_smart_schedule: true,
+        interval_minutes: 30, // 后端智能模式下会忽略
       });
       setKeyword('');
-      await loadTasks(task.id);
+      setScheduleRefreshKey((prev) => prev + 1);
+      
+      // 添加人为延迟以显示启动遮罩并确保后台初始子任务抵达数据库
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await loadTasks(null, true);
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? '创建采集任务失败。');
+      setError(err?.response?.data?.detail ?? '创建自动监控任务失败。');
     } finally {
       setIsSubmitting(false);
     }
@@ -169,9 +180,28 @@ export function Spider() {
   const handleCancelTask = async (taskId: number) => {
     try {
       await api.post(`/spider/tasks/${taskId}/cancel`);
-      await loadTasks(taskId);
+      await loadTasks(null);
     } catch (err: any) {
       setError(err?.response?.data?.detail ?? '停止任务失败。');
+    }
+  };
+
+  const handleDeleteTask = (taskId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // 防止触发选中
+    setConfirmTaskId(taskId);
+  };
+
+  const performDeleteTask = async () => {
+    if (confirmTaskId === null) return;
+    try {
+      await deleteSpiderTask(confirmTaskId);
+      const isDeletingSelected = selectedTaskId === confirmTaskId;
+      if (isDeletingSelected) setSelectedTaskId(null);
+      await loadTasks(null, isDeletingSelected);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail ?? '删除任务失败。');
+    } finally {
+      setConfirmTaskId(null);
     }
   };
 
@@ -184,12 +214,15 @@ export function Spider() {
         </div>
       </div>
 
+      {isSubmitting && <Loading fullScreen text="正在将关键词注册到智能监控网络中，稍后首次执行将同步呈现..." />}
+
+
       <div className={styles.infoBanner}>{connectionHint}</div>
 
       {error ? <div className={styles.errorBanner}>{error}</div> : null}
 
       <div className={styles.grid}>
-        <Card title="新建采集任务" subtitle="关键词、平台与页数都会真实提交给后端执行。">
+        <Card title="新建监控任务" subtitle="提交后将自动加入该关键词的全天智能周期监控。">
           <form className={styles.form} onSubmit={handleCreateTask}>
             <div className={styles.platformGroup}>
               <button
@@ -265,16 +298,33 @@ export function Spider() {
                     {mapTaskStatus(task.status).text}
                   </Badge>
                   {task.status === 'processing' ? (
-                    <Button size="sm" variant="ghost" onClick={() => handleCancelTask(task.id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => { e.stopPropagation(); handleCancelTask(task.id); }}
+                    >
                       停止
                     </Button>
-                  ) : null}
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => handleDeleteTask(task.id, e)}
+                      title="删除记录"
+                    >
+                      删除
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </Card>
       </div>
+
+      <Card title="监控中的关键词" subtitle="系统会根据当前时段自动调节以下任务的采集频率（可展开查看计划表）。">
+        <ScheduledJobsPanel refreshTrigger={scheduleRefreshKey} />
+      </Card>
 
       <Card
         title="抓取结果"
@@ -322,6 +372,14 @@ export function Spider() {
           </div>
         ) : null}
       </Card>
+      
+      <ConfirmModal
+        isOpen={confirmTaskId !== null}
+        title="确认删除该记录？"
+        message="删除任务后，关联的所有抓取数据将会被一并清除，且不可恢复。"
+        onConfirm={performDeleteTask}
+        onCancel={() => setConfirmTaskId(null)}
+      />
     </MainLayout>
   );
 }

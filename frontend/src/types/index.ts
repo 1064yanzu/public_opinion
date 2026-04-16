@@ -241,3 +241,60 @@ export interface CaseDetailResponse {
         url?: string | null;
     }>;
 }
+
+// ===== 定时采集任务 =====
+export interface ScheduledJob {
+  id: number;
+  keyword: string;
+  task_type: 'weibo' | 'douyin';
+  max_page: number;
+  interval_minutes: number;
+  use_smart_schedule: boolean;
+  is_active: boolean;
+  last_run_at?: string | null;
+  next_run_at?: string | null;
+  run_count: number;
+  last_error?: string | null;
+  last_task_id?: number | null;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface ScheduledJobListResponse {
+  total: number;
+  jobs: ScheduledJob[];
+}
+
+export interface ScheduledJobCreate {
+  keyword: string;
+  task_type: 'weibo' | 'douyin';
+  max_page: number;
+  use_smart_schedule: boolean;
+  interval_minutes: number;
+}
+
+export interface ScheduledJobUpdate {
+  interval_minutes?: number;
+  max_page?: number;
+  is_active?: boolean;
+  use_smart_schedule?: boolean;
+}
+
+export interface SmartPhaseInfo {
+  start: string;        // "06:00"
+  end: string;          // "09:00"
+  interval_minutes: number;
+  label: string;        // "早间高峰"
+  emoji: string;        // "🌅"
+}
+
+export interface SchedulerStatus {
+  is_running: boolean;
+  active_jobs: number;
+  total_jobs: number;
+  message: string;
+  current_phase?: string;
+  current_phase_emoji?: string;
+  current_interval?: number;
+  smart_phases?: SmartPhaseInfo[];
+}

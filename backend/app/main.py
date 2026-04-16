@@ -30,9 +30,25 @@ async def lifespan(app: FastAPI):
     except Exception as exc:  # pragma: no cover - 启动日志
         logger.error("数据库初始化失败: %s", exc)
 
+    # 启动定时采集调度器，恢复持久化的定时任务
+    try:
+        from app.services.scheduler import scheduler_service
+        await scheduler_service.start()
+        logger.info("定时采集调度器已启动")
+    except Exception as exc:
+        logger.error("调度器启动失败: %s", exc)
+
     yield
 
     logger.info("应用关闭中...")
+    # 优雅停止调度器
+    try:
+        from app.services.scheduler import scheduler_service
+        await scheduler_service.stop()
+        logger.info("调度器已停止")
+    except Exception as exc:
+        logger.error("调度器停止时出错: %s", exc)
+
     await close_db()
     logger.info("数据库连接已关闭")
 
@@ -60,9 +76,11 @@ def create_app() -> FastAPI:
     )
 
     from app.routers import auth, spider, analysis, monitor, page, ai, advanced, dashboard, reports, system
+    from app.routers import scheduler
 
     app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
     app.include_router(spider.router, prefix="/api/spider", tags=["爬虫"])
+    app.include_router(scheduler.router, prefix="/api/scheduler", tags=["定时采集"])
     app.include_router(analysis.router, prefix="/api/analysis", tags=["分析"])
     app.include_router(monitor.router, prefix="/api/monitor", tags=["监控"])
     app.include_router(page.router, prefix="/api/page", tags=["页面数据"])

@@ -29,6 +29,10 @@ export async function fetchSpiderTask(taskId: number) {
   return response.data;
 }
 
+export async function deleteSpiderTask(taskId: number): Promise<void> {
+  await api.delete(`/spider/tasks/${taskId}`);
+}
+
 export async function createSpiderTask(payload: {
   task_type: 'weibo' | 'douyin';
   keyword: string;

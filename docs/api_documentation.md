@@ -10,14 +10,15 @@
 
 1. [认证接口](#认证接口)
 2. [爬虫接口](#爬虫接口)
-3. [数据分析接口](#数据分析接口)
-4. [页面数据接口](#页面数据接口)
-5. [AI助手接口](#ai助手接口)
-6. [高级分析接口](#高级分析接口)
-7. [系统监控接口](#系统监控接口)
-8. [系统配置接口](#系统配置接口)
-9. [数据模型](#数据模型)
-10. [错误码说明](#错误码说明)
+3. [定时采集接口](#定时采集接口)
+4. [数据分析接口](#数据分析接口)
+5. [页面数据接口](#页面数据接口)
+6. [AI助手接口](#ai助手接口)
+7. [高级分析接口](#高级分析接口)
+8. [系统监控接口](#系统监控接口)
+9. [系统配置接口](#系统配置接口)
+10. [数据模型](#数据模型)
+11. [错误码说明](#错误码说明)
 
 ---
 
@@ -342,6 +343,162 @@ GET /api/spider/douyin
 **查询参数**: 同微博数据接口
 
 **响应** (200): 结构类似微博数据
+
+---
+
+## 定时采集接口
+
+> 基础路径: `/api/scheduler`  
+> 定时采集任务持久化到数据库，应用重启后自动恢复运行。
+
+### 调度器状态
+
+```
+GET /api/scheduler/status
+```
+
+**响应** (200):
+```json
+{
+  "is_running": true,
+  "active_jobs": 3,
+  "total_jobs": 5,
+  "message": "调度器运行中，3 个任务活跃"
+}
+```
+
+---
+
+### 获取定时任务列表
+
+```
+GET /api/scheduler/jobs
+```
+
+**查询参数**:
+| 参数 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| page | int | 1 | 页码 |
+| page_size | int | 20 | 每页数量 |
+| is_active | bool | — | 筛选启用状态 |
+
+**响应** (200):
+```json
+{
+  "total": 3,
+  "jobs": [
+    {
+      "id": 1,
+      "keyword": "某品牌",
+      "task_type": "weibo",
+      "max_page": 5,
+      "interval_minutes": 30,
+      "is_active": true,
+      "last_run_at": "2026-04-16T08:00:00Z",
+      "next_run_at": "2026-04-16T08:30:00Z",
+      "run_count": 12,
+      "last_error": null,
+      "last_task_id": 45,
+      "created_at": "2026-04-15T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 获取定时任务详情
+
+```
+GET /api/scheduler/jobs/{job_id}
+```
+
+**响应** (200): 返回单个 ScheduledJob 对象（结构同上）
+
+**错误**:
+- `404`: 任务不存在
+
+---
+
+### 创建定时采集任务
+
+```
+POST /api/scheduler/jobs
+```
+
+**请求体**:
+```json
+{
+  "keyword": "某品牌",
+  "task_type": "weibo",
+  "max_page": 5,
+  "interval_minutes": 30
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| keyword | string | ✅ | 监控关键词，1-200字符 |
+| task_type | string | ✅ | 平台：`weibo` / `douyin` |
+| max_page | int | ✅ | 每次采集页数，1-50 |
+| interval_minutes | int | ✅ | 采集间隔（分钟），5-1440 |
+
+**响应** (200): 返回创建的 ScheduledJob 对象
+
+**说明**: 创建后**立即触发第一次采集**，随后按 `interval_minutes` 周期循环执行。
+
+---
+
+### 更新定时任务（动态生效）
+
+```
+PATCH /api/scheduler/jobs/{job_id}
+```
+
+**请求体**（所有字段可选）:
+```json
+{
+  "interval_minutes": 60,
+  "max_page": 10,
+  "is_active": false
+}
+```
+
+**说明**:
+- `interval_minutes` 或 `max_page` 修改后**立即重启对应 asyncio Task**，新参数即时生效。
+- `is_active: false` 暂停任务（不删除），`true` 恢复并立即执行一次。
+
+**响应** (200): 返回更新后的 ScheduledJob 对象
+
+---
+
+### 删除定时任务
+
+```
+DELETE /api/scheduler/jobs/{job_id}
+```
+
+**说明**: 同时停止后台 asyncio Task 并从数据库删除记录。
+
+**响应** (200):
+```json
+{
+  "success": true,
+  "message": "定时任务 1 已删除"
+}
+```
+
+---
+
+### 立即触发一次采集
+
+```
+POST /api/scheduler/jobs/{job_id}/trigger
+```
+
+**说明**: 不等待间隔，立即触发该任务采集一次。触发后常规定时循环**不受影响**。
+
+**响应** (200): 返回当前 ScheduledJob 对象
 
 ---
 

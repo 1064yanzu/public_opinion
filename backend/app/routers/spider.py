@@ -87,9 +87,13 @@ async def create_search_task(
             await db.refresh(task)
             
         except Exception as e:
-            task.status = "failed"
-            task.error_message = str(e)
-            await db.commit()
+            await db.rollback()
+            result = await db.execute(select(Task).where(Task.id == task.id))
+            _task = result.scalar_one_or_none()
+            if _task:
+                _task.status = "failed"
+                _task.error_message = str(e)[:500]
+                await db.commit()
             raise HTTPException(status_code=500, detail=f"爬虫执行失败: {str(e)}")
     
     return task
@@ -142,9 +146,13 @@ async def execute_spider_task_async(task_id: int, task_type: str, keyword: str, 
             
         except Exception as e:
             print(f"任务 {task_id} 失败: {e}")
-            task.status = "failed"
-            task.error_message = str(e)
-            await db.commit()
+            await db.rollback()
+            result = await db.execute(select(Task).where(Task.id == task_id))
+            _task = result.scalar_one_or_none()
+            if _task:
+                _task.status = "failed"
+                _task.error_message = str(e)[:500]
+                await db.commit()
 
 
 @router.get("/tasks", response_model=TaskListResponse, summary="获取任务列表",
@@ -221,6 +229,26 @@ async def cancel_task(
     await db.commit()
     
     return MessageResponse(message="任务已取消", success=True)
+
+
+@router.delete("/tasks/{task_id}", response_model=MessageResponse, summary="删除任务",
+               description="删除任务记录及关联的采集数据")
+async def delete_task(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+):
+    """删除任务及其所有关联数据"""
+    result = await db.execute(select(Task).where(Task.id == task_id))
+    task = result.scalar_one_or_none()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="任务不存在")
+
+    await db.delete(task)
+    await db.commit()
+
+    return MessageResponse(message="任务已删除", success=True)
 
 
 # ===== 数据查询 =====

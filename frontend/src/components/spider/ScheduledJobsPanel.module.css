@@ -1,0 +1,186 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 状态条 ── */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fbfcfb;
+  border: 1px solid #e0e8e3;
+  flex-wrap: wrap;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+  animation: pulse 2s infinite;
+}
+
+.statusDot.inactive {
+  background: #888;
+  box-shadow: none;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.statusText {
+  font-size: 13px;
+  color: #738078;
+  flex: 1;
+  min-width: 0;
+}
+
+.currentInterval {
+  font-size: 12px;
+  color: #5f6d66;
+  background: rgba(0,0,0,0.06);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.phaseToggle {
+  font-size: 12px;
+  color: #315672;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.phaseToggle:hover { opacity: 0.75; }
+
+/* ── 时段配置表 ── */
+.phaseTable {
+  border-radius: 8px;
+  border: 1px solid #e0e8e3;
+  overflow: hidden;
+  background: #fbfcfb;
+}
+
+.phaseTableTitle {
+  font-size: 12px;
+  color: #5f6d66;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e0e8e3;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.phaseRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.phaseRow {
+  display: grid;
+  grid-template-columns: 24px 90px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid #edf2ee;
+  transition: background 0.15s;
+}
+.phaseRow:last-child { border-bottom: none; }
+.phaseRow:hover { background: #f1f5f2; }
+
+.phaseEmoji  { font-size: 14px; }
+.phaseTime   { color: #5f6d66; font-variant-numeric: tabular-nums; }
+.phaseLabel  { color: #1f2f28; }
+.phaseInterval {
+  color: #315672;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── 任务列表 ── */
+.jobList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty {
+  padding: 28px 0;
+  text-align: center;
+  color: #738078;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.jobCard {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #e0e8e3;
+  background: #fbfcfb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+.jobCard:hover { border-color: #1f5d47; }
+.jobCard.paused { opacity: 0.55; }
+
+.jobHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jobKeyword {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2f28;
+  flex: 1;
+}
+
+.jobMeta {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: #5f6d66;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.jobTime {
+  font-size: 11px;
+  color: #738078;
+}
+
+.jobError {
+  font-size: 11px;
+  color: #d15555;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jobFooter {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

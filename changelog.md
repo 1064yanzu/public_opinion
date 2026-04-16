@@ -1,6 +1,110 @@
 # 项目更新日志
 
-## 整理并完善 .gitignore 忽略规则 - 2026-04-16
+## 爬虫任务记录删除与智能定时调度支持 - 2026-04-16
+
+### 变更类型
+**体验优化 / 调度侧策略化**
+
+### 问题背景
+1. 爬虫历史任务只有取消（在进行中时），当用户测试爬了一堆数据时，无法清理垃圾记录，界面太乱。
+2. 调度器一开始做成了手动敲定一个数值（如 30 分钟），但用户真实需求是：舆情易发的早晚高峰需要密集监控，凌晨和午后则不急，需要“智能自动调度”。
+
+### 本次修改
+
+**后端改动**:
+- [backend/app/routers/spider.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/spider.py)
+  - 新增 `DELETE /tasks/{task_id}` 接口。任务被删除时会连同其爬虫数据级联删除或标记丢弃。
+- [backend/app/models/scheduled_job.py](/Volumes/external%20disk/develop/public_opinion/backend/app/models/scheduled_job.py)
+  - 新增 `use_smart_schedule` 布尔字段。
+- [backend/app/database.py](/Volumes/external%20disk/develop/public_opinion/backend/app/database.py)
+  - 在运行时热补丁 `_ensure_runtime_columns` 中注入了 `use_smart_schedule`，避免破坏已有本地 SQLite 库。
+- [backend/app/services/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/scheduler.py)
+  - 全面重写调度核心事件循环（`_job_loop`）：每次 `await _execute_once()` 结束后，重新取一次系统的时段感知规则。
+  - 智能策略：早晚高峰（06~09，18~21）= 15分/次；上午下午工作段 = 20分/次；深夜（23~06）= 120分/次。
+- [backend/app/schemas/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/schemas/scheduler.py) / [backend/app/routers/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/scheduler.py)
+  - 状态接口暴露 `smart_phases` 全天排班表和 `current_phase` 给前端。
+
+**前端改动**:
+- [frontend/src/services/page.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/services/page.ts)
+  - 导出 `deleteSpiderTask` API 包装。
+- [frontend/src/types/index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+  - 补充上智能调度暴露出来的 `SmartPhaseInfo` 等信息。
+- [frontend/src/pages/Spider.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - 如果一个任务当前不再是 processing 状态（失败/完成/被取消），它右边现在展示“删除”操作替代了之前的“停止”。
+  - 删除选中任务会一并清空右侧视图缓存展现。
+- [frontend/src/components/spider/ScheduledJobsPanel.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/spider/ScheduledJobsPanel.tsx) / [frontend/src/components/spider/ScheduledJobsPanel.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/spider/ScheduledJobsPanel.module.css)
+  - **移除**：用户手动输入监控间隔（分钟）的组件逻辑。
+  - **新增**：面板中加入智能调度的科普 UI；
+  - **详情展示**：加入折叠展示“全天智能采集计划”（不同时间配了不同 Emoji 表情标识，如早间日出、晚间月亮）。
+  - 各个 Job 控制块里不再提供编辑间隔的功能，直接显示它距离下次触发执行的**实时倒计时**秒数。
+
+
+## 定时周期爬取功能实现 - 2026-04-16
+
+### 变更类型
+**功能新增 / 核心架构补齐**
+
+### 背景
+Tauri 版本的爬虫原来是单次执行模式，但作为网络舆情监测系统，应该支持定时周期性爬取关键词，持续监控舆情动态。参考旧版 Flask `views/page/page.py` 的 APScheduler 实现思路，在新 FastAPI 架构中用纯 asyncio 重新实现了完整的定时采集体系。
+
+### 本次修改
+
+**后端新增**:
+- [backend/app/models/scheduled_job.py](/Volumes/external%20disk/develop/public_opinion/backend/app/models/scheduled_job.py)
+  - 新建 `ScheduledJob` 数据模型，持久化定时任务到 SQLite
+  - 字段包含：keyword、task_type、interval_minutes、is_active、last_run_at、next_run_at、run_count、last_error
+- [backend/app/schemas/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/schemas/scheduler.py)
+  - 新建定时任务相关 Pydantic Schema：Create / Update / Response / ListResponse / StatusResponse
+- [backend/app/services/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/services/scheduler.py)
+  - 核心调度器服务（全局单例 `SchedulerService`）
+  - 基于纯 asyncio.Task 实现，每个定时任务对应一个独立的事件循环 Task
+  - 支持**动态增删改**，修改 interval_minutes/max_page 后立即重启 Task 生效
+  - 应用重启时自动从数据库恢复所有 `is_active=True` 的任务
+  - 每次执行复用现有 `execute_spider_task` 逻辑，写入 `tasks` 表记录
+- [backend/app/routers/scheduler.py](/Volumes/external%20disk/develop/public_opinion/backend/app/routers/scheduler.py)
+  - 新建定时任务 API 路由：
+    - `GET /api/scheduler/status`：调度器状态
+    - `GET/POST /api/scheduler/jobs`：列表 / 创建
+    - `GET/PATCH/DELETE /api/scheduler/jobs/{id}`：详情 / 更新 / 删除
+    - `POST /api/scheduler/jobs/{id}/trigger`：立即触发一次
+
+**后端改动**:
+- [backend/app/main.py](/Volumes/external%20disk/develop/public_opinion/backend/app/main.py)
+  - lifespan 启动时调用 `scheduler_service.start()`，关闭时调用 `stop()`
+  - 注册 `/api/scheduler` 路由
+- [backend/app/database.py](/Volumes/external%20disk/develop/public_opinion/backend/app/database.py)
+  - `init_db` 导入 `scheduled_job` 模型确保建表
+- [backend/app/schemas/__init__.py](/Volumes/external%20disk/develop/public_opinion/backend/app/schemas/__init__.py)
+  - 导出 scheduler 相关 Schema
+
+**前端新增**:
+- [frontend/src/services/scheduler.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/services/scheduler.ts)
+  - 封装所有调度器 API 调用
+- [frontend/src/components/spider/ScheduledJobsPanel.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/spider/ScheduledJobsPanel.tsx)
+  - 定时监控面板组件：创建表单 + 任务卡片列表
+  - 间隔时间支持**内联点击编辑**（不跳弹窗），输入后立即 PATCH 生效
+  - 每 10 秒自动刷新 last_run_at / next_run_at
+  - 支持：暂停/恢复、立即触发、删除操作
+- [frontend/src/components/spider/ScheduledJobsPanel.module.css](/Volumes/external%20disk/develop/public_opinion/frontend/src/components/spider/ScheduledJobsPanel.module.css)
+  - 面板专属样式
+
+**前端改动**:
+- [frontend/src/types/index.ts](/Volumes/external%20disk/develop/public_opinion/frontend/src/types/index.ts)
+  - 新增 ScheduledJob / ScheduledJobListResponse / ScheduledJobCreate / ScheduledJobUpdate / SchedulerStatus 类型
+- [frontend/src/pages/Spider.tsx](/Volumes/external%20disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - 爬虫控制台页面嵌入"定时监控"卡片（ScheduledJobsPanel）
+
+**文档**:
+- [docs/api_documentation.md](/Volumes/external%20disk/develop/public_opinion/docs/api_documentation.md)
+  - 新增"定时采集接口"完整章节（目录 + 6 个接口规范）
+
+### 设计要点
+- **不引入 APScheduler**（同步库，与 async FastAPI 有摩擦）：改用纯 asyncio.Task 实现调度循环
+- **持久化**：定时任务配置存于 SQLite `scheduled_jobs` 表，应用重启后自动恢复
+- **动态生效**：PATCH interval/max_page 时直接 cancel + 重建对应 asyncio.Task，不需重启应用
+- **创建即执行**：新建定时任务后立即触发第一次采集，然后进入间隔循环
+
+
 
 ### 变更类型
 **配置优化 / 代码库清理**
@@ -2076,3 +2180,31 @@ def run_wordcloud_task(csv_path, task_id):
 ---
 
 *本日志将持续更新，记录每个优化步骤的详细信息和效果评估*
+
+## 2026-04-16 21:57:47 - 修复舆情应对手册目录跳转问题
+
+### 1. 修复网络舆情应对手册小标题跳转“概览”页面的问题
+- **依赖更新**：在 `frontend` 目录安装并引入了 `rehype-slug`，用于在渲染 Markdown 的 Heading 节点时自动赋予唯一的 `id` 属性。
+- **链接拦截**：在 `Manual.tsx` 的 `ReactMarkdown` 自定义 `components` 映射中，为 `<a>` 标签加入了拦截逻辑如果链接以 `#` 开头，则截断其默认行为（不再触发 react-router 的重定向），并使用原生 DOM 方法 `scrollIntoView()` 实现锚点平滑滚动。
+
+## 2026-04-16 22:08:30 - 功能优化及 Bug 修复
+
+### 1. 移除多余功能
+- 在前台去除了“案例库”、“舆情分析”、“高级洞察”菜单及路由。
+
+### 2. 修复任务查询“监控中的关键词”不可见及后台报错
+- **样式优化**：修复了监控列表 (`ScheduledJobsPanel.module.css`) 在偏亮色背景下文字发白看不见的样式问题，统一为应用浅色主题。
+- **后台报错修复**：捕获爬虫异常未 Rollback 导致 SQLAlchemy 引发 Session 异常 (`This Session's transaction has been rolled back due to a previous exception during flush`)，现已在异常处理块中补充 `await db.rollback()` 以清除有毒的 Transaction 上下文，随后重新从库中获取任务记录状态写入报错信息，确保任务后续流转不崩溃。
+
+### 3. 加入新关键词采集遮罩
+- 在添加新爬虫关键词的过程中加入全屏遮罩 (`<Loading fullScreen />`)，给后台调度器首发预热争取时间（1-2秒），确保加载提示完毕后首条爬取调度任务马上能在列表中显示。
+
+### 4. 修复任务删除逻辑
+- 修改了爬虫历史列表中 `Spider.tsx` 删除时的视图选择重置逻辑。此前 React 闭包中包含旧选中的 ID，导致即使将选中的记录删去并在本地置空 `selectedTaskId`，仍因为闭包特性通过 `loadTasks` 重新获取旧 ID。目前由传参显式跳过选中避免死结。
+
+## 2026-04-16 22:18:41 - 修复 Tauri 下删除任务无法响应的问题
+
+### 1. 替换原生 Confirm 弹窗
+- 由于 \`window.confirm\` 等同步阻塞原生弹窗可能在 Tauri 苹果/Windows 桌面的 Webview 渲染层被屏蔽或直接返回 False 导致事件失效（表现为用户点击“删除”后界面完全无响应且网络请求未发）。
+- 为统一各平台的用户体验，移除了 \`Spider.tsx\` 以及 \`ScheduledJobsPanel.tsx\` 中使用的原生 \`window.confirm()\` 方案。
+- 手写了一个高度可控且贴合系统浅色 UI 规范的 React 组件 \`<ConfirmModal>\` 替代，成功解决了在宿主环境拦截下的弹窗无响应和误取消的问题，彻底恢复了任务历史和监控配置列表的正常删除功能。
