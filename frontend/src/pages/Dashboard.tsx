@@ -18,6 +18,7 @@ export const Dashboard: React.FC = () => {
     const [trendData, setTrendData] = useState<any[]>([]);
     const [sentiments, setSentiments] = useState<any[]>([]);
     const [tasks, setTasks] = useState<any[]>([]);
+    const [influencers, setInfluencers] = useState<any[]>([]);
     const [wordcloudUrl, setWordcloudUrl] = useState<string | null>(null);
     const [wordcloudGenerating, setWordcloudGenerating] = useState(false);
 
@@ -25,27 +26,35 @@ export const Dashboard: React.FC = () => {
         const fetchData = async () => {
             try {
                 // 1. Basic Stats
-                const statsRes = await api.get('/dashboard/stats');
-                setStats(statsRes.data);
-                if (statsRes.data.sentiment_distribution) {
-                    setSentiments(statsRes.data.sentiment_distribution);
-                }
+                api.get('/dashboard/stats').then(statsRes => {
+                    setStats(statsRes.data);
+                    if (statsRes.data.sentiment_distribution) {
+                        setSentiments(statsRes.data.sentiment_distribution);
+                    }
+                }).catch(err => console.error("Failed to load basic stats", err));
 
                 // 2. Trend Data 
-                const chartRes = await api.get('/dashboard/trend');
-                if (chartRes.data.dates) {
-                    const data = chartRes.data.dates.map((date: string, i: number) => ({
-                        time: date,
-                        value: chartRes.data.values[i]
-                    }));
-                    setTrendData(data);
-                }
+                api.get('/dashboard/trend').then(chartRes => {
+                    if (chartRes.data.dates) {
+                        const data = chartRes.data.dates.map((date: string, i: number) => ({
+                            time: date,
+                            value: chartRes.data.values[i]
+                        }));
+                        setTrendData(data);
+                    }
+                }).catch(err => console.error("Failed to load trend data", err));
 
                 // 3. Latest Tasks
-                const tasksRes = await api.get('/spider/tasks?page_size=5');
-                setTasks(tasksRes.data.tasks || []);
+                api.get('/spider/tasks?page_size=5').then(tasksRes => {
+                    setTasks(tasksRes.data.tasks || []);
+                }).catch(err => console.error("Failed to load generic tasks", err));
 
-                // 4. WordCloud Generation
+                // 4. Influencers
+                api.get('/dashboard/influencers').then(infRes => {
+                    setInfluencers(infRes.data.influencers || []);
+                }).catch(err => console.error("Failed to load influencers", err));
+
+                // 5. WordCloud Generation
                 setWordcloudGenerating(true);
                 generateWordcloud().then((res) => {
                     if (res.image_url) {
@@ -58,9 +67,10 @@ export const Dashboard: React.FC = () => {
                 });
 
             } catch (error) {
-                console.error("Failed to load dashboard data", error);
+                console.error("Failed to load dashboard data (critical)", error);
             } finally {
-                setLoading(false);
+                // Delay loading to allow initial promises to fire
+                setTimeout(() => setLoading(false), 500);
             }
         };
 
@@ -142,6 +152,27 @@ export const Dashboard: React.FC = () => {
                             <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', color: '#9ca3af' }}>正在绘制词图轮廓...</div>
                         ) : (
                             <div style={{ color: '#9ca3af' }}>暂无词云数据</div>
+                        )}
+                    </div>
+                </Card>
+
+                <Card title="关键传播主体" subtitle="全网互动量(转评赞) Top 5" className={styles.influencersCard} noPadding>
+                    <div className={styles.taskList}>
+                        {influencers.length === 0 ? (
+                            <div className={styles.emptyTasks}>暂无传播主体数据</div>
+                        ) : (
+                            influencers.map((inf, index) => (
+                                <div key={index} className={styles.influencerItem}>
+                                    <div className={`${styles.influencerRank} ${index === 0 ? styles.top1 : index === 1 ? styles.top2 : index === 2 ? styles.top3 : ''}`}>
+                                        {index + 1}
+                                    </div>
+                                    <div className={styles.influencerName}>@{inf.name}</div>
+                                    <div className={styles.influencerScore}>
+                                        <span className={styles.influencerScoreValue}>{inf.engagement.toLocaleString()}</span>
+                                        <span className={styles.influencerScoreLabel}>总互动</span>
+                                    </div>
+                                </div>
+                            ))
                         )}
                     </div>
                 </Card>

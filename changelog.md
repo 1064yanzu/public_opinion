@@ -2264,3 +2264,12 @@ def run_wordcloud_task(csv_path, task_id):
 ### 2. 前端 page.ts 对齐
 - `generateWordcloud()` 改为调用 `GET /page/wordcloud`，语义由"主动生成"变为"获取当前词云"。
 - 新增 `forceGenerateWordcloud()` 对应 POST 强制重生成。
+
+## 2026-04-16 22:50:33 - 新增关键传播主体识别功能
+
+### 1. 后端接口开发
+- 在 `backend/app/routers/dashboard.py` 中新增 `GET /influencers` 接口，按全网（如微博）用户的互动总量（转贴+评论+点赞）排名，精准识别出 "Top 5" 关键传播者。
+
+### 2. 前端可视化与布局重构
+- 扩维并更新了 Dashboard 的 Grid 网格（`Dashboard.module.css`），将原本独立的词云行重塑为 `"wordcloud influencers"` 一比一/二比一双排并列设计。
+- 开发了金牌榜排版样式的 `influencersCard` 模块，包含带有动态颜色徽章标识的排名序号、用户 @名称及对应互动数据。大幅度强化概览页对"意见领袖"或重要传谣/辟谣源头的可视化呈现度。

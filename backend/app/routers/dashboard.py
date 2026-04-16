@@ -130,3 +130,30 @@ async def get_dashboard_trend(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         print(f"Error fetching dashboard trend: {e}")
         return {"dates": [], "values": []}
+
+@router.get("/influencers", response_model=Dict[str, List[Any]])
+async def get_key_influencers(db: AsyncSession = Depends(get_db)):
+    """获取关键传播主体 (Top Influencers)"""
+    try:
+        # 微博平台的关键传播主体
+        stmt = select(
+            WeiboData.user_name,
+            func.sum(WeiboData.like_count + WeiboData.comment_count + WeiboData.share_count).label("engagement")
+        ).where(WeiboData.user_name.is_not(None)).group_by(WeiboData.user_name).order_by(
+            func.sum(WeiboData.like_count + WeiboData.comment_count + WeiboData.share_count).desc()
+        ).limit(5)
+        
+        res = await db.execute(stmt)
+        influencers = [
+            {
+                "name": row[0],
+                "engagement": int(row[1] or 0),
+                "platform": "微博"
+            } 
+            for row in res.all() if row[0]
+        ]
+
+        return {"influencers": influencers}
+    except Exception as e:
+        print(f"Error fetching influencers: {e}")
+        return {"influencers": []}
