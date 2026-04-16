@@ -28,7 +28,7 @@ fi
 PYINSTALLER_ARGS=(
   --noconfirm
   --clean
-  --onedir
+  --onefile
   --name public_opinion_backend
   --distpath "$DIST_DIR"
   --workpath "$BUILD_DIR/build"

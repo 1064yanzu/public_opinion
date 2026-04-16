@@ -47,7 +47,7 @@ jobs:
           $pyinstallerArgs = @(
             '--noconfirm',
             '--clean',
-            '--onedir',
+            '--onefile',
             '--name', 'public_opinion_backend',
             '--distpath', 'frontend/src-tauri/resources/backend',
             '--workpath', 'backend/.pyinstaller/build',

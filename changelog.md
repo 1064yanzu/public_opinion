@@ -33,6 +33,15 @@
 - 正在执行本地 mac 桌面打包验证
 - 远端 Windows `exe` 安装包 workflow 已加固，待 push 后可触发执行
 
+### 追加修复 - 2026-04-17
+
+- [build_desktop_backend.sh](/Volumes/external disk/develop/public_opinion/backend/scripts/build_desktop_backend.sh)
+  - 将桌面 sidecar 从 `PyInstaller --onedir` 改为 `--onefile`，避免 Tauri 递归打包庞大 `_internal` 目录树导致的桌面构建失败。
+- [release.yml](/Volumes/external disk/develop/public_opinion/.github/workflows/release.yml)
+  - 同步将 Windows 发布链路里的 PyInstaller 参数改为 `--onefile`，确保远端 exe 安装包和本地桌面包使用一致策略。
+- [desktop_release_packaging_construction.md](/Volumes/external disk/develop/public_opinion/docs/desktop_release_packaging_construction.md)
+  - 追加记录 `onedir` 触发 Tauri 资源打包失败的根因与改回 `onefile` 的取舍。
+
 ## GitHub Action 前端构建报错修复 - 2026-04-16
 
 ### 变更类型

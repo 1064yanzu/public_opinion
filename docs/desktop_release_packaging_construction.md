@@ -72,3 +72,30 @@
 
 - 当前环境没有 `gh` CLI，无法直接在本地调用 GitHub API 触发远端 workflow
 - 在本地改动尚未 push 前，GitHub 远端也拿不到这些修复，因此远端 exe 打包必须在推送后执行
+
+---
+
+## 第二轮排障补充（2026-04-17）
+
+### 新暴露的问题
+
+在远端 Windows 与本地 mac 打包阶段，Tauri 构建脚本都在处理 `resources/backend` 时失败：
+
+- Windows：`build-script-build` 在枚举 `resources/backend/public_opinion_backend/_internal/...` 超大资源树后失败
+- mac：`Not a directory (os error 20)`，表现为 Tauri 在递归资源时撞到 `public_opinion_backend/public_opinion_backend` 同名文件/目录结构
+
+### 根因结论
+
+根因不是业务代码，而是把 `PyInstaller --onedir` 产出的整个 sidecar 目录作为 Tauri `bundle.resources` 递归打包。该目录：
+
+- 文件数量极多
+- 层级很深
+- 还包含“目录名与可执行文件名相同”的结构
+
+这会让 Tauri 在不同平台上都表现得很脆弱。
+
+### 修复方案
+
+- 将桌面后端 sidecar 从 `PyInstaller --onedir` 改回 `--onefile`
+- 这样 Tauri 只需要携带单个 `public_opinion_backend(.exe)`，不再递归打包庞大的 `_internal` 资源树
+- 该方案会带来更慢的首次启动，但当前桌面端已经有更长的启动等待与日志排障闭环，能承受这个代价
