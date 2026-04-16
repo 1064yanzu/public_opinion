@@ -6,6 +6,10 @@ import api from '@/services/api';
 import styles from './BigData.module.css';
 import type { HotTopic, RealtimeMonitoringItem } from '@/types';
 
+function resolveMonitoringLink(item: RealtimeMonitoringItem) {
+  return item.Link ?? item.link ?? item.url ?? '#';
+}
+
 function toPieData(source: Record<string, number>, nameMap?: Record<string, string>) {
   return Object.entries(source).map(([name, value]) => ({
     name: nameMap?.[name] ?? name,
@@ -224,7 +228,7 @@ export function BigData() {
                     <li key={`${item.author}-${index}`}>
                        <span className={styles.author}>{item.author}</span>
                        <span className={styles.content}>
-                         <a href={item.Link || item.link || item.url || '#'} target="_blank" rel="noopener noreferrer">
+                         <a href={resolveMonitoringLink(item)} target="_blank" rel="noopener noreferrer">
                            {item.content || '无内容'}
                          </a>
                        </span>

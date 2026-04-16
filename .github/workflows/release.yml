@@ -16,9 +16,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
-          cache-dependency-path: frontend/package.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -32,18 +32,34 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci
 
       - name: Install Python Dependencies & Build Backend (Windows)
         run: |
           python -m venv .venv
           .venv\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pyinstaller
           mkdir frontend/src-tauri/resources/backend -Force
           mkdir backend/.pyinstaller/assets -Force
           if (Test-Path "三极泼墨体.ttf") { Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf" }
-          pyinstaller --noconfirm --clean --onedir --name public_opinion_backend --distpath frontend/src-tauri/resources/backend --workpath backend/.pyinstaller/build --specpath backend/.pyinstaller/spec --hidden-import aiosqlite --collect-submodules passlib.handlers --add-data "${{ github.workspace }}/backend/.pyinstaller/assets/sanjipomoti.ttf;." backend/run_desktop.py
+          $pyinstallerArgs = @(
+            '--noconfirm',
+            '--clean',
+            '--onedir',
+            '--name', 'public_opinion_backend',
+            '--distpath', 'frontend/src-tauri/resources/backend',
+            '--workpath', 'backend/.pyinstaller/build',
+            '--specpath', 'backend/.pyinstaller/spec',
+            '--hidden-import', 'aiosqlite',
+            '--collect-submodules', 'passlib.handlers'
+          )
+          if (Test-Path "backend/.pyinstaller/assets/sanjipomoti.ttf") {
+            $pyinstallerArgs += @('--add-data', "${{ github.workspace }}/backend/.pyinstaller/assets/sanjipomoti.ttf;.")
+          }
+          $pyinstallerArgs += 'backend/run_desktop.py'
+          & pyinstaller @pyinstallerArgs
 
       - name: Build Tauri App
         working-directory: frontend

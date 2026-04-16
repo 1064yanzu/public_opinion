@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { resolveBackendUrl } from '@/services/runtime';
 
 type HeatmapPoint = {
   name: string;

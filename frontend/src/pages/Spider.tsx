@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { createSpiderTask, deleteSpiderTask, fetchSpiderData, fetchSpiderTask, fetchSpiderTasks } from '@/services/page';
+import { deleteSpiderTask, fetchSpiderData, fetchSpiderTask, fetchSpiderTasks } from '@/services/page';
 import { createScheduledJob } from '@/services/scheduler';
 import api from '@/services/api';
 import { Badge } from '@/components/common/Badge';

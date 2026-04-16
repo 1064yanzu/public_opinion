@@ -3,8 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import styles from './Sidebar.module.css';
 import {
     LayoutDashboard,
-    BarChart,
-    Search,
     FileText,
     Settings,
     MessageSquare,

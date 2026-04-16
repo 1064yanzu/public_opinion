@@ -1,5 +1,76 @@
 # 项目更新日志
 
+## 桌面端发布打包链路清理与加固 - 2026-04-16
+
+### 变更类型
+**构建优化 / 发布稳定性 / 仓库清理**
+
+### 问题背景
+
+- 本地桌面构建产物 `frontend/src-tauri/resources/backend/` 会错误出现在 git 新增列表
+- `frontend/tsconfig.tsbuildinfo` 作为 TypeScript 构建缓存被持续跟踪，污染工作区
+- Windows 发布 workflow 仍使用较旧的 Node 版本，且 PyInstaller 对字体资源参数缺少容错
+
+### 本次修改
+
+- [.gitignore](/Volumes/external disk/develop/public_opinion/.gitignore)
+  - 增加 `*.tsbuildinfo`
+  - 忽略 `frontend/src-tauri/resources/backend/**`
+  - 忽略 `backend/.pyinstaller/`
+- [build_desktop_backend.sh](/Volumes/external disk/develop/public_opinion/backend/scripts/build_desktop_backend.sh)
+  - 将字体资源打包参数改为按文件存在性动态追加，降低本地 mac sidecar 构建脆弱性。
+- [release.yml](/Volumes/external disk/develop/public_opinion/.github/workflows/release.yml)
+  - Node 升级到 `20`
+  - `npm install` 改为 `npm ci`
+  - npm cache 依赖改为 `frontend/package-lock.json`
+  - 增加 `pip` 升级
+  - PyInstaller 字体参数改为条件传入，避免 Windows 发布链路因可选字体缺失失败
+- [desktop_release_packaging_construction.md](/Volumes/external disk/develop/public_opinion/docs/desktop_release_packaging_construction.md)
+  - 新增本轮桌面发布施工文档
+
+### 本次验证
+
+- 正在执行本地 mac 桌面打包验证
+- 远端 Windows `exe` 安装包 workflow 已加固，待 push 后可触发执行
+
+## GitHub Action 前端构建报错修复 - 2026-04-16
+
+### 变更类型
+**缺陷修复 / CI 构建稳定性**
+
+### 问题背景
+
+`release.yml` 在执行前端 `npm run build` 时，被 TypeScript 严格检查阻断，报错集中在：
+
+- 未使用导入 / 形参导致的 `TS6133`
+- `BigData` 页面读取 `RealtimeMonitoringItem.link/url`，但类型声明未覆盖导致的 `TS2551` / `TS2339`
+
+这些问题会直接让 GitHub Action 退出，影响桌面端打包发布。
+
+### 本次修改
+
+- [frontend/src/components/charts/ChinaHeatmap.tsx](/Volumes/external disk/develop/public_opinion/frontend/src/components/charts/ChinaHeatmap.tsx)
+  - 删除未使用的 `resolveBackendUrl` 导入。
+- [frontend/src/components/layout/Sidebar.tsx](/Volumes/external disk/develop/public_opinion/frontend/src/components/layout/Sidebar.tsx)
+  - 删除未使用的 `BarChart`、`Search` 图标导入。
+- [frontend/src/components/spider/ScheduledJobsPanel.tsx](/Volumes/external disk/develop/public_opinion/frontend/src/components/spider/ScheduledJobsPanel.tsx)
+  - 删除未使用的 `useRef` 与 `createScheduledJob` 导入，避免定时任务面板触发严格编译失败。
+- [frontend/src/pages/Spider.tsx](/Volumes/external disk/develop/public_opinion/frontend/src/pages/Spider.tsx)
+  - 删除未使用的 `createSpiderTask` 导入。
+- [frontend/src/types/index.ts](/Volumes/external disk/develop/public_opinion/frontend/src/types/index.ts)
+  - 为 `RealtimeMonitoringItem` 补充 `link`、`url` 字段声明，兼容现有实时监测数据读取逻辑。
+- [frontend/src/pages/BigData.tsx](/Volumes/external disk/develop/public_opinion/frontend/src/pages/BigData.tsx)
+  - 抽离统一的实时监测链接解析函数，避免页面内散落字段兜底判断并消除类型错误。
+- [frontend/src/services/page.ts](/Volumes/external disk/develop/public_opinion/frontend/src/services/page.ts)
+  - 调整 `forceGenerateWordcloud` 的参数默认值写法，消除未使用形参告警且保持调用兼容。
+- [docs/github_action_build_fix_construction.md](/Volumes/external disk/develop/public_opinion/docs/github_action_build_fix_construction.md)
+  - 新增本轮施工文档，记录报错根因、修复范围与验证方案。
+
+### 本次验证
+
+- `cd frontend && npm run build`：通过
+- 当前仅剩 Vite chunk 体积告警，不影响 GitHub Action 构建成功。
+
 ## 爬虫任务记录删除与智能定时调度支持 - 2026-04-16
 
 ### 变更类型

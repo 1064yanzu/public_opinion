@@ -25,17 +25,22 @@ if [ -f "$FONT_FILE" ]; then
   cp "$FONT_FILE" "$STAGED_FONT_FILE"
 fi
 
-pyinstaller \
-  --noconfirm \
-  --clean \
-  --onedir \
-  --name public_opinion_backend \
-  --distpath "$DIST_DIR" \
-  --workpath "$BUILD_DIR/build" \
-  --specpath "$BUILD_DIR/spec" \
-  --hidden-import aiosqlite \
-  --collect-submodules passlib.handlers \
-  --add-data "$STAGED_FONT_FILE:." \
-  "$ENTRY_FILE"
+PYINSTALLER_ARGS=(
+  --noconfirm
+  --clean
+  --onedir
+  --name public_opinion_backend
+  --distpath "$DIST_DIR"
+  --workpath "$BUILD_DIR/build"
+  --specpath "$BUILD_DIR/spec"
+  --hidden-import aiosqlite
+  --collect-submodules passlib.handlers
+)
+
+if [ -f "$STAGED_FONT_FILE" ]; then
+  PYINSTALLER_ARGS+=(--add-data "$STAGED_FONT_FILE:.")
+fi
+
+pyinstaller "${PYINSTALLER_ARGS[@]}" "$ENTRY_FILE"
 
 echo "桌面后端已输出到 $DIST_DIR"

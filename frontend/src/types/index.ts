@@ -165,6 +165,8 @@ export interface RealtimeMonitoringItem {
     author: string;
     content: string;
     Link?: string | null;
+    link?: string | null;
+    url?: string | null;
     authorUrl?: string | null;
 }
 

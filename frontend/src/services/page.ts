@@ -91,12 +91,12 @@ export async function fetchCaseDetail(caseId: number) {
   return response.data;
 }
 
-export async function generateWordcloud(payload?: { keyword?: string; task_id?: number }) {
+export async function generateWordcloud() {
   const response = await api.get<{ image_url: string; word_freq: Record<string, number>; message: string }>('/page/wordcloud');
   return response.data;
 }
 
-export async function forceGenerateWordcloud(payload?: { keyword?: string; task_id?: number }) {
-  const response = await api.post<{ image_url: string; word_freq: Record<string, number>; message: string }>('/page/wordcloud', payload || {});
+export async function forceGenerateWordcloud(payload: { keyword?: string; task_id?: number } = {}) {
+  const response = await api.post<{ image_url: string; word_freq: Record<string, number>; message: string }>('/page/wordcloud', payload);
   return response.data;
 }
