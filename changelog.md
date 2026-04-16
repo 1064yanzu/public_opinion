@@ -2273,3 +2273,10 @@ def run_wordcloud_task(csv_path, task_id):
 ### 2. 前端可视化与布局重构
 - 扩维并更新了 Dashboard 的 Grid 网格（`Dashboard.module.css`），将原本独立的词云行重塑为 `"wordcloud influencers"` 一比一/二比一双排并列设计。
 - 开发了金牌榜排版样式的 `influencersCard` 模块，包含带有动态颜色徽章标识的排名序号、用户 @名称及对应互动数据。大幅度强化概览页对"意见领袖"或重要传谣/辟谣源头的可视化呈现度。
+
+## 2026-04-16 23:03:58 - 跨平台自动化打包构建 (macOS & Windows)配置构建
+
+### 1. 跨平台发版架构编排
+- 新增 `GitHub Actions` 持续交付管道配置（位于 `.github/workflows/release.yml`）。
+- 打包方案包含了 Node.js 18、Rust 编译器及 Python 3.12 的混合原生构建环境支持。
+- 因为本项目是前后端混合的 Tauri + Fastapi(Python) 的硬核架构，配置了针对 macOS 和 Windows 在云端宿主机内利用 PyInstaller 将后端源码（带内置中文字体）编译构建为对应的 `.app`/Unix ELF 与 `.exe` 独立组件。最后交由 Tauri 前端打包聚合输出标准化的 `.dmg` 与 `.exe` 安装程序。

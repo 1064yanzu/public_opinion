@@ -1,0 +1,59 @@
+name: "Release Windows"
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Install Python Dependencies & Build Backend (Windows)
+        run: |
+          python -m venv .venv
+          .venv\Scripts\Activate.ps1
+          pip install -r backend/requirements.txt
+          pip install pyinstaller
+          mkdir frontend/src-tauri/resources/backend -Force
+          mkdir backend/.pyinstaller/assets -Force
+          if (Test-Path "三极泼墨体.ttf") { Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf" }
+          pyinstaller --noconfirm --clean --onedir --name public_opinion_backend --distpath frontend/src-tauri/resources/backend --workpath backend/.pyinstaller/build --specpath backend/.pyinstaller/spec --hidden-import aiosqlite --collect-submodules passlib.handlers --add-data "backend/.pyinstaller/assets/sanjipomoti.ttf;." backend/run_desktop.py
+
+      - name: Build Tauri App
+        working-directory: frontend
+        run: npm run tauri build -- --config src-tauri/tauri.bundle.conf.json --target x86_64-pc-windows-msvc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-opinion-Windows
+          path: |
+            frontend/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
