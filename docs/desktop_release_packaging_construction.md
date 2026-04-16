@@ -110,3 +110,17 @@
 
 - 基于现有 `frontend/src-tauri/icons/icon.png` 生成 `frontend/src-tauri/icons/icon.ico`
 - 在 `tauri.conf.json` 中显式声明 `bundle.icon`，固定 Windows 打包所使用的图标资源
+
+### 再次补充（2026-04-17）
+
+远端 Windows 构建继续失败后，最新根因已经进一步收敛：
+
+- `tauri build` 在 Windows 上默认还会尝试生成 `msi`
+- `msi` 依赖 WiX `candle/light`，当前 runner 在 `light.exe` 阶段失败
+- 但本项目实际发布目标是 `nsis exe`，并不需要 `msi`
+
+最终处理：
+
+- 新增 `frontend/src-tauri/tauri.windows.bundle.conf.json`
+- 仅在 Windows GitHub Actions 中使用该配置
+- 将远端 bundle 目标限制为 `nsis`，彻底绕开 WiX / MSI 链路

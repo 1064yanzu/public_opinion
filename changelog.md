@@ -45,6 +45,10 @@
   - 显式声明桌面端 `bundle.icon`，并为 Windows 打包补齐 `icons/icon.ico`。
 - [icon.ico](/Volumes/external disk/develop/public_opinion/frontend/src-tauri/icons/icon.ico)
   - 基于现有 `icon.png` 生成 Windows 所需图标文件，修复 `tauri-build` 在远端生成资源文件时的中断。
+- [tauri.windows.bundle.conf.json](/Volumes/external disk/develop/public_opinion/frontend/src-tauri/tauri.windows.bundle.conf.json)
+  - 新增 Windows 专用 Tauri bundle 配置，将远端发布目标限制为 `nsis`，不再生成 `msi`。
+- [release.yml](/Volumes/external disk/develop/public_opinion/.github/workflows/release.yml)
+  - Windows workflow 改为使用 `tauri.windows.bundle.conf.json`，彻底绕开 WiX `light.exe` 失败链路。
 
 ## GitHub Action 前端构建报错修复 - 2026-04-16
 
