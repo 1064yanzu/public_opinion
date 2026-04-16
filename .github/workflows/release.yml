@@ -43,7 +43,7 @@ jobs:
           mkdir frontend/src-tauri/resources/backend -Force
           mkdir backend/.pyinstaller/assets -Force
           if (Test-Path "三极泼墨体.ttf") { Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf" }
-          pyinstaller --noconfirm --clean --onedir --name public_opinion_backend --distpath frontend/src-tauri/resources/backend --workpath backend/.pyinstaller/build --specpath backend/.pyinstaller/spec --hidden-import aiosqlite --collect-submodules passlib.handlers --add-data "backend/.pyinstaller/assets/sanjipomoti.ttf;." backend/run_desktop.py
+          pyinstaller --noconfirm --clean --onedir --name public_opinion_backend --distpath frontend/src-tauri/resources/backend --workpath backend/.pyinstaller/build --specpath backend/.pyinstaller/spec --hidden-import aiosqlite --collect-submodules passlib.handlers --add-data "${{ github.workspace }}/backend/.pyinstaller/assets/sanjipomoti.ttf;." backend/run_desktop.py
 
       - name: Build Tauri App
         working-directory: frontend
