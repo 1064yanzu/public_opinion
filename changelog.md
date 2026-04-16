@@ -41,6 +41,10 @@
   - 同步将 Windows 发布链路里的 PyInstaller 参数改为 `--onefile`，确保远端 exe 安装包和本地桌面包使用一致策略。
 - [desktop_release_packaging_construction.md](/Volumes/external disk/develop/public_opinion/docs/desktop_release_packaging_construction.md)
   - 追加记录 `onedir` 触发 Tauri 资源打包失败的根因与改回 `onefile` 的取舍。
+- [tauri.conf.json](/Volumes/external disk/develop/public_opinion/frontend/src-tauri/tauri.conf.json)
+  - 显式声明桌面端 `bundle.icon`，并为 Windows 打包补齐 `icons/icon.ico`。
+- [icon.ico](/Volumes/external disk/develop/public_opinion/frontend/src-tauri/icons/icon.ico)
+  - 基于现有 `icon.png` 生成 Windows 所需图标文件，修复 `tauri-build` 在远端生成资源文件时的中断。
 
 ## GitHub Action 前端构建报错修复 - 2026-04-16
 

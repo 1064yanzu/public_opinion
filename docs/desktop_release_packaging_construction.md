@@ -99,3 +99,14 @@
 - 将桌面后端 sidecar 从 `PyInstaller --onedir` 改回 `--onefile`
 - 这样 Tauri 只需要携带单个 `public_opinion_backend(.exe)`，不再递归打包庞大的 `_internal` 资源树
 - 该方案会带来更慢的首次启动，但当前桌面端已经有更长的启动等待与日志排障闭环，能承受这个代价
+
+### 后续补充（2026-04-17）
+
+远端 Windows 重新构建后，又暴露出一个独立问题：
+
+- `icons/icon.ico` 缺失，导致 `tauri-build` 无法生成 Windows Resource file
+
+处理方式：
+
+- 基于现有 `frontend/src-tauri/icons/icon.png` 生成 `frontend/src-tauri/icons/icon.ico`
+- 在 `tauri.conf.json` 中显式声明 `bundle.icon`，固定 Windows 打包所使用的图标资源
