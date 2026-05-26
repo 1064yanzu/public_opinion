@@ -1,4 +1,4 @@
-name: "Release Windows"
+name: "Release Windows & macOS"
 on:
   push:
     tags:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -41,9 +41,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pyinstaller
+
+          # 准备资产目录
           mkdir frontend/src-tauri/resources/backend -Force
           mkdir backend/.pyinstaller/assets -Force
-          if (Test-Path "三极泼墨体.ttf") { Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf" }
+
+          # 复制字体文件
+          if (Test-Path "三极泼墨体.ttf") {
+            Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf"
+          }
+
+          # 获取 snownlp 安装路径（用于 --add-data 精确指定数据文件）
+          $snownlpPath = python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))"
+          Write-Host "snownlp path: $snownlpPath"
+
+          # 构建 PyInstaller 参数
           $pyinstallerArgs = @(
             '--noconfirm',
             '--clean',
@@ -52,24 +64,148 @@ jobs:
             '--distpath', 'frontend/src-tauri/resources/backend',
             '--workpath', 'backend/.pyinstaller/build',
             '--specpath', 'backend/.pyinstaller/spec',
+            # 使用自定义 hooks 目录（修复 snownlp 数据文件问题）
+            '--additional-hooks-dir', 'backend/.pyinstaller/hooks',
+            # snownlp runtime hook（确保 frozen 环境路径正确）
+            '--runtime-hook', 'backend/.pyinstaller/hooks/rthook-snownlp.py',
+            # 显式收集 NLP 库所有子模块和数据文件
+            '--collect-all', 'snownlp',
+            '--collect-all', 'jieba',
+            '--collect-all', 'wordcloud',
+            # 显式 add-data snownlp 数据文件（兜底，双重保险）
+            '--add-data', "${snownlpPath}/normal/stopwords.txt;snownlp/normal/",
+            '--add-data', "${snownlpPath}/normal/pinyin.txt;snownlp/normal/",
+            '--add-data', "${snownlpPath}/seg/data.txt;snownlp/seg/",
+            '--add-data', "${snownlpPath}/seg/seg.marshal;snownlp/seg/",
+            '--add-data', "${snownlpPath}/seg/seg.marshal.3;snownlp/seg/",
+            '--add-data', "${snownlpPath}/sentiment/neg.txt;snownlp/sentiment/",
+            '--add-data', "${snownlpPath}/sentiment/pos.txt;snownlp/sentiment/",
+            '--add-data', "${snownlpPath}/sentiment/sentiment.marshal;snownlp/sentiment/",
+            '--add-data', "${snownlpPath}/sentiment/sentiment.marshal.3;snownlp/sentiment/",
+            '--add-data', "${snownlpPath}/tag/199801.txt;snownlp/tag/",
+            '--add-data', "${snownlpPath}/tag/tag.marshal;snownlp/tag/",
+            '--add-data', "${snownlpPath}/tag/tag.marshal.3;snownlp/tag/",
+            # 其他 hidden imports
             '--hidden-import', 'aiosqlite',
             '--collect-submodules', 'passlib.handlers'
           )
+
           if (Test-Path "backend/.pyinstaller/assets/sanjipomoti.ttf") {
-            $pyinstallerArgs += @('--add-data', "${{ github.workspace }}/backend/.pyinstaller/assets/sanjipomoti.ttf;.")
+            $pyinstallerArgs += @('--add-data', "backend/.pyinstaller/assets/sanjipomoti.ttf;.")
           }
+
           $pyinstallerArgs += 'backend/run_desktop.py'
           & pyinstaller @pyinstallerArgs
 
-      - name: Build Tauri App
+      - name: Build Tauri App (Windows)
         working-directory: frontend
         run: npx tauri build --config src-tauri/tauri.windows.bundle.conf.json --target x86_64-pc-windows-msvc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifacts
+      - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: public-opinion-Windows
           path: |
             frontend/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Python Dependencies & Build Backend (macOS)
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pyinstaller
+
+          # 准备资产目录
+          mkdir -p frontend/src-tauri/resources/backend
+          mkdir -p backend/.pyinstaller/assets
+
+          # 复制字体文件
+          if [ -f "三极泼墨体.ttf" ]; then
+            cp "三极泼墨体.ttf" "backend/.pyinstaller/assets/sanjipomoti.ttf"
+          fi
+
+          # 获取 snownlp 安装路径
+          SNOWNLP_PATH=$(python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))")
+          echo "snownlp path: $SNOWNLP_PATH"
+
+          # 构建 PyInstaller 命令
+          PYINSTALLER_ARGS=(
+            '--noconfirm'
+            '--clean'
+            '--onefile'
+            '--name' 'public_opinion_backend'
+            '--distpath' 'frontend/src-tauri/resources/backend'
+            '--workpath' 'backend/.pyinstaller/build'
+            '--specpath' 'backend/.pyinstaller/spec'
+            '--additional-hooks-dir' 'backend/.pyinstaller/hooks'
+            '--runtime-hook' 'backend/.pyinstaller/hooks/rthook-snownlp.py'
+            '--collect-all' 'snownlp'
+            '--collect-all' 'jieba'
+            '--collect-all' 'wordcloud'
+            "--add-data" "${SNOWNLP_PATH}/normal/stopwords.txt:snownlp/normal/"
+            "--add-data" "${SNOWNLP_PATH}/normal/pinyin.txt:snownlp/normal/"
+            "--add-data" "${SNOWNLP_PATH}/seg/data.txt:snownlp/seg/"
+            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal:snownlp/seg/"
+            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal.3:snownlp/seg/"
+            "--add-data" "${SNOWNLP_PATH}/sentiment/neg.txt:snownlp/sentiment/"
+            "--add-data" "${SNOWNLP_PATH}/sentiment/pos.txt:snownlp/sentiment/"
+            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal:snownlp/sentiment/"
+            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal.3:snownlp/sentiment/"
+            "--add-data" "${SNOWNLP_PATH}/tag/199801.txt:snownlp/tag/"
+            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal:snownlp/tag/"
+            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal.3:snownlp/tag/"
+            '--hidden-import' 'aiosqlite'
+            '--collect-submodules' 'passlib.handlers'
+          )
+
+          if [ -f "backend/.pyinstaller/assets/sanjipomoti.ttf" ]; then
+            PYINSTALLER_ARGS+=("--add-data" "backend/.pyinstaller/assets/sanjipomoti.ttf:.")
+          fi
+
+          PYINSTALLER_ARGS+=('backend/run_desktop.py')
+          pyinstaller "${PYINSTALLER_ARGS[@]}"
+
+      - name: Build Tauri App (macOS)
+        working-directory: frontend
+        run: npx tauri build --target aarch64-apple-darwin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-opinion-macOS
+          path: |
+            frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz

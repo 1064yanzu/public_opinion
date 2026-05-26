@@ -1,5 +1,55 @@
 # 项目更新日志
 
+## snownlp 数据文件打包修复 & macOS 发布链路新增 - 2026-04-17
+
+### 变更类型
+**缺陷修复 / 构建稳定性 / 跨平台发布**
+
+### 问题背景
+
+打包后的桌面应用（Windows / macOS）运行时报错：
+```
+[Errno 2] No such file or directory: '/var/.../T/_MEIuD36hV/snownlp/normal/stopwords.txt'
+```
+
+**根因分析：**
+
+- `snownlp` 各子模块（`normal/__init__.py`、`seg/__init__.py` 等）在**模块级别**（import 时）就直接 `open(os.path.join(os.path.dirname(__file__), 'xxx.txt'))` 读取数据文件
+- PyInstaller `--onefile` 模式下，数据文件理论上应被解压到 `sys._MEIPASS` 临时目录，子模块 `__file__` 也指向该临时目录
+- 问题在于：虽然 `.spec` 里已有 `collect_all('snownlp')`，但该 hook 仅在 PyInstaller 的默认 hooks 目录生效；**GitHub Actions 命令行方式打包**（直接 `pyinstaller` CLI）不会自动读取 `.spec`，也没有指定自定义 hooks 目录，导致 snownlp 的数据文件（`.txt`、`.marshal`）根本没被带进包内
+- Windows 无响应：`console=False` 时进程因找不到数据文件而崩溃退出，表现为"无响应"
+
+### 本次修改
+
+**新增 PyInstaller 自定义 hook：**
+- [backend/.pyinstaller/hooks/hook-snownlp.py](/Volumes/external disk/develop/public_opinion/backend/.pyinstaller/hooks/hook-snownlp.py)
+  - 使用 `collect_data_files('snownlp', includes=['**/*.txt', '**/*.marshal', '**/*.marshal.3'])` 显式收集全部数据文件
+  - 同时收集所有子模块作为 `hiddenimports`
+
+**新增 PyInstaller runtime hook：**
+- [backend/.pyinstaller/hooks/rthook-snownlp.py](/Volumes/external disk/develop/public_opinion/backend/.pyinstaller/hooks/rthook-snownlp.py)
+  - 在 frozen 环境中，import snownlp 之前提前修正已加载模块的 `__file__` 与 `__path__`，确保路径指向 `sys._MEIPASS` 下的正确位置
+
+**重写 GitHub Actions release workflow：**
+- [.github/workflows/release.yml](/Volumes/external disk/develop/public_opinion/.github/workflows/release.yml)
+  - Windows 打包步骤新增：
+    - `--additional-hooks-dir backend/.pyinstaller/hooks`（启用自定义 hook）
+    - `--runtime-hook backend/.pyinstaller/hooks/rthook-snownlp.py`
+    - `--collect-all snownlp`
+    - 显式 `--add-data` 逐一指定 snownlp 所有数据文件（双重保险）：`normal/stopwords.txt`、`normal/pinyin.txt`、`seg/data.txt`、`seg/seg.marshal`、`seg/seg.marshal.3`、`sentiment/neg.txt`、`sentiment/pos.txt`、`sentiment/sentiment.marshal`、`sentiment/sentiment.marshal.3`、`tag/199801.txt`、`tag/tag.marshal`、`tag/tag.marshal.3`
+  - **新增 macOS 发布 job**（`build-macos`）：
+    - `runs-on: macos-latest`，target `aarch64-apple-darwin`
+    - 完全对称的 Python 依赖安装 + PyInstaller 打包（使用 `:` 分隔符）
+    - 产物上传：`*.dmg` + `*.app.tar.gz`
+
+### 本次验证
+
+- 已确认 snownlp 在 `.venv` 中的完整数据文件列表：`normal/`、`seg/`、`sentiment/`、`tag/` 四个子目录
+- GitHub Actions workflow 语法检查通过
+- 下次推 tag 或手动触发 workflow 时将完成全量验证
+
+---
+
 ## 桌面端发布打包链路清理与加固 - 2026-04-16
 
 ### 变更类型
@@ -2368,3 +2418,5 @@ def run_wordcloud_task(csv_path, task_id):
 - 新增 `GitHub Actions` 持续交付管道配置（位于 `.github/workflows/release.yml`）。
 - 打包方案包含了 Node.js 18、Rust 编译器及 Python 3.12 的混合原生构建环境支持。
 - 因为本项目是前后端混合的 Tauri + Fastapi(Python) 的硬核架构，配置了针对 macOS 和 Windows 在云端宿主机内利用 PyInstaller 将后端源码（带内置中文字体）编译构建为对应的 `.app`/Unix ELF 与 `.exe` 独立组件。最后交由 Tauri 前端打包聚合输出标准化的 `.dmg` 与 `.exe` 安装程序。
+## 2026-04-17 - 升级 Claude Code
+- 使用 npm 全局升级 `@anthropic-ai/claude-code` 到最新版。

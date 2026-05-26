@@ -3,12 +3,24 @@
 """
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 
-BACKEND_DIR = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = BACKEND_DIR.parent.parent
+# 在 PyInstaller --onefile/--onedir frozen 模式下，__file__ 指向解压的临时目录
+# 这里只用于确定「项目包内」的相对结构，不能用于用户数据存储
+_IS_FROZEN = getattr(sys, "frozen", False)
+
+if _IS_FROZEN:
+    # frozen 模式：BACKEND_DIR 指向 _MEIPASS 视作"包根"
+    BACKEND_DIR = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    # PROJECT_ROOT 在 frozen 模式下无意义（不存在真实项目目录），
+    # 指向临时目录的父目录仅作占位，实际路径由 APP_DATA_DIR 环境变量决定
+    PROJECT_ROOT = BACKEND_DIR
+else:
+    BACKEND_DIR = Path(__file__).resolve().parents[1]
+    PROJECT_ROOT = BACKEND_DIR.parent.parent
 
 
 @dataclass(frozen=True)
@@ -70,16 +82,24 @@ def resolve_runtime_paths(
         resolved_log_dir = _normalize_path(log_dir, resolved_app_data_dir / "logs")
         resolved_config_path = _normalize_path(config_path, resolved_config_dir / "runtime-config.json")
     else:
-        resolved_app_data_dir = PROJECT_ROOT
-        resolved_config_dir = PROJECT_ROOT / "config"
-        resolved_data_dir = _normalize_path(data_dir, PROJECT_ROOT / "data")
-        resolved_static_dir = _normalize_path(static_dir, PROJECT_ROOT / "static")
-        resolved_reports_dir = _normalize_path(reports_dir, PROJECT_ROOT / "reports")
+        # frozen 模式下如果未设置 APP_DATA_DIR，默认使用用户 home 下的数据目录
+        # 避免尝试向临时解压目录（_MEIPASS）写数据
+        if _IS_FROZEN:
+            import os
+            _fallback_root = Path.home() / ".public_opinion_desktop"
+        else:
+            _fallback_root = PROJECT_ROOT
+        resolved_app_data_dir = _fallback_root
+        resolved_config_dir = _fallback_root / "config"
+        resolved_data_dir = _normalize_path(data_dir, _fallback_root / "data")
+        resolved_static_dir = _normalize_path(static_dir, _fallback_root / "static")
+        resolved_reports_dir = _normalize_path(reports_dir, _fallback_root / "reports")
         resolved_wordcloud_dir = _normalize_path(wordcloud_dir, resolved_static_dir / "wordcloud")
-        resolved_upload_dir = _normalize_path(upload_dir, BACKEND_DIR / "uploads")
-        resolved_database_path = _normalize_path(database_path, BACKEND_DIR / "public_opinion.db")
-        resolved_log_dir = _normalize_path(log_dir, PROJECT_ROOT / "logs")
+        resolved_upload_dir = _normalize_path(upload_dir, _fallback_root / "uploads")
+        resolved_database_path = _normalize_path(database_path, _fallback_root / "database" / "public_opinion.db")
+        resolved_log_dir = _normalize_path(log_dir, _fallback_root / "logs")
         resolved_config_path = _normalize_path(config_path, resolved_config_dir / "runtime-config.json")
+
 
     return RuntimePaths(
         app_data_dir=resolved_app_data_dir,

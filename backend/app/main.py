@@ -64,8 +64,14 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # 确保静态目录存在（frozen/首次启动时可能还未创建）
+    import os
+    os.makedirs(settings.STATIC_DIR, exist_ok=True)
+    os.makedirs(settings.REPORTS_DIR, exist_ok=True)
+
     app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
     app.mount("/static/reports", StaticFiles(directory=settings.REPORTS_DIR), name="reports")
+
 
     app.add_middleware(
         CORSMiddleware,
