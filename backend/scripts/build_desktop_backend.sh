@@ -62,6 +62,10 @@ PYINSTALLER_ARGS=(
   # 其他 hidden imports
   --hidden-import aiosqlite
   --collect-submodules passlib.handlers
+  # 排除不需要的模块以减小体积
+  --exclude-module tkinter
+  --exclude-module matplotlib
+  --exclude-module scipy
 )
 
 if [ -f "$STAGED_FONT_FILE" ]; then
@@ -70,4 +74,13 @@ fi
 
 pyinstaller "${PYINSTALLER_ARGS[@]}" "$ENTRY_FILE"
 
-echo "桌面后端已输出到 $DIST_DIR"
+# 验证输出
+BACKEND_BIN="$DIST_DIR/public_opinion_backend"
+if [ -f "$BACKEND_BIN" ]; then
+  SIZE=$(du -h "$BACKEND_BIN" | cut -f1)
+  echo "桌面后端已输出到 $DIST_DIR ($SIZE)"
+  chmod +x "$BACKEND_BIN"
+else
+  echo "构建失败: $BACKEND_BIN 未找到" >&2
+  exit 1
+fi

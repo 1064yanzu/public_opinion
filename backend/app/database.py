@@ -13,6 +13,11 @@ async_engine = create_async_engine(
     echo=settings.DEBUG,
     future=True,
     pool_pre_ping=True,
+    # 连接池优化配置
+    pool_size=20,           # 连接池大小（默认 5）
+    max_overflow=10,        # 最大溢出连接数（默认 10）
+    pool_timeout=30,        # 获取连接的超时时间（秒）
+    pool_recycle=3600,      # 连接回收时间（秒），防止连接过期
 )
 
 # 创建同步引擎（用于 Alembic 迁移）
@@ -84,6 +89,10 @@ async def init_db():
         # 启用 WAL 模式（提升并发性能）
         await conn.execute(text("PRAGMA journal_mode=WAL;"))
         await conn.execute(text("PRAGMA synchronous=NORMAL;"))
+        # 限制 SQLite 页面缓存大小，减少内存占用（默认 ~2MB）
+        await conn.execute(text("PRAGMA cache_size=-2000;"))
+        # 临时表存储在内存中，减少磁盘 I/O
+        await conn.execute(text("PRAGMA temp_store=MEMORY;"))
 
 
 async def _ensure_runtime_columns(conn):

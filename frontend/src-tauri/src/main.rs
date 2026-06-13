@@ -98,8 +98,16 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
         "public_opinion_backend"
     };
 
+    // 获取可执行文件所在目录（Windows NSIS 安装根目录）
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(|| resource_dir.clone());
+
     let candidates = [
+        // Tauri resource_dir 下的 backend 子目录 (macOS .app/Contents/Resources/backend/)
         resource_dir.join("backend").join(executable),
+        // Tauri NSIS data 目录 (Windows: <install>/data/backend/)
         resource_dir
             .join("backend")
             .join("public_opinion_backend")
@@ -113,6 +121,12 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
             .join("backend")
             .join("public_opinion_backend")
             .join(executable),
+        // Windows NSIS: 可能直接放在安装根目录
+        exe_dir.join("backend").join(executable),
+        exe_dir.join("resources").join("backend").join(executable),
+        exe_dir.join(executable),
+        // 同目录下查找
+        exe_dir.join("data").join("backend").join(executable),
     ];
 
     for candidate in candidates {
@@ -121,9 +135,75 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
         }
     }
 
+    // 列出资源目录的实际内容，方便诊断
+    let mut checked = String::new();
+    let mut dir_listings = String::new();
+
+    // 检查所有候选路径
+    for (idx, candidate) in candidates.iter().enumerate() {
+        checked.push_str(&format!("\n  {}. {}", idx + 1, candidate.display()));
+        if candidate.exists() {
+            checked.push_str(" ✓ 存在");
+            if candidate.is_file() {
+                if let Ok(metadata) = fs::metadata(candidate) {
+                    checked.push_str(&format!(" ({} 字节)", metadata.len()));
+                }
+            }
+        } else {
+            checked.push_str(" ✗ 不存在");
+        }
+    }
+
+    // 尝试列出资源目录内容
+    dir_listings.push_str(&format!("\n资源目录 ({}):\n", resource_dir.display()));
+    match fs::read_dir(&resource_dir) {
+        Ok(entries) => {
+            for entry in entries.filter_map(|e| e.ok()) {
+                let path = entry.path();
+                let name = entry.file_name();
+                if path.is_dir() {
+                    dir_listings.push_str(&format!("  [目录] {}/\n", name.to_string_lossy()));
+                } else {
+                    dir_listings.push_str(&format!("  [文件] {}\n", name.to_string_lossy()));
+                }
+            }
+        }
+        Err(e) => {
+            dir_listings.push_str(&format!("  (无法读取: {})\n", e));
+        }
+    }
+
+    // 如果存在 backend 子目录，也列出其内容
+    let backend_dir = resource_dir.join("backend");
+    if backend_dir.exists() {
+        dir_listings.push_str(&format!("\nbackend 子目录 ({}):\n", backend_dir.display()));
+        match fs::read_dir(&backend_dir) {
+            Ok(entries) => {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let name = entry.file_name();
+                    dir_listings.push_str(&format!("  - {}\n", name.to_string_lossy()));
+                }
+            }
+            Err(e) => {
+                dir_listings.push_str(&format!("  (无法读取: {})\n", e));
+            }
+        }
+    }
+
     Err(format!(
-        "缺少打包后的后端二进制，已检查资源目录: {}",
-        resource_dir.display()
+        "缺少打包后的后端二进制文件\n\
+        \n【已检查的路径】:{}\
+        \n\n【目录内容】:{}\
+        \n\n这通常意味着：\n\
+        1. 打包时未正确包含后端文件\n\
+        2. 安装程序损坏或不完整\n\
+        3. 文件被杀毒软件删除\n\
+        \n请尝试：\n\
+        - 重新下载并安装\n\
+        - 关闭杀毒软件后再试\n\
+        - 联系技术支持并提供此错误信息",
+        checked,
+        dir_listings
     ))
 }
 
@@ -143,8 +223,52 @@ fn spawn_backend(
         project_root.to_path_buf()
     };
 
+    // 准备诊断日志
+    let diagnostic_log = app_data_dir.join("logs/tauri_startup.log");
+
     let mut command = if is_packaged {
-        let backend_binary = packaged_backend_path(app_handle)?;
+        let backend_binary = match packaged_backend_path(app_handle) {
+            Ok(path) => {
+                // 写入诊断信息
+                if let Ok(mut diag) = OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&diagnostic_log)
+                {
+                    use std::io::Write;
+                    let _ = writeln!(diag, "\n=== 后端启动诊断 ===");
+                    let _ = writeln!(diag, "时间: {:?}", std::time::SystemTime::now());
+                    let _ = writeln!(diag, "后端二进制路径: {}", path.display());
+
+                    // 检查文件信息
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        let _ = writeln!(diag, "文件大小: {} 字节", metadata.len());
+                        let _ = writeln!(diag, "文件权限: {:?}", metadata.permissions());
+                        let _ = writeln!(diag, "是否可执行: {}", metadata.permissions().readonly() == false);
+                    } else {
+                        let _ = writeln!(diag, "无法读取文件元数据");
+                    }
+
+                    let _ = writeln!(diag, "工作目录: {}", working_dir.display());
+                    let _ = writeln!(diag, "端口: {}", port);
+                }
+                path
+            },
+            Err(e) => {
+                // 写入详细的路径查找失败信息
+                if let Ok(mut diag) = OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&diagnostic_log)
+                {
+                    use std::io::Write;
+                    let _ = writeln!(diag, "\n=== 后端路径查找失败 ===");
+                    let _ = writeln!(diag, "时间: {:?}", std::time::SystemTime::now());
+                    let _ = writeln!(diag, "错误: {}", e);
+                }
+                return Err(e);
+            }
+        };
         Command::new(backend_binary)
     } else {
         let python = find_python(project_root);
@@ -163,8 +287,9 @@ fn spawn_backend(
         .try_clone()
         .map_err(|err| format!("无法复制后端日志句柄 {}: {err}", backend_log_path.display()))?;
 
+    let log_path = app_data_dir.join("logs/backend.log");
     command
-        .current_dir(working_dir)
+        .current_dir(&working_dir)
         .env("API_HOST", "127.0.0.1")
         .env("API_PORT", port.to_string())
         .env("DESKTOP_MODE", "true")
@@ -173,7 +298,41 @@ fn spawn_backend(
         .stdout(Stdio::from(backend_log))
         .stderr(Stdio::from(backend_log_err));
 
-    command.spawn().map_err(|err| err.to_string())
+    command.spawn().map_err(|err| {
+        // 写入详细的启动失败诊断
+        if let Ok(mut diag) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&diagnostic_log)
+        {
+            use std::io::Write;
+            let _ = writeln!(diag, "\n=== 后端进程启动失败 ===");
+            let _ = writeln!(diag, "时间: {:?}", std::time::SystemTime::now());
+            let _ = writeln!(diag, "错误: {}", err);
+            let _ = writeln!(diag, "工作目录: {}", working_dir.display());
+            let _ = writeln!(diag, "环境变量:");
+            let _ = writeln!(diag, "  API_HOST=127.0.0.1");
+            let _ = writeln!(diag, "  API_PORT={}", port);
+            let _ = writeln!(diag, "  DESKTOP_MODE=true");
+            let _ = writeln!(diag, "  APP_DATA_DIR={}", app_data_dir.display());
+        }
+
+        format!(
+            "应用启动失败\n\n可能原因：\n\
+             1. 杀毒软件拦截了后端程序\n\
+             2. 端口 {} 已被占用\n\
+             3. 安装文件不完整或损坏\n\n\
+             详细日志位置：\n\
+             - 后端日志: {}\n\
+             - 诊断日志: {}\n\n\
+             启动错误: {}\n\n\
+             如需帮助，请将以上日志文件发送给技术支持。",
+            port,
+            log_path.display(),
+            diagnostic_log.display(),
+            err
+        )
+    })
 }
 
 fn stop_backend(manager: &mut BackendManager) {
@@ -321,5 +480,5 @@ fn main() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("应用启动失败，请检查日志: ~/.public_opinion_desktop/logs/");
 }

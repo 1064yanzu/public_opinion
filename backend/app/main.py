@@ -2,16 +2,26 @@
 FastAPI 主应用。
 """
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import close_db, init_db
 
+# Windows 编码修复：确保日志输出使用 UTF-8
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        if hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 logging.basicConfig(
     level=logging.INFO if not settings.DEBUG else logging.DEBUG,
@@ -62,6 +72,7 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
+        default_response_class=ORJSONResponse,  # 使用 orjson 加速 JSON 序列化
     )
 
     # 确保静态目录存在（frozen/首次启动时可能还未创建）
@@ -129,9 +140,10 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def log_requests(request, call_next):
-        logger.info("%s %s", request.method, request.url.path)
         response = await call_next(request)
-        logger.info("Status: %s", response.status_code)
+        # 只记录非 2xx 响应，减少桌面端日志 I/O
+        if response.status_code >= 400:
+            logger.warning("%s %s -> %s", request.method, request.url.path, response.status_code)
         return response
 
     return app

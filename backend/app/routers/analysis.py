@@ -5,7 +5,7 @@ from typing import Optional, List
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from datetime import datetime, date
 from app.dependencies import get_db, get_current_user_optional
 from app.models.user import User
@@ -13,6 +13,7 @@ from app.models.weibo import WeiboData
 from app.models.douyin import DouyinData
 from app.models.hotspot import Hotspot
 from app.services.wordcloud_generator import WordCloudGenerator
+from app.services.cache_service import cached
 from app.schemas import (
     StatsResponse, SentimentDistribution, HomeDataResponse,
     SentimentRequest, SentimentResponse, SentimentResult,
@@ -24,36 +25,36 @@ router = APIRouter()
 
 @router.get("/home", response_model=HomeDataResponse, summary="获取主页数据",
             description="获取主页展示所需的统计数据、情感分布和最近数据")
+@cached(lambda: "analysis:home")
 async def get_home_data(db: AsyncSession = Depends(get_db)):
     """
     获取主页数据
-    
+
     包括：
     - 数据统计（总数、今日新增、情感分布）
     - 最近爬取的数据
     - 热点新闻
     """
-    # 统计微博数据
-    weibo_total = await db.execute(select(func.count()).select_from(WeiboData))
-    weibo_count = weibo_total.scalar() or 0
-    
-    # 今日新增
+    # 优化：使用单个聚合查询替代多个独立查询
     today = date.today()
-    today_query = select(func.count()).select_from(WeiboData).where(
-        func.date(WeiboData.created_at) == today
+
+    stats_query = select(
+        func.count(WeiboData.id).label('total'),
+        func.sum(case((func.date(WeiboData.created_at) == today, 1), else_=0)).label('today'),
+        func.sum(case((WeiboData.sentiment_label == 'positive', 1), else_=0)).label('positive'),
+        func.sum(case((WeiboData.sentiment_label == 'negative', 1), else_=0)).label('negative'),
+        func.sum(case((WeiboData.sentiment_label == 'neutral', 1), else_=0)).label('neutral'),
     )
-    today_result = await db.execute(today_query)
-    today_count = today_result.scalar() or 0
-    
-    # 情感统计
-    positive_query = select(func.count()).select_from(WeiboData).where(WeiboData.sentiment_label == "positive")
-    negative_query = select(func.count()).select_from(WeiboData).where(WeiboData.sentiment_label == "negative")
-    neutral_query = select(func.count()).select_from(WeiboData).where(WeiboData.sentiment_label == "neutral")
-    
-    positive_count = (await db.execute(positive_query)).scalar() or 0
-    negative_count = (await db.execute(negative_query)).scalar() or 0
-    neutral_count = (await db.execute(neutral_query)).scalar() or 0
-    
+
+    stats_result = await db.execute(stats_query)
+    stats_row = stats_result.one()
+
+    weibo_count = stats_row.total or 0
+    today_count = stats_row.today or 0
+    positive_count = stats_row.positive or 0
+    negative_count = stats_row.negative or 0
+    neutral_count = stats_row.neutral or 0
+
     # 计算情感分布百分比
     total_sentiment = positive_count + negative_count + neutral_count
     if total_sentiment > 0:
@@ -64,7 +65,7 @@ async def get_home_data(db: AsyncSession = Depends(get_db)):
         )
     else:
         sentiment_dist = SentimentDistribution(positive=0, negative=0, neutral=100)
-    
+
     # 最近数据（限制20条）
     recent_query = select(WeiboData).order_by(WeiboData.created_at.desc()).limit(20)
     recent_result = await db.execute(recent_query)
@@ -79,7 +80,7 @@ async def get_home_data(db: AsyncSession = Depends(get_db)):
         }
         for item in recent_result.scalars().all()
     ]
-    
+
     # 热点数据
     hotspot_query = select(Hotspot).order_by(Hotspot.publish_date.desc()).limit(10)
     hotspot_result = await db.execute(hotspot_query)
@@ -93,7 +94,7 @@ async def get_home_data(db: AsyncSession = Depends(get_db)):
         }
         for h in hotspot_result.scalars().all()
     ]
-    
+
     return HomeDataResponse(
         stats=StatsResponse(
             total_count=weibo_count,

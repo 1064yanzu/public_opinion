@@ -2,7 +2,7 @@
 依赖注入模块
 包含认证、数据库会话等依赖
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -13,6 +13,7 @@ from sqlalchemy import select
 from app.database import AsyncSessionLocal
 from app.config import settings
 from app.models.user import User
+from app.database import get_db  # re-export canonical version with auto-commit
 
 # 密码加密上下文 (使用 pbkdf2_sha256 以避免 bcrypt 分发包在部分环境下的 72 字节限制冲突)
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
@@ -37,9 +38,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     """创建访问令牌"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -52,16 +53,6 @@ def decode_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
-
-
-# ===== 数据库依赖 =====
-async def get_db() -> AsyncSession:
-    """获取数据库会话"""
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
 
 
 # ===== 认证依赖 =====

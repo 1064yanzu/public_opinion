@@ -65,7 +65,6 @@ class EnvironmentSettings(BaseSettings):
     AI_BASE_URL: str = ""
     AI_MODEL_ID: str = ""
     WEIBO_COOKIE: str = ""
-    WEIBO_COOKIE: str = ""
 
     ENABLE_CACHE: bool = True
     CACHE_DURATION: int = 300

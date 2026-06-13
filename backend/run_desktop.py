@@ -11,6 +11,20 @@ import os
 import sys
 import traceback
 
+# Windows 编码修复：强制使用 UTF-8
+if sys.platform == "win32":
+    try:
+        # 重新配置标准输出和错误输出为 UTF-8
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        if hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+        # 设置环境变量确保子进程也使用 UTF-8
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+    except Exception:
+        pass  # 静默失败，不阻碍启动
+
 
 def _setup_frozen_logging():
     """为 frozen 环境配置一个最基本的文件日志，写到用户可见的位置。"""
@@ -42,12 +56,16 @@ def main():
         from app.main import app
         from app.config import settings
 
+        # 桌面模式: 单 worker, 关闭 access log, 尝试用 httptools 加速
         uvicorn.run(
             app,
             host=settings.API_HOST,
             port=settings.API_PORT,
             reload=False,
-            log_level="debug" if settings.DEBUG else "info",
+            workers=1,
+            access_log=False,
+            log_level="warning" if not settings.DEBUG else "debug",
+            timeout_keep_alive=30,
         )
     except Exception as exc:
         error_msg = f"后端启动失败:\n{traceback.format_exc()}"

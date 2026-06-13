@@ -21,5 +21,22 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
-  }
+  },
+  build: {
+    // 生产环境移除 console/debugger
+    minify: 'esbuild',
+    target: 'es2020',
+    // 分包策略: 将大型依赖拆分为独立 chunk
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          // echarts 已经是动态 import，不需要额外分包
+        },
+      },
+    },
+    // chunk 大小警告阈值
+    chunkSizeWarningLimit: 600,
+  },
 })

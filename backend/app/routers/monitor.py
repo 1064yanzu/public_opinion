@@ -12,19 +12,12 @@ from app.schemas import (
     PerformanceStats, CacheStats, AlertInfo, AlertListResponse, MessageResponse
 )
 from app.config import settings
+from app.services.cache_service import get_cache_service
 
 router = APIRouter()
 
 # 应用启动时间
 START_TIME = time.time()
-
-# 简单的内存缓存统计
-_cache_stats = {
-    "total_size": 0,
-    "item_count": 0,
-    "hits": 0,
-    "misses": 0,
-}
 
 # 告警历史
 _alert_history = []
@@ -66,13 +59,13 @@ async def get_performance_stats(current_user: User = Depends(get_current_user)):
             description="获取缓存统计信息")
 async def get_cache_stats(current_user: User = Depends(get_current_user)):
     """获取缓存统计信息"""
-    total_requests = _cache_stats["hits"] + _cache_stats["misses"]
-    hit_rate = _cache_stats["hits"] / total_requests if total_requests > 0 else 0
-    
+    cache_service = get_cache_service()
+    stats = cache_service.stats()
+
     return CacheStats(
-        total_size=_cache_stats["total_size"],
-        item_count=_cache_stats["item_count"],
-        hit_rate=round(hit_rate, 4),
+        total_size=stats["size"],
+        item_count=stats["size"],
+        hit_rate=stats["hit_rate"] / 100,  # 转换为 0-1 的比例
     )
 
 
@@ -80,15 +73,10 @@ async def get_cache_stats(current_user: User = Depends(get_current_user)):
              description="清空系统缓存")
 async def clear_cache(current_user: User = Depends(get_current_user)):
     """清空缓存"""
-    global _cache_stats
-    old_count = _cache_stats["item_count"]
-    _cache_stats = {
-        "total_size": 0,
-        "item_count": 0,
-        "hits": 0,
-        "misses": 0,
-    }
-    
+    cache_service = get_cache_service()
+    old_count = len(cache_service.cache)
+    cache_service.clear()
+
     return MessageResponse(message=f"缓存已清空，共清除 {old_count} 项", success=True)
 
 

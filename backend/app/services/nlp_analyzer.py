@@ -2,9 +2,15 @@
 NLP 分析服务
 包含情感分析、关键词提取、文本分类等功能
 """
+import asyncio
 import re
 from typing import List, Dict, Tuple, Optional, Any
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+
+
+# 线程池，用于异步执行 CPU 密集型 NLP 操作
+_nlp_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="nlp_worker")
 
 
 class NLPAnalyzer:
@@ -77,24 +83,24 @@ class NLPAnalyzer:
     
     def sentiment_analysis(self, text: str) -> Dict[str, Any]:
         """
-        情感分析
-        
+        情感分析（同步版本）
+
         Returns:
             {'score': 0.0-1.0, 'label': 'positive/negative/neutral'}
         """
         self._load_snownlp()
-        
+
         if not text or not self._snownlp:
             return {'score': 0.5, 'label': 'neutral'}
-        
+
         try:
             cleaned_text = self.clean_text(text)
             if not cleaned_text:
                 return {'score': 0.5, 'label': 'neutral'}
-            
+
             s = self._snownlp(cleaned_text)
             score = s.sentiments
-            
+
             # 分类
             if score > 0.6:
                 label = 'positive'
@@ -102,54 +108,84 @@ class NLPAnalyzer:
                 label = 'negative'
             else:
                 label = 'neutral'
-            
+
             return {'score': round(score, 4), 'label': label}
-            
+
         except Exception as e:
             print(f"情感分析出错: {e}")
             return {'score': 0.5, 'label': 'neutral'}
+
+    async def sentiment_analysis_async(self, text: str) -> Dict[str, Any]:
+        """
+        情感分析（异步版本）
+
+        使用线程池执行 CPU 密集型的 snownlp 操作，避免阻塞事件循环
+
+        Returns:
+            {'score': 0.0-1.0, 'label': 'positive/negative/neutral'}
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_nlp_executor, self.sentiment_analysis, text)
     
     def batch_sentiment_analysis(self, texts: List[str]) -> List[Dict[str, Any]]:
-        """批量情感分析"""
+        """批量情感分析（同步版本）"""
         return [self.sentiment_analysis(text) for text in texts]
+
+    async def batch_sentiment_analysis_async(self, texts: List[str]) -> List[Dict[str, Any]]:
+        """
+        批量情感分析（异步版本）
+
+        并发执行多个情感分析任务，显著提升批量处理性能
+        """
+        tasks = [self.sentiment_analysis_async(text) for text in texts]
+        return await asyncio.gather(*tasks)
     
     def extract_keywords(self, text: str, top_n: int = 10) -> List[Tuple[str, float]]:
         """
-        提取关键词
-        
+        提取关键词（同步版本）
+
         Returns:
             [(keyword, weight), ...]
         """
         self._load_jieba()
-        
+
         if not text or not self._jieba:
             return []
-        
+
         try:
             import jieba.analyse
-            
+
             cleaned_text = self.clean_text(text)
             if not cleaned_text:
                 return []
-            
+
             # 使用 TF-IDF 提取关键词
             keywords = jieba.analyse.extract_tags(
-                cleaned_text, 
-                topK=top_n, 
+                cleaned_text,
+                topK=top_n,
                 withWeight=True
             )
-            
+
             # 过滤停用词
             filtered = [
-                (word, weight) for word, weight in keywords 
+                (word, weight) for word, weight in keywords
                 if word not in self.STOPWORDS and len(word) >= 2
             ]
-            
+
             return filtered[:top_n]
-            
+
         except Exception as e:
             print(f"关键词提取出错: {e}")
             return []
+
+    async def extract_keywords_async(self, text: str, top_n: int = 10) -> List[Tuple[str, float]]:
+        """
+        提取关键词（异步版本）
+
+        使用线程池执行 jieba 分词操作
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_nlp_executor, self.extract_keywords, text, top_n)
     
     def extract_keywords_from_texts(self, texts: List[str], top_n: int = 20) -> List[Tuple[str, int]]:
         """
@@ -182,11 +218,20 @@ class NLPAnalyzer:
                         word_freq[word] += 1
             
             return word_freq.most_common(top_n)
-            
+
         except Exception as e:
             print(f"批量关键词提取出错: {e}")
             return []
-    
+
+    async def extract_keywords_from_texts_async(self, texts: List[str], top_n: int = 20) -> List[Tuple[str, int]]:
+        """
+        从多个文本中提取关键词（异步版本）
+
+        使用线程池执行 CPU 密集型的分词和统计操作
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_nlp_executor, self.extract_keywords_from_texts, texts, top_n)
+
     def word_frequency(self, texts: List[str], min_length: int = 2) -> Dict[str, int]:
         """
         词频统计
@@ -216,11 +261,20 @@ class NLPAnalyzer:
                         freq[word] += 1
             
             return dict(freq)
-            
+
         except Exception as e:
             print(f"词频统计出错: {e}")
             return {}
-    
+
+    async def word_frequency_async(self, texts: List[str], min_length: int = 2) -> Dict[str, int]:
+        """
+        词频统计（异步版本）
+
+        使用线程池执行分词和统计操作
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_nlp_executor, self.word_frequency, texts, min_length)
+
     def summarize(self, text: str, sentences: int = 3) -> List[str]:
         """
         文本摘要
@@ -241,10 +295,19 @@ class NLPAnalyzer:
             s = self._snownlp(cleaned)
             summary = s.summary(sentences)
             return summary if isinstance(summary, list) else [summary]
-            
+
         except Exception as e:
             print(f"文本摘要出错: {e}")
             return []
+
+    async def summarize_async(self, text: str, sentences: int = 3) -> List[str]:
+        """
+        文本摘要（异步版本）
+
+        使用线程池执行 CPU 密集型的摘要生成操作
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_nlp_executor, self.summarize, text, sentences)
 
 
 # 单例实例
