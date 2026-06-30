@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
@@ -32,19 +32,33 @@ export const Analysis: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<number | null>(null);
-  const [pollIntervalId, setPollIntervalId] = useState<number | null>(null);
+  // 用 useRef 持有 interval，避免 setState 重渲染时丢失 timer 引用
+  const pollIntervalRef = useRef<number | null>(null);
   const [stats, setStats] = useState<AdvancedStats | null>(null);
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
   const [trendData, setTrendData] = useState<TrendPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const stopPolling = () => {
+    if (pollIntervalRef.current !== null) {
+      window.clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  };
+
+  // 组件卸载/页面隐藏统一清理 interval
   useEffect(() => {
-    return () => {
-      if (pollIntervalId) {
-        window.clearInterval(pollIntervalId);
+    const onVisibility = () => {
+      if (document.hidden) {
+        stopPolling();
       }
     };
-  }, [pollIntervalId]);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stopPolling();
+    };
+  }, []);
 
   const fetchAnalysisResults = async (nextTaskId: number) => {
     try {
@@ -75,10 +89,7 @@ export const Analysis: React.FC = () => {
       return;
     }
 
-    if (pollIntervalId) {
-      window.clearInterval(pollIntervalId);
-      setPollIntervalId(null);
-    }
+    stopPolling();
 
     setLoading(true);
     setAnalyzing(true);
@@ -98,32 +109,28 @@ export const Analysis: React.FC = () => {
       const nextTaskId = response.data.id;
       setTaskId(nextTaskId);
 
-      const interval = window.setInterval(async () => {
+      pollIntervalRef.current = window.setInterval(async () => {
+        if (document.hidden) return;
         try {
           const taskRes = await api.get(`/spider/tasks/${nextTaskId}`);
           const status = taskRes.data.status;
 
           if (status === 'completed') {
-            window.clearInterval(interval);
-            setPollIntervalId(null);
+            stopPolling();
             await fetchAnalysisResults(nextTaskId);
           } else if (status === 'failed' || status === 'cancelled') {
-            window.clearInterval(interval);
-            setPollIntervalId(null);
+            stopPolling();
             setLoading(false);
             setAnalyzing(false);
             setError(taskRes.data.error_message || '任务执行失败，请稍后重试。');
           }
         } catch {
-          window.clearInterval(interval);
-          setPollIntervalId(null);
+          stopPolling();
           setLoading(false);
           setAnalyzing(false);
           setError('获取任务状态失败。');
         }
       }, 2000);
-
-      setPollIntervalId(interval);
     } catch (err: any) {
       setLoading(false);
       setAnalyzing(false);

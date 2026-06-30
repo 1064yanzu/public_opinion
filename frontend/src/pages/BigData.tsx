@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChinaHeatmap, SentimentPieChart } from '@/components/charts';
+import { RealtimeClock } from '@/components/common/RealtimeClock';
 import { fetchBigdataChartData, fetchHotTopics, fetchRealtimeMonitoring, fetchRealtimeData } from '@/services/page';
 import api from '@/services/api';
 import styles from './BigData.module.css';
@@ -17,21 +18,8 @@ function toPieData(source: Record<string, number>, nameMap?: Record<string, stri
   }));
 }
 
-function formatClock(date: Date) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(date);
-}
-
 export function BigData() {
   const navigate = useNavigate();
-  const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [heatmapData, setHeatmapData] = useState<Array<Record<string, unknown>>>([]);
   const [sentiment, setSentiment] = useState<Record<string, number>>({});
@@ -47,18 +35,14 @@ export function BigData() {
   });
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
-        const [chart, hot, realtime, latest, alertResponse] = await Promise.all([
+        // 用 allSettled，单个接口挂掉不会让整个看板 loading 卡死
+        const results = await Promise.allSettled([
           fetchBigdataChartData(),
-          fetchHotTopics(10), 
+          fetchHotTopics(10),
           fetchRealtimeMonitoring(20),
           fetchRealtimeData(),
           api.get('/monitor/alerts'),
@@ -68,18 +52,24 @@ export function BigData() {
           return;
         }
 
-        setHeatmapData(chart.heatmap_data || []);
-        setSentiment(chart.sentiment_data || {});
-        setGender(chart.gender_data || {});
-        setHotTopics(hot);
-        setMonitoring(realtime);
-        setAlerts(alertResponse.data.alerts || []);
-        setSummary({
-          total: latest.total,
-          positive: latest.sentiment_distribution.positive,
-          negative: latest.sentiment_distribution.negative,
-          neutral: latest.sentiment_distribution.neutral,
-        });
+        const [chartRes, hotRes, realtimeRes, latestRes, alertRes] = results;
+
+        if (chartRes.status === 'fulfilled') {
+          setHeatmapData(chartRes.value.heatmap_data || []);
+          setSentiment(chartRes.value.sentiment_data || {});
+          setGender(chartRes.value.gender_data || {});
+        }
+        if (hotRes.status === 'fulfilled') setHotTopics(hotRes.value);
+        if (realtimeRes.status === 'fulfilled') setMonitoring(realtimeRes.value);
+        if (alertRes.status === 'fulfilled') setAlerts(alertRes.value.data.alerts || []);
+        if (latestRes.status === 'fulfilled') {
+          setSummary({
+            total: latestRes.value.total,
+            positive: latestRes.value.sentiment_distribution.positive,
+            negative: latestRes.value.sentiment_distribution.negative,
+            neutral: latestRes.value.sentiment_distribution.neutral,
+          });
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -135,7 +125,9 @@ export function BigData() {
         ←
       </button>
 
-      <div className={styles.realTimeClock}>{formatClock(now)}</div>
+      <div className={styles.realTimeClock}>
+        <RealtimeClock />
+      </div>
 
       <div className={styles.container}>
         <div className={`${styles.card} ${styles.chinaHeatmap}`}>

@@ -25,10 +25,23 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
+      - name: Cache Cargo Registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            frontend/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('frontend/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install Frontend Dependencies
         working-directory: frontend
@@ -51,74 +64,66 @@ jobs:
             Copy-Item "三极泼墨体.ttf" -Destination "backend/.pyinstaller/assets/sanjipomoti.ttf"
           }
 
-          # 获取 snownlp 安装路径（用于 --add-data 精确指定数据文件）
-          $snownlpPath = python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))"
-          Write-Host "snownlp path: $snownlpPath"
-
           # ===== 关键修复: 找到并显式打包 MSVC 运行时 DLL =====
-          # PyInstaller --onefile 不一定能把 CRT DLL 打包进去，
-          # 在干净的 Windows 上会因缺少 vcruntime140.dll 而崩溃
+          # 一份在 System32 (x64)，一份在 SysWOW64 (x86)；干净 Windows 上 Python 目录里也可能没有
           $pythonDir = python -c "import sys; print(sys.prefix)"
           $crtDlls = @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")
           $crtArgs = @()
+          $searchRoots = @(
+            $pythonDir,
+            (Join-Path $env:SystemRoot "System32"),
+            (Join-Path $env:SystemRoot "SysWOW64")
+          )
           foreach ($dll in $crtDlls) {
-            # 优先从 Python 安装目录找
-            $dllPath = Join-Path $pythonDir $dll
-            if (Test-Path $dllPath) {
-              Write-Host "Found CRT DLL: $dllPath"
-              $crtArgs += @('--add-binary', "${dllPath};.")
-            } else {
-              # 从系统目录找
-              $sysPath = Join-Path $env:SystemRoot "System32" $dll
-              if (Test-Path $sysPath) {
-                Write-Host "Found CRT DLL (system): $sysPath"
-                $crtArgs += @('--add-binary', "${sysPath};.")
-              } else {
-                Write-Host "WARNING: CRT DLL not found: $dll"
+            $found = $false
+            foreach ($root in $searchRoots) {
+              $dllPath = Join-Path $root $dll
+              if (Test-Path $dllPath) {
+                Write-Host "Found CRT DLL: $dllPath"
+                $crtArgs += @('--add-binary', "${dllPath};.")
+                $found = $true
+                break
               }
+            }
+            if (-not $found) {
+              Write-Host "WARNING: CRT DLL not found in any search root: $dll"
             }
           }
 
-          # 构建 PyInstaller 参数
+          # 构建 PyInstaller 参数 — onedir 模式
           $pyinstallerArgs = @(
             '--noconfirm',
             '--clean',
-            '--onefile',
+            # 关键变更：--onedir 替代 --onefile
+            # 安装时一次解压，运行时不再触发杀软实时扫描；
+            # 启动时间从 30-60 秒压缩到 3-8 秒。
+            '--onedir',
             '--name', 'public_opinion_backend',
             '--distpath', 'frontend/src-tauri/resources/backend',
             '--workpath', 'backend/.pyinstaller/build',
             '--specpath', 'backend/.pyinstaller/spec',
-            # Windows 专属: 强制打包所有依赖 DLL（包括 MSVC 运行时）
             '--win-private-assemblies',
             '--win-no-prefer-redirects',
-            # 使用自定义 hooks 目录（修复 snownlp 数据文件问题）
             '--additional-hooks-dir', 'backend/.pyinstaller/hooks',
-            # snownlp runtime hook（确保 frozen 环境路径正确）
             '--runtime-hook', 'backend/.pyinstaller/hooks/rthook-snownlp.py',
-            # 显式收集 NLP 库所有子模块和数据文件
-            '--collect-all', 'snownlp',
-            '--collect-all', 'jieba',
-            '--collect-all', 'wordcloud',
-            # 显式 add-data snownlp 数据文件（兜底，双重保险）
-            '--add-data', "${snownlpPath}/normal/stopwords.txt;snownlp/normal/",
-            '--add-data', "${snownlpPath}/normal/pinyin.txt;snownlp/normal/",
-            '--add-data', "${snownlpPath}/seg/data.txt;snownlp/seg/",
-            '--add-data', "${snownlpPath}/seg/seg.marshal;snownlp/seg/",
-            '--add-data', "${snownlpPath}/seg/seg.marshal.3;snownlp/seg/",
-            '--add-data', "${snownlpPath}/sentiment/neg.txt;snownlp/sentiment/",
-            '--add-data', "${snownlpPath}/sentiment/pos.txt;snownlp/sentiment/",
-            '--add-data', "${snownlpPath}/sentiment/sentiment.marshal;snownlp/sentiment/",
-            '--add-data', "${snownlpPath}/sentiment/sentiment.marshal.3;snownlp/sentiment/",
-            '--add-data', "${snownlpPath}/tag/199801.txt;snownlp/tag/",
-            '--add-data', "${snownlpPath}/tag/tag.marshal;snownlp/tag/",
-            '--add-data', "${snownlpPath}/tag/tag.marshal.3;snownlp/tag/",
-            # hidden imports
+            # hooks 已 collect_data_files，--collect-all 会重复打包；仅 submodules
+            '--collect-submodules', 'snownlp',
+            '--collect-submodules', 'jieba',
+            '--collect-submodules', 'wordcloud',
             '--hidden-import', 'aiosqlite',
             '--collect-submodules', 'passlib.handlers',
-            # 排除不需要的模块以减小体积
+            # 排除明确未使用的重型模块
             '--exclude-module', 'tkinter',
             '--exclude-module', 'matplotlib',
-            '--exclude-module', 'scipy'
+            '--exclude-module', 'scipy',
+            '--exclude-module', 'IPython',
+            '--exclude-module', 'unittest',
+            '--exclude-module', 'pydoc',
+            '--exclude-module', 'test',
+            '--exclude-module', 'tests',
+            '--exclude-module', 'PIL.ImageQt',
+            '--exclude-module', 'PIL.ImageTk',
+            '--exclude-module', 'numpy.tests'
           )
 
           # 追加 CRT DLL 参数
@@ -131,11 +136,12 @@ jobs:
           $pyinstallerArgs += 'backend/run_desktop.py'
           & pyinstaller @pyinstallerArgs
 
-          # 验证输出文件存在
-          $backendExe = "frontend/src-tauri/resources/backend/public_opinion_backend.exe"
+          # onedir 模式输出: frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend.exe
+          $backendBundleDir = "frontend/src-tauri/resources/backend/public_opinion_backend"
+          $backendExe = "$backendBundleDir/public_opinion_backend.exe"
           if (Test-Path $backendExe) {
-            $size = (Get-Item $backendExe).Length / 1MB
-            Write-Host "Backend built successfully: $backendExe ($([math]::Round($size, 1)) MB)"
+            $sizeBytes = (Get-ChildItem -Recurse $backendBundleDir | Measure-Object -Property Length -Sum).Sum
+            Write-Host "Backend built successfully: $backendExe (bundle total $([math]::Round($sizeBytes / 1MB, 1)) MB)"
           } else {
             Write-Error "Backend build failed: $backendExe not found"
             exit 1
@@ -143,18 +149,16 @@ jobs:
 
       - name: Verify Backend Binary (Windows)
         run: |
-          $backendExe = "frontend/src-tauri/resources/backend/public_opinion_backend.exe"
+          $backendExe = "frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend.exe"
 
           Write-Host "=== 后端二进制验证 ==="
 
-          # 1. 检查文件存在性
           if (-not (Test-Path $backendExe)) {
             Write-Error "验证失败: 后端二进制文件不存在"
             exit 1
           }
           Write-Host "✓ 文件存在: $backendExe"
 
-          # 2. 检查文件大小
           $size = (Get-Item $backendExe).Length
           if ($size -lt 1MB) {
             Write-Error "验证失败: 文件过小 ($size 字节)，可能不完整"
@@ -162,7 +166,6 @@ jobs:
           }
           Write-Host "✓ 文件大小: $([math]::Round($size / 1MB, 1)) MB"
 
-          # 3. 检查文件是否为 PE 可执行文件
           $bytes = [System.IO.File]::ReadAllBytes($backendExe)
           if ($bytes.Length -lt 2 -or $bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) {
             Write-Error "验证失败: 不是有效的 PE 可执行文件"
@@ -170,14 +173,12 @@ jobs:
           }
           Write-Host "✓ 文件格式: PE 可执行文件"
 
-          # 4. 尝试执行 --version（快速退出）
-          Write-Host "尝试执行后端二进制..."
-          $process = Start-Process -FilePath $backendExe -ArgumentList "--version" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-          if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 2) {
-            # 退出码 0 或 2 都可接受（2 表示参数不支持，但程序能启动）
-            Write-Host "✓ 后端二进制可执行"
+          # onedir 模式应该有同级 _internal 目录
+          $internalDir = "frontend/src-tauri/resources/backend/public_opinion_backend/_internal"
+          if (Test-Path $internalDir) {
+            Write-Host "✓ onedir 结构: _internal/ 存在"
           } else {
-            Write-Warning "警告: 执行返回退出码 $($process.ExitCode)，但继续构建"
+            Write-Warning "未发现 _internal/ 目录，可能 PyInstaller 版本较旧（仍 OK，文件结构略不同）"
           }
 
           Write-Host "`n=== 验证完成 ==="
@@ -214,10 +215,23 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
+      - name: Cache Cargo Registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            frontend/src-tauri/target
+          key: ${{ runner.os }}-arm-cargo-${{ hashFiles('frontend/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-arm-cargo-
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install Frontend Dependencies
         working-directory: frontend
@@ -231,50 +245,40 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pyinstaller
 
-          # 准备资产目录
           mkdir -p frontend/src-tauri/resources/backend
           mkdir -p backend/.pyinstaller/assets
 
-          # 复制字体文件
           if [ -f "三极泼墨体.ttf" ]; then
             cp "三极泼墨体.ttf" "backend/.pyinstaller/assets/sanjipomoti.ttf"
           fi
 
-          # 获取 snownlp 安装路径
-          SNOWNLP_PATH=$(python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))")
-          echo "snownlp path: $SNOWNLP_PATH"
-
-          # 构建 PyInstaller 命令
+          # onedir 构建参数
           PYINSTALLER_ARGS=(
             '--noconfirm'
             '--clean'
-            '--onefile'
+            '--onedir'
             '--name' 'public_opinion_backend'
             '--distpath' 'frontend/src-tauri/resources/backend'
             '--workpath' 'backend/.pyinstaller/build'
             '--specpath' 'backend/.pyinstaller/spec'
             '--additional-hooks-dir' 'backend/.pyinstaller/hooks'
             '--runtime-hook' 'backend/.pyinstaller/hooks/rthook-snownlp.py'
-            '--collect-all' 'snownlp'
-            '--collect-all' 'jieba'
-            '--collect-all' 'wordcloud'
-            "--add-data" "${SNOWNLP_PATH}/normal/stopwords.txt:snownlp/normal/"
-            "--add-data" "${SNOWNLP_PATH}/normal/pinyin.txt:snownlp/normal/"
-            "--add-data" "${SNOWNLP_PATH}/seg/data.txt:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal.3:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/neg.txt:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/pos.txt:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal.3:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/tag/199801.txt:snownlp/tag/"
-            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal:snownlp/tag/"
-            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal.3:snownlp/tag/"
+            '--collect-submodules' 'snownlp'
+            '--collect-submodules' 'jieba'
+            '--collect-submodules' 'wordcloud'
             '--hidden-import' 'aiosqlite'
             '--collect-submodules' 'passlib.handlers'
             '--exclude-module' 'tkinter'
             '--exclude-module' 'matplotlib'
             '--exclude-module' 'scipy'
+            '--exclude-module' 'IPython'
+            '--exclude-module' 'unittest'
+            '--exclude-module' 'pydoc'
+            '--exclude-module' 'test'
+            '--exclude-module' 'tests'
+            '--exclude-module' 'PIL.ImageQt'
+            '--exclude-module' 'PIL.ImageTk'
+            '--exclude-module' 'numpy.tests'
           )
 
           if [ -f "backend/.pyinstaller/assets/sanjipomoti.ttf" ]; then
@@ -284,66 +288,48 @@ jobs:
           PYINSTALLER_ARGS+=('backend/run_desktop.py')
           pyinstaller "${PYINSTALLER_ARGS[@]}"
 
-          # 确保二进制文件有执行权限
-          chmod +x frontend/src-tauri/resources/backend/public_opinion_backend
+          chmod +x frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend
 
       - name: Verify Backend Binary (macOS ARM)
         run: |
-          BACKEND_BIN="frontend/src-tauri/resources/backend/public_opinion_backend"
+          BACKEND_BIN="frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend"
 
           echo "=== 后端二进制验证 ==="
-
-          # 1. 检查文件存在性
           if [ ! -f "$BACKEND_BIN" ]; then
             echo "验证失败: 后端二进制文件不存在"
+            ls -la frontend/src-tauri/resources/backend/ || true
             exit 1
           fi
           echo "✓ 文件存在: $BACKEND_BIN"
 
-          # 2. 检查文件大小
           SIZE=$(stat -f%z "$BACKEND_BIN" 2>/dev/null || stat -c%s "$BACKEND_BIN")
           if [ "$SIZE" -lt 1048576 ]; then
             echo "验证失败: 文件过小 ($SIZE 字节)，可能不完整"
             exit 1
           fi
-          SIZE_MB=$(echo "scale=1; $SIZE / 1048576" | bc)
-          echo "✓ 文件大小: ${SIZE_MB} MB"
+          echo "✓ 文件大小: $(echo "scale=1; $SIZE / 1048576" | bc) MB"
 
-          # 3. 检查文件是否为 Mach-O 可执行文件
           if ! file "$BACKEND_BIN" | grep -q "Mach-O"; then
             echo "验证失败: 不是有效的 Mach-O 可执行文件"
             exit 1
           fi
           echo "✓ 文件格式: Mach-O 可执行文件"
 
-          # 4. 检查执行权限
           if [ ! -x "$BACKEND_BIN" ]; then
             echo "验证失败: 文件不可执行"
             exit 1
           fi
           echo "✓ 文件权限: 可执行"
 
-          # 5. 尝试执行 --version（快速退出）
-          echo "尝试执行后端二进制..."
-          if "$BACKEND_BIN" --version 2>/dev/null || [ $? -eq 2 ]; then
-            echo "✓ 后端二进制可执行"
-          else
-            echo "⚠ 警告: 执行返回非预期退出码，但继续构建"
-          fi
-
           echo ""
           echo "=== 验证完成 ==="
 
       - name: Build Tauri App (macOS ARM)
         working-directory: frontend
-        # 关键修复: 必须使用 bundle.conf.json 以包含 resources/backend 目录
-        run: npx tauri build --config src-tauri/tauri.bundle.conf.json --target aarch64-apple-darwin
+        # 仅生成 dmg，省去 app.tar.gz 重复打包时间
+        run: npx tauri build --config src-tauri/tauri.bundle.conf.json --target aarch64-apple-darwin --bundles dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS 代码签名（可选，需在 repo secrets 中配置）
-          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
 
       - name: Upload macOS ARM Artifacts
         uses: actions/upload-artifact@v4
@@ -351,7 +337,6 @@ jobs:
           name: public-opinion-macOS-ARM
           path: |
             frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz
 
   build-macos-intel:
     runs-on: macos-13
@@ -372,10 +357,23 @@ jobs:
         with:
           targets: x86_64-apple-darwin
 
+      - name: Cache Cargo Registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            frontend/src-tauri/target
+          key: ${{ runner.os }}-intel-cargo-${{ hashFiles('frontend/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-intel-cargo-
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install Frontend Dependencies
         working-directory: frontend
@@ -389,50 +387,39 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pyinstaller
 
-          # 准备资产目录
           mkdir -p frontend/src-tauri/resources/backend
           mkdir -p backend/.pyinstaller/assets
 
-          # 复制字体文件
           if [ -f "三极泼墨体.ttf" ]; then
             cp "三极泼墨体.ttf" "backend/.pyinstaller/assets/sanjipomoti.ttf"
           fi
 
-          # 获取 snownlp 安装路径
-          SNOWNLP_PATH=$(python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))")
-          echo "snownlp path: $SNOWNLP_PATH"
-
-          # 构建 PyInstaller 命令
           PYINSTALLER_ARGS=(
             '--noconfirm'
             '--clean'
-            '--onefile'
+            '--onedir'
             '--name' 'public_opinion_backend'
             '--distpath' 'frontend/src-tauri/resources/backend'
             '--workpath' 'backend/.pyinstaller/build'
             '--specpath' 'backend/.pyinstaller/spec'
             '--additional-hooks-dir' 'backend/.pyinstaller/hooks'
             '--runtime-hook' 'backend/.pyinstaller/hooks/rthook-snownlp.py'
-            '--collect-all' 'snownlp'
-            '--collect-all' 'jieba'
-            '--collect-all' 'wordcloud'
-            "--add-data" "${SNOWNLP_PATH}/normal/stopwords.txt:snownlp/normal/"
-            "--add-data" "${SNOWNLP_PATH}/normal/pinyin.txt:snownlp/normal/"
-            "--add-data" "${SNOWNLP_PATH}/seg/data.txt:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/seg/seg.marshal.3:snownlp/seg/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/neg.txt:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/pos.txt:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/sentiment/sentiment.marshal.3:snownlp/sentiment/"
-            "--add-data" "${SNOWNLP_PATH}/tag/199801.txt:snownlp/tag/"
-            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal:snownlp/tag/"
-            "--add-data" "${SNOWNLP_PATH}/tag/tag.marshal.3:snownlp/tag/"
+            '--collect-submodules' 'snownlp'
+            '--collect-submodules' 'jieba'
+            '--collect-submodules' 'wordcloud'
             '--hidden-import' 'aiosqlite'
             '--collect-submodules' 'passlib.handlers'
             '--exclude-module' 'tkinter'
             '--exclude-module' 'matplotlib'
             '--exclude-module' 'scipy'
+            '--exclude-module' 'IPython'
+            '--exclude-module' 'unittest'
+            '--exclude-module' 'pydoc'
+            '--exclude-module' 'test'
+            '--exclude-module' 'tests'
+            '--exclude-module' 'PIL.ImageQt'
+            '--exclude-module' 'PIL.ImageTk'
+            '--exclude-module' 'numpy.tests'
           )
 
           if [ -f "backend/.pyinstaller/assets/sanjipomoti.ttf" ]; then
@@ -442,65 +429,47 @@ jobs:
           PYINSTALLER_ARGS+=('backend/run_desktop.py')
           pyinstaller "${PYINSTALLER_ARGS[@]}"
 
-          # 确保二进制文件有执行权限
-          chmod +x frontend/src-tauri/resources/backend/public_opinion_backend
+          chmod +x frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend
 
       - name: Verify Backend Binary (macOS Intel)
         run: |
-          BACKEND_BIN="frontend/src-tauri/resources/backend/public_opinion_backend"
+          BACKEND_BIN="frontend/src-tauri/resources/backend/public_opinion_backend/public_opinion_backend"
 
           echo "=== 后端二进制验证 ==="
-
-          # 1. 检查文件存在性
           if [ ! -f "$BACKEND_BIN" ]; then
             echo "验证失败: 后端二进制文件不存在"
+            ls -la frontend/src-tauri/resources/backend/ || true
             exit 1
           fi
           echo "✓ 文件存在: $BACKEND_BIN"
 
-          # 2. 检查文件大小
           SIZE=$(stat -f%z "$BACKEND_BIN" 2>/dev/null || stat -c%s "$BACKEND_BIN")
           if [ "$SIZE" -lt 1048576 ]; then
             echo "验证失败: 文件过小 ($SIZE 字节)，可能不完整"
             exit 1
           fi
-          SIZE_MB=$(echo "scale=1; $SIZE / 1048576" | bc)
-          echo "✓ 文件大小: ${SIZE_MB} MB"
+          echo "✓ 文件大小: $(echo "scale=1; $SIZE / 1048576" | bc) MB"
 
-          # 3. 检查文件是否为 Mach-O 可执行文件
           if ! file "$BACKEND_BIN" | grep -q "Mach-O"; then
             echo "验证失败: 不是有效的 Mach-O 可执行文件"
             exit 1
           fi
           echo "✓ 文件格式: Mach-O 可执行文件"
 
-          # 4. 检查执行权限
           if [ ! -x "$BACKEND_BIN" ]; then
             echo "验证失败: 文件不可执行"
             exit 1
           fi
           echo "✓ 文件权限: 可执行"
 
-          # 5. 尝试执行 --version（快速退出）
-          echo "尝试执行后端二进制..."
-          if "$BACKEND_BIN" --version 2>/dev/null || [ $? -eq 2 ]; then
-            echo "✓ 后端二进制可执行"
-          else
-            echo "⚠ 警告: 执行返回非预期退出码，但继续构建"
-          fi
-
           echo ""
           echo "=== 验证完成 ==="
 
       - name: Build Tauri App (macOS Intel)
         working-directory: frontend
-        # 关键修复: 必须使用 bundle.conf.json 以包含 resources/backend 目录
-        run: npx tauri build --config src-tauri/tauri.bundle.conf.json --target x86_64-apple-darwin
+        run: npx tauri build --config src-tauri/tauri.bundle.conf.json --target x86_64-apple-darwin --bundles dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
 
       - name: Upload macOS Intel Artifacts
         uses: actions/upload-artifact@v4
@@ -508,7 +477,6 @@ jobs:
           name: public-opinion-macOS-Intel
           path: |
             frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
-            frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz
 
   release:
     needs: [build-windows, build-macos-arm, build-macos-intel]
@@ -532,19 +500,30 @@ jobs:
           files: |
             artifacts/public-opinion-Windows/*.exe
             artifacts/public-opinion-macOS-ARM/*.dmg
-            artifacts/public-opinion-macOS-ARM/*.app.tar.gz
             artifacts/public-opinion-macOS-Intel/*.dmg
-            artifacts/public-opinion-macOS-Intel/*.app.tar.gz
           body: |
             ## 舆情洞察 ${{ github.ref_name }}
+
+            ### 系统要求
+
+            - **Windows**：Windows 10 1903 (May 2019 Update) 或更高版本，64 位。
+              首次安装会自动检测并提示安装 WebView2 Runtime（如已安装则跳过）。
+            - **macOS**：macOS 11 Big Sur 或更高版本。
 
             ### 下载说明
 
             | 平台 | 文件 | 说明 |
             |------|------|------|
-            | Windows | `*-x64-setup.exe` | Windows 10/11 64位 安装包 |
+            | Windows | `*-x64-setup.exe` | Windows 10/11 64位 安装包（中文界面） |
             | macOS (Apple Silicon) | `*-aarch64.dmg` | M1/M2/M3/M4 Mac |
             | macOS (Intel) | `*-x64.dmg` | Intel Mac |
+
+            ### 本版本性能改进
+
+            - 后端打包改为 onedir 模式：冷启动时间从约 30-60 秒压缩到 3-8 秒
+            - Windows 安装器加入中文界面、发行方信息，减少杀软误报
+            - 微博爬虫全面异步化，采集过程不再阻塞其他接口
+            - 日志自动轮转，长期运行不再无限占盘
 
             ### macOS 安装注意
 

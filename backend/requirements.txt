@@ -23,8 +23,8 @@ python-dotenv==1.0.1
 # pandas/numpy 已移除 — 后端代码未使用，减少打包体积 ~150MB
 
 # ===== 网络请求 =====
-requests==2.31.0
-urllib3==2.1.0
+# 全栈统一到 aiohttp。requests / urllib3 已移除（约 3MB）。
+# 如果未来引入 PyPI 包仍传递依赖到 requests，会被 pip 自动解决，无需在此列出。
 aiohttp==3.9.1
 
 # ===== 自然语言处理 =====

@@ -123,30 +123,65 @@ export function Spider() {
     void loadRows(selectedTaskId, platform);
   }, [platform, selectedTaskId]);
 
+  // 计算"是否有正在执行的任务"，但用 useRef 持有 activeTaskId 避免 useEffect
+  // 依赖 tasks 数组每次 setTasks 都重启 interval（导致轮询叠加的 bug）。
+  const activeTaskId = useMemo(
+    () => tasks.find((task) => task.status === 'processing')?.id ?? null,
+    [tasks],
+  );
+
   useEffect(() => {
-    const activeTask = tasks.find((task) => task.status === 'processing');
-    if (!activeTask) {
+    if (activeTaskId === null) {
       return;
     }
 
-    const timer = window.setInterval(async () => {
+    let cancelled = false;
+    let timer: number | null = null;
+
+    const tick = async () => {
+      if (cancelled) return;
+      if (document.hidden) return;
       try {
-        const detail = await fetchSpiderTask(activeTask.id);
+        const detail = await fetchSpiderTask(activeTaskId);
+        if (cancelled) return;
         setTasks((prev) => prev.map((task) => (task.id === detail.id ? detail : task)));
 
         if (detail.status === 'completed' || detail.status === 'failed' || detail.status === 'cancelled') {
-          window.clearInterval(timer);
+          if (timer !== null) window.clearInterval(timer);
+          timer = null;
           await loadTasks(detail.id);
           await loadRows(detail.id, detail.task_type);
           setPlatform(detail.task_type);
         }
       } catch {
-        window.clearInterval(timer);
+        if (timer !== null) window.clearInterval(timer);
+        timer = null;
       }
-    }, 2500);
+    };
 
-    return () => window.clearInterval(timer);
-  }, [tasks]);
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (timer !== null) {
+          window.clearInterval(timer);
+          timer = null;
+        }
+      } else if (timer === null) {
+        void tick();
+        timer = window.setInterval(tick, 2500);
+      }
+    };
+
+    if (!document.hidden) {
+      timer = window.setInterval(tick, 2500);
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (timer !== null) window.clearInterval(timer);
+    };
+  }, [activeTaskId]);
 
   const handleCreateTask = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -166,9 +201,9 @@ export function Spider() {
       });
       setKeyword('');
       setScheduleRefreshKey((prev) => prev + 1);
-      
-      // 添加人为延迟以显示启动遮罩并确保后台初始子任务抵达数据库
-      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 短延迟，让首次执行的子任务有机会落库后再刷新列表
+      await new Promise(resolve => setTimeout(resolve, 800));
       await loadTasks(null, true);
     } catch (err: any) {
       setError(err?.response?.data?.detail ?? '创建自动监控任务失败。');

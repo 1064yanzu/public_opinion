@@ -11,12 +11,12 @@ interface BootstrapScreenProps {
 const DESKTOP_STEPS = [
   {
     title: '正在唤起本地后端',
-    text: '桌面版会先拉起内置 FastAPI 服务，并准备数据库、配置文件与本地目录。',
+    text: '桌面版会拉起内置 FastAPI 服务，并准备数据库、配置文件与本地目录。',
     icon: Server,
   },
   {
     title: '正在装载分析能力',
-    text: '首次启动需要初始化 Python 运行时以及数据分析依赖，时间会明显长于后续启动。',
+    text: '调度器与 NLP 资源会在后台并行就绪，不阻塞主界面。',
     icon: Sparkles,
   },
   {
@@ -56,7 +56,7 @@ export function BootstrapScreen({ mode, error, onRetry }: BootstrapScreenProps) 
 
         <p className={styles.description}>
           {mode === 'desktop'
-            ? '首次冷启动可能需要接近一分钟。后端准备完成后会自动进入应用，后续再次启动通常会明显更快。'
+            ? '通常只需几秒。后端准备完成后会自动进入应用，如果首次启动稍慢，多半是杀软在检查二进制——这是一次性的。'
             : '正在同步运行时配置与认证上下文，请稍候。'}
         </p>
 

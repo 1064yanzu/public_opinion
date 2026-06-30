@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { Loading } from '@/components/common/Loading';
 
 // 代码分割：按路由懒加载页面组件
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -19,7 +20,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="loading-screen">Loading...</div>;
+    return <Loading fullScreen text="正在校验登录状态..." />;
   }
 
   if (!isAuthenticated) {
@@ -31,7 +32,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 function App() {
   return (
-    <Suspense fallback={<div className="loading-screen">Loading...</div>}>
+    <Suspense fallback={<Loading fullScreen text="正在加载页面..." />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

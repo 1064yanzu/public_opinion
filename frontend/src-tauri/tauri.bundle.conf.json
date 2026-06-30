@@ -3,6 +3,11 @@
   "bundle": {
     "resources": [
       "resources/backend"
-    ]
+    ],
+    "publisher": "舆情洞察",
+    "copyright": "© 2026 舆情洞察",
+    "shortDescription": "实时舆情分析与监测平台",
+    "longDescription": "面向研究、政企和媒体团队的本地舆情采集、情感分析与可视化看板。",
+    "category": "Productivity"
   }
 }

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Loading } from '@/components/common/Loading';
 import { Cpu, Database, Server, AlertTriangle, CheckCircle } from 'lucide-react';
 import api from '@/services/api';
+import { usePolling } from '@/hooks/usePolling';
 import styles from './Monitor.module.css';
 
 export const Monitor: React.FC = () => {
@@ -13,32 +14,35 @@ export const Monitor: React.FC = () => {
     const [cache, setCache] = useState<any>(null);
     const [alerts, setAlerts] = useState<any[]>([]);
     const [health, setHealth] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchMonitorData();
-        const interval = setInterval(fetchMonitorData, 5000); // 5s refresh
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchMonitorData = async () => {
+    const fetchMonitorData = useCallback(async () => {
         try {
-            const [perfRes, cacheRes, alertsRes, healthRes] = await Promise.all([
+            // 用 allSettled，单个接口挂了不会让整页 loading 卡死
+            const [perfRes, cacheRes, alertsRes, healthRes] = await Promise.allSettled([
                 api.get('/monitor/performance'),
                 api.get('/monitor/cache'),
                 api.get('/monitor/alerts'),
                 api.get('/monitor/health'),
             ]);
 
-            setPerf(perfRes.data);
-            setCache(cacheRes.data);
-            setAlerts(alertsRes.data.alerts || []);
-            setHealth(healthRes.data);
+            if (perfRes.status === 'fulfilled') setPerf(perfRes.value.data);
+            if (cacheRes.status === 'fulfilled') setCache(cacheRes.value.data);
+            if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value.data.alerts || []);
+            if (healthRes.status === 'fulfilled') setHealth(healthRes.value.data);
+
+            const anyFailed = [perfRes, cacheRes, alertsRes, healthRes].some(r => r.status === 'rejected');
+            setError(anyFailed ? '部分监控数据获取失败，已展示可用数据。' : null);
             setLoading(false);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            setError(err?.response?.data?.detail ?? '监控数据获取失败。');
             setLoading(false);
         }
-    };
+    }, []);
+
+    // 5s 轮询，页面隐藏时自动暂停，避免后台标签也持续打接口
+    usePolling(fetchMonitorData, 5000);
 
     const getHealthColor = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -62,6 +66,12 @@ export const Monitor: React.FC = () => {
                     系统状态: {health?.status || '未知'}
                 </Badge>
             </div>
+
+            {error ? (
+                <div style={{ background: 'rgba(217, 108, 79, 0.08)', border: '1px solid rgba(217, 108, 79, 0.3)', color: '#8b2d2d', padding: '12px 16px', borderRadius: 12, marginBottom: 16 }}>
+                    {error}
+                </div>
+            ) : null}
 
             <div className={styles.grid}>
                 {/* Resource Usage */}

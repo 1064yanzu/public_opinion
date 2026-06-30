@@ -35,7 +35,7 @@ struct DesktopRuntime {
     is_packaged: bool,
 }
 
-const BACKEND_STARTUP_MAX_RETRIES: usize = 480;
+const BACKEND_STARTUP_MAX_RETRIES: usize = 240;
 const BACKEND_STARTUP_POLL_INTERVAL_MS: u64 = 250;
 
 fn project_root() -> PathBuf {
@@ -104,34 +104,51 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| resource_dir.clone());
 
+    // PyInstaller onedir 模式输出结构：
+    //   <DIST>/public_opinion_backend/public_opinion_backend(.exe)
+    //   <DIST>/public_opinion_backend/_internal/...
+    // 因此 build 时打包的 resources/backend 目录里会包含 public_opinion_backend/ 子目录。
+    // 老版本 onefile 模式直接是单文件，路径里没有这层 wrap，保留兼容。
     let candidates = [
-        // Tauri resource_dir 下的 backend 子目录 (macOS .app/Contents/Resources/backend/)
+        // === onedir 优先：multi-file bundle ===
+        // macOS .app/Contents/Resources/backend/public_opinion_backend/<exe>
+        resource_dir
+            .join("backend")
+            .join("public_opinion_backend")
+            .join(executable),
+        // Tauri 旧版/某些通道仍在 resources/ 层下
+        resource_dir
+            .join("resources")
+            .join("backend")
+            .join("public_opinion_backend")
+            .join(executable),
+        // Windows NSIS 安装根目录附近
+        exe_dir
+            .join("backend")
+            .join("public_opinion_backend")
+            .join(executable),
+        exe_dir
+            .join("resources")
+            .join("backend")
+            .join("public_opinion_backend")
+            .join(executable),
+        exe_dir
+            .join("data")
+            .join("backend")
+            .join("public_opinion_backend")
+            .join(executable),
+        // === onefile 兼容：单文件结构（老安装包/dev）===
         resource_dir.join("backend").join(executable),
-        // Tauri NSIS data 目录 (Windows: <install>/data/backend/)
-        resource_dir
-            .join("backend")
-            .join("public_opinion_backend")
-            .join(executable),
-        resource_dir
-            .join("resources")
-            .join("backend")
-            .join(executable),
-        resource_dir
-            .join("resources")
-            .join("backend")
-            .join("public_opinion_backend")
-            .join(executable),
-        // Windows NSIS: 可能直接放在安装根目录
+        resource_dir.join("resources").join("backend").join(executable),
         exe_dir.join("backend").join(executable),
         exe_dir.join("resources").join("backend").join(executable),
         exe_dir.join(executable),
-        // 同目录下查找
         exe_dir.join("data").join("backend").join(executable),
     ];
 
-    for candidate in candidates {
+    for candidate in &candidates {
         if candidate.exists() {
-            return Ok(candidate);
+            return Ok(candidate.clone());
         }
     }
 
@@ -173,7 +190,7 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
         }
     }
 
-    // 如果存在 backend 子目录，也列出其内容
+    // 如果存在 backend 子目录，也列出其内容（含 onedir 的 bundle 子目录）
     let backend_dir = resource_dir.join("backend");
     if backend_dir.exists() {
         dir_listings.push_str(&format!("\nbackend 子目录 ({}):\n", backend_dir.display()));
@@ -181,7 +198,21 @@ fn packaged_backend_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
             Ok(entries) => {
                 for entry in entries.filter_map(|e| e.ok()) {
                     let name = entry.file_name();
-                    dir_listings.push_str(&format!("  - {}\n", name.to_string_lossy()));
+                    let path = entry.path();
+                    if path.is_dir() {
+                        dir_listings.push_str(&format!("  [目录] {}/\n", name.to_string_lossy()));
+                        // 进一步列出 onedir bundle 内部
+                        if let Ok(inner) = fs::read_dir(&path) {
+                            for sub in inner.filter_map(|e| e.ok()).take(20) {
+                                dir_listings.push_str(&format!(
+                                    "    └ {}\n",
+                                    sub.file_name().to_string_lossy()
+                                ));
+                            }
+                        }
+                    } else {
+                        dir_listings.push_str(&format!("  [文件] {}\n", name.to_string_lossy()));
+                    }
                 }
             }
             Err(e) => {

@@ -1,7 +1,10 @@
 """
 FastAPI 主应用。
 """
+import asyncio
 import logging
+import logging.handlers
+import os
 import sys
 from contextlib import asynccontextmanager
 
@@ -23,11 +26,111 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+
+def _setup_logging() -> None:
+    """配置带轮转的日志输出，避免长期运行日志膨胀到 GB 级。"""
+    root = logging.getLogger()
+    root.setLevel(logging.INFO if not settings.DEBUG else logging.DEBUG)
+
+    fmt = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+    # 移除已存在的同源 handler，避免重启时重复
+    for handler in list(root.handlers):
+        root.removeHandler(handler)
+
+    # 控制台输出（桌面端会被 Tauri 重定向到 backend.log）
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(fmt)
+    root.addHandler(stream_handler)
+
+    # 文件日志：10MB × 5 份，最多占 50MB
+    try:
+        log_dir = settings.LOG_DIR
+        os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.handlers.RotatingFileHandler(
+            os.path.join(log_dir, "app.log"),
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
+        )
+        file_handler.setFormatter(fmt)
+        root.addHandler(file_handler)
+    except Exception as exc:  # 不阻塞启动
+        root.warning("RotatingFileHandler 初始化失败: %s", exc)
+
+
+_setup_logging()
 logger = logging.getLogger(__name__)
+
+
+async def _periodic_storage_maintenance() -> None:
+    """每 6 小时执行：清理过期词云图、checkpoint WAL、optimize。"""
+    from datetime import datetime, timedelta
+    from sqlalchemy import text
+    from app.database import async_engine
+
+    while True:
+        try:
+            # === 1. 清理 7 天前的词云图片 ===
+            try:
+                wc_dir = settings.WORDCLOUD_DIR
+                cutoff = datetime.now() - timedelta(days=7)
+                if os.path.isdir(wc_dir):
+                    removed = 0
+                    for name in os.listdir(wc_dir):
+                        full = os.path.join(wc_dir, name)
+                        if not os.path.isfile(full):
+                            continue
+                        try:
+                            mtime = datetime.fromtimestamp(os.path.getmtime(full))
+                            if mtime < cutoff:
+                                os.remove(full)
+                                removed += 1
+                        except OSError:
+                            continue
+                    if removed:
+                        logger.info("清理过期词云图片: %d 张", removed)
+            except Exception as exc:
+                logger.warning("词云清理失败: %s", exc)
+
+            # === 2. 清理 7 天前的报告 ===
+            try:
+                rp_dir = settings.REPORTS_DIR
+                cutoff = datetime.now() - timedelta(days=7)
+                if os.path.isdir(rp_dir):
+                    removed = 0
+                    for name in os.listdir(rp_dir):
+                        full = os.path.join(rp_dir, name)
+                        if not os.path.isfile(full):
+                            continue
+                        try:
+                            mtime = datetime.fromtimestamp(os.path.getmtime(full))
+                            if mtime < cutoff:
+                                os.remove(full)
+                                removed += 1
+                        except OSError:
+                            continue
+                    if removed:
+                        logger.info("清理过期报告: %d 份", removed)
+            except Exception as exc:
+                logger.warning("报告清理失败: %s", exc)
+
+            # === 3. SQLite checkpoint + optimize ===
+            try:
+                async with async_engine.begin() as conn:
+                    await conn.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+                    await conn.execute(text("PRAGMA optimize;"))
+                logger.debug("SQLite wal_checkpoint + optimize 完成")
+            except Exception as exc:
+                logger.warning("SQLite 维护失败: %s", exc)
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.error("存储维护任务异常: %s", exc)
+
+        # 每 6 小时跑一次
+        await asyncio.sleep(6 * 60 * 60)
 
 
 @asynccontextmanager
@@ -37,21 +140,45 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         logger.info("数据库初始化成功")
-    except Exception as exc:  # pragma: no cover - 启动日志
+    except Exception as exc:
         logger.error("数据库初始化失败: %s", exc)
 
-    # 启动定时采集调度器，恢复持久化的定时任务
-    try:
-        from app.services.scheduler import scheduler_service
-        await scheduler_service.start()
-        logger.info("定时采集调度器已启动")
-    except Exception as exc:
-        logger.error("调度器启动失败: %s", exc)
+    # 启动定时采集调度器 — 用 create_task 不阻塞 lifespan，
+    # 让 FastAPI 立刻准备好响应 health 检查，前端尽快越过启动屏。
+    scheduler_task: asyncio.Task | None = None
+
+    async def _start_scheduler():
+        try:
+            from app.services.scheduler import scheduler_service
+            await scheduler_service.start()
+            logger.info("定时采集调度器已启动")
+        except Exception as exc:
+            logger.error("调度器启动失败: %s", exc)
+
+    scheduler_task = asyncio.create_task(_start_scheduler())
+
+    # 启动存储维护后台任务
+    maintenance_task = asyncio.create_task(_periodic_storage_maintenance())
 
     yield
 
     logger.info("应用关闭中...")
-    # 优雅停止调度器
+
+    # 停止维护任务
+    maintenance_task.cancel()
+    try:
+        await maintenance_task
+    except (asyncio.CancelledError, Exception):
+        pass
+
+    # 等调度器 start 任务结束（如果还没好就放掉）
+    if scheduler_task and not scheduler_task.done():
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except (asyncio.CancelledError, Exception):
+            pass
+
     try:
         from app.services.scheduler import scheduler_service
         await scheduler_service.stop()
@@ -72,17 +199,15 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
-        default_response_class=ORJSONResponse,  # 使用 orjson 加速 JSON 序列化
+        default_response_class=ORJSONResponse,
     )
 
     # 确保静态目录存在（frozen/首次启动时可能还未创建）
-    import os
     os.makedirs(settings.STATIC_DIR, exist_ok=True)
     os.makedirs(settings.REPORTS_DIR, exist_ok=True)
 
     app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
     app.mount("/static/reports", StaticFiles(directory=settings.REPORTS_DIR), name="reports")
-
 
     app.add_middleware(
         CORSMiddleware,
@@ -92,6 +217,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # 路由注册：函数级导入仍然会触发 router 模块加载，但 lifespan 已通过
+    # asyncio.create_task 把调度器/维护任务挪出主路径，主要冷启动开销在这。
     from app.routers import auth, spider, analysis, monitor, page, ai, advanced, dashboard, reports, system
     from app.routers import scheduler
 

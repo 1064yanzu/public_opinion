@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
+import { Loading } from '@/components/common/Loading';
 import { Plus, TrendingUp, Activity, MessageSquare } from 'lucide-react';
 import { TrendChart, SentimentPieChart } from '@/components/charts';
 import { useAuth } from '@/context/AuthContext';
@@ -21,69 +22,95 @@ export const Dashboard: React.FC = () => {
     const [influencers, setInfluencers] = useState<any[]>([]);
     const [wordcloudUrl, setWordcloudUrl] = useState<string | null>(null);
     const [wordcloudGenerating, setWordcloudGenerating] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
+        let mounted = true;
+        const controller = new AbortController();
+
         const fetchData = async () => {
-            try {
-                // 1. Basic Stats
-                api.get('/dashboard/stats').then(statsRes => {
-                    setStats(statsRes.data);
-                    if (statsRes.data.sentiment_distribution) {
-                        setSentiments(statsRes.data.sentiment_distribution);
-                    }
-                }).catch(err => console.error("Failed to load basic stats", err));
+            // 用 allSettled 并发拉取，任一接口失败不会拖死其他卡片
+            const results = await Promise.allSettled([
+                api.get('/dashboard/stats', { signal: controller.signal }),
+                api.get('/dashboard/trend', { signal: controller.signal }),
+                api.get('/spider/tasks?page_size=5', { signal: controller.signal }),
+                api.get('/dashboard/influencers', { signal: controller.signal }),
+            ]);
 
-                // 2. Trend Data 
-                api.get('/dashboard/trend').then(chartRes => {
-                    if (chartRes.data.dates) {
-                        const data = chartRes.data.dates.map((date: string, i: number) => ({
-                            time: date,
-                            value: chartRes.data.values[i]
-                        }));
-                        setTrendData(data);
-                    }
-                }).catch(err => console.error("Failed to load trend data", err));
+            if (!mounted) return;
 
-                // 3. Latest Tasks
-                api.get('/spider/tasks?page_size=5').then(tasksRes => {
-                    setTasks(tasksRes.data.tasks || []);
-                }).catch(err => console.error("Failed to load generic tasks", err));
+            const [statsRes, trendRes, tasksRes, infRes] = results;
+            const failures: string[] = [];
 
-                // 4. Influencers
-                api.get('/dashboard/influencers').then(infRes => {
-                    setInfluencers(infRes.data.influencers || []);
-                }).catch(err => console.error("Failed to load influencers", err));
+            if (statsRes.status === 'fulfilled') {
+                setStats(statsRes.value.data);
+                if (statsRes.value.data.sentiment_distribution) {
+                    setSentiments(statsRes.value.data.sentiment_distribution);
+                }
+            } else {
+                failures.push('概览统计');
+            }
 
-                // 5. WordCloud Generation
-                setWordcloudGenerating(true);
-                generateWordcloud().then((res) => {
+            if (trendRes.status === 'fulfilled') {
+                if (trendRes.value.data.dates) {
+                    const data = trendRes.value.data.dates.map((date: string, i: number) => ({
+                        time: date,
+                        value: trendRes.value.data.values[i],
+                    }));
+                    setTrendData(data);
+                }
+            } else {
+                failures.push('热度趋势');
+            }
+
+            if (tasksRes.status === 'fulfilled') {
+                setTasks(tasksRes.value.data.tasks || []);
+            } else {
+                failures.push('采集任务');
+            }
+
+            if (infRes.status === 'fulfilled') {
+                setInfluencers(infRes.value.data.influencers || []);
+            } else {
+                failures.push('传播主体');
+            }
+
+            // 词云独立处理（耗时较长，且容易失败）
+            setWordcloudGenerating(true);
+            generateWordcloud()
+                .then((res) => {
+                    if (!mounted) return;
                     if (res.image_url) {
                         setWordcloudUrl(resolveBackendUrl(res.image_url));
                     }
-                }).catch((err) => {
-                    console.error("Failed to generate wordcloud", err);
-                }).finally(() => {
-                    setWordcloudGenerating(false);
+                })
+                .catch(() => {
+                    if (mounted) failures.push('词云图');
+                })
+                .finally(() => {
+                    if (mounted) setWordcloudGenerating(false);
                 });
 
-            } catch (error) {
-                console.error("Failed to load dashboard data (critical)", error);
-            } finally {
-                // Delay loading to allow initial promises to fire
-                setTimeout(() => setLoading(false), 500);
+            if (failures.length > 0) {
+                setLoadError(`部分数据加载失败：${failures.join('、')}。可下拉刷新或稍后重试。`);
+            } else {
+                setLoadError(null);
             }
+            setLoading(false);
         };
 
-        fetchData();
+        void fetchData();
+        return () => {
+            mounted = false;
+            controller.abort();
+        };
     }, []);
 
 
     if (loading) {
         return (
             <MainLayout>
-                <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ animation: 'spin 1s linear infinite' }}>Loading...</div>
-                </div>
+                <Loading fullScreen text="正在加载概览数据..." />
             </MainLayout>
         );
     }
@@ -99,6 +126,12 @@ export const Dashboard: React.FC = () => {
                     <Button icon={<Plus size={18} />}>新建分析</Button>
                 </Link>
             </header>
+
+            {loadError ? (
+                <div style={{ background: 'rgba(217, 108, 79, 0.08)', border: '1px solid rgba(217, 108, 79, 0.3)', color: '#8b2d2d', padding: '12px 16px', borderRadius: 12, marginBottom: 16 }}>
+                    {loadError}
+                </div>
+            ) : null}
 
             {/* Summary Cards */}
             <div className={styles.summaryGrid}>

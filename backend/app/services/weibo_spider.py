@@ -1,19 +1,18 @@
 """
 微博爬虫服务
-基于原项目 spiders/articles_spider.py 的逻辑重写
+
+基于原项目 spiders/articles_spider.py 的逻辑重写，并迁移到 aiohttp，
+确保在 FastAPI 异步路由中不再阻塞事件循环。
 """
 import re
-import time
 import random
-import requests
+import asyncio
+import aiohttp
 import json
 from urllib.parse import quote
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-from requests.cookies import create_cookie
 from sqlalchemy.ext.asyncio import AsyncSession
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from app.models.weibo import WeiboData
 from app.models.task import Task
@@ -21,13 +20,13 @@ from app.config import settings
 
 
 class WeiboSpider:
-    """微博爬虫类"""
-    
+    """微博爬虫类（aiohttp 异步实现）"""
+
     BASE_URL = "https://m.weibo.cn/api/container/getIndex"
     SEARCH_URL = "https://m.weibo.cn/search"
     VISITOR_GEN_URL = "https://passport.weibo.com/visitor/genvisitor"
     VISITOR_INCAR_URL = "https://passport.weibo.com/visitor/visitor"
-    
+
     USER_AGENTS = [
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
@@ -36,45 +35,44 @@ class WeiboSpider:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
     ]
-    
+
     def __init__(self, cookie: str = ""):
-        self.session = self._create_session()
         self.cookie = cookie or settings.WEIBO_COOKIE
+        self.session: Optional[aiohttp.ClientSession] = None
+        self.cookie_jar = aiohttp.CookieJar(unsafe=True)
         self.request_count = 0
         self.success_count = 0
         self.fail_count = 0
         self.last_error = ""
         self.visitor_initialized = False
-    
-    def _create_session(self) -> requests.Session:
-        """创建优化的请求会话"""
-        session = requests.Session()
-        
-        # 配置重试策略
-        retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]
-        )
-        
-        adapter = HTTPAdapter(
-            max_retries=retry_strategy,
-            pool_connections=10,
-            pool_maxsize=10,
-            pool_block=False
-        )
-        
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        
-        return session
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """获取或创建 aiohttp 会话。"""
+        if self.session is None or self.session.closed:
+            timeout = aiohttp.ClientTimeout(total=30, connect=10)
+            connector = aiohttp.TCPConnector(limit=10, ssl=False)
+            self.session = aiohttp.ClientSession(
+                timeout=timeout,
+                connector=connector,
+                cookie_jar=self.cookie_jar,
+            )
+        return self.session
+
+    async def close(self):
+        if self.session and not self.session.closed:
+            await self.session.close()
 
     def _seed_cookie(self, name: str, value: str):
         if not value:
             return
+        # aiohttp CookieJar：通过 update_cookies 注入；domain 通过 response URL 推导
+        # 对于纯写入，用 morsels：构造 SimpleCookie 比较繁琐，统一调用 update_cookies
+        from yarl import URL
         for domain in (".weibo.com", ".weibo.cn", "m.weibo.cn", "passport.weibo.com"):
-            self.session.cookies.set_cookie(create_cookie(name=name, value=value, domain=domain))
+            try:
+                self.cookie_jar.update_cookies({name: value}, response_url=URL(f"https://{domain.lstrip('.')}/"))
+            except Exception:
+                continue
 
     def _seed_cookie_header(self):
         if not self.cookie:
@@ -86,21 +84,12 @@ class WeiboSpider:
             self._seed_cookie(name.strip(), value.strip())
 
     def _get_cookie_value(self, name: str) -> Optional[str]:
-        for domain in ("m.weibo.cn", ".weibo.cn", ".weibo.com", "passport.weibo.com", None):
-            try:
-                if domain is None:
-                    for cookie in self.session.cookies:
-                        if cookie.name == name and cookie.value:
-                            return cookie.value
-                else:
-                    value = self.session.cookies.get(name, domain=domain)
-                    if value:
-                        return value
-            except Exception:
-                continue
+        for cookie in self.cookie_jar:
+            if cookie.key == name and cookie.value:
+                return cookie.value
         return None
 
-    def _prepare_visitor_session(self, keyword: str):
+    async def _prepare_visitor_session(self, keyword: str):
         if self.visitor_initialized:
             return
         if self.cookie:
@@ -108,16 +97,20 @@ class WeiboSpider:
             self.visitor_initialized = True
             return
 
+        session = await self._get_session()
         callback = "gen_callback"
-        response = self.session.get(
+        async with session.get(
             f"{self.VISITOR_GEN_URL}?cb={callback}",
             headers={"User-Agent": random.choice(self.USER_AGENTS), "Referer": "https://weibo.com/"},
-            timeout=30,
-        )
-        if response.status_code != 200 or "gen_callback(" not in response.text:
-            raise RuntimeError(f"微博访客初始化失败，genvisitor 返回 HTTP {response.status_code}")
+        ) as response:
+            if response.status != 200:
+                raise RuntimeError(f"微博访客初始化失败，genvisitor 返回 HTTP {response.status}")
+            text = await response.text()
 
-        match = re.search(r"gen_callback\((.*)\)", response.text)
+        if "gen_callback(" not in text:
+            raise RuntimeError("微博访客初始化失败，未匹配 gen_callback")
+
+        match = re.search(r"gen_callback\((.*)\)", text)
         if not match:
             raise RuntimeError("微博访客初始化失败，无法解析 genvisitor 响应")
 
@@ -126,7 +119,9 @@ class WeiboSpider:
         if not tid:
             raise RuntimeError("微博访客初始化失败，未获取到 tid")
 
-        incarnate = self.session.get(
+        # 用 loop.time 代替 time.time 避免 PyInstaller 下额外开销
+        rand_seed = str(asyncio.get_event_loop().time())
+        async with session.get(
             self.VISITOR_INCAR_URL,
             params={
                 "a": "incarnate",
@@ -136,40 +131,45 @@ class WeiboSpider:
                 "gc": "",
                 "cb": "cross_domain",
                 "from": "weibo",
-                "_rand": str(time.time()),
+                "_rand": rand_seed,
             },
             headers={"User-Agent": random.choice(self.USER_AGENTS), "Referer": "https://weibo.com/"},
-            timeout=30,
-        )
-        if incarnate.status_code != 200 or "cross_domain(" not in incarnate.text:
-            raise RuntimeError(f"微博访客初始化失败，incarnate 返回 HTTP {incarnate.status_code}")
+        ) as incarnate:
+            if incarnate.status != 200:
+                raise RuntimeError(f"微博访客初始化失败，incarnate 返回 HTTP {incarnate.status}")
+            incarnate_text = await incarnate.text()
 
-        match = re.search(r"cross_domain\((.*)\)", incarnate.text)
+        if "cross_domain(" not in incarnate_text:
+            raise RuntimeError("微博访客初始化失败，未匹配 cross_domain")
+
+        match = re.search(r"cross_domain\((.*)\)", incarnate_text)
         if match:
             payload = json.loads(match.group(1))
             visitor_data = payload.get("data", {})
             self._seed_cookie("SUB", visitor_data.get("sub", ""))
             self._seed_cookie("SUBP", visitor_data.get("subp", ""))
 
-        for cookie_name in ("SUB", "SUBP", "SVB", "SRT", "SRF"):
-            cookie_value = self._get_cookie_value(cookie_name)
-            if cookie_value:
-                self._seed_cookie(cookie_name, cookie_value)
-
-        self.session.get(
-            self.SEARCH_URL,
-            params={"containerid": f"100103type=1&q={keyword}"},
-            headers={"User-Agent": random.choice(self.USER_AGENTS)},
-            timeout=30,
-        )
+        # 触发一次 search，让服务端补齐其他 cookie
+        try:
+            async with session.get(
+                self.SEARCH_URL,
+                params={"containerid": f"100103type=1&q={keyword}"},
+                headers={"User-Agent": random.choice(self.USER_AGENTS)},
+            ) as _:
+                pass
+        except Exception:
+            pass
 
         self.visitor_initialized = True
-    
+
     def _get_headers(self, keyword: str = "") -> Dict[str, str]:
         """获取随机请求头"""
         user_agent = random.choice(self.USER_AGENTS)
         encoded_keyword = quote(keyword, safe="") if keyword else ""
-        referer = f'https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D{encoded_keyword}' if keyword else 'https://m.weibo.cn/'
+        referer = (
+            f'https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D{encoded_keyword}'
+            if keyword else 'https://m.weibo.cn/'
+        )
         headers = {
             'User-Agent': user_agent,
             'Accept': 'application/json, text/plain, */*',
@@ -199,24 +199,22 @@ class WeiboSpider:
         if self.cookie:
             headers['Cookie'] = self.cookie
         return headers
-    
+
     @staticmethod
     def _trans_time(time_str: str) -> Optional[datetime]:
         """转换GMT时间为datetime对象"""
         if not time_str or time_str == 'N/A':
             return None
-            
+
         try:
             GMT_FORMAT = '%a %b %d %H:%M:%S +0800 %Y'
             return datetime.strptime(time_str, GMT_FORMAT)
         except ValueError:
             pass
-        
-        # 尝试处理相对时间
+
         try:
             now = datetime.now()
             if "分钟前" in time_str:
-                minutes = int(re.search(r'(\d+)', time_str).group(1))
                 return now.replace(second=0, microsecond=0)
             elif "小时前" in time_str:
                 return now.replace(minute=0, second=0, microsecond=0)
@@ -224,29 +222,26 @@ class WeiboSpider:
                 return now.replace(hour=12, minute=0, second=0, microsecond=0)
             elif "今天" in time_str:
                 return now.replace(second=0, microsecond=0)
-        except:
+        except Exception:
             pass
-        
+
         return None
-    
+
     @staticmethod
     def _clean_content(text: str) -> str:
-        """清理HTML标签"""
         if not text:
             return ""
         return re.sub(r'<[^>]+>', '', text).strip()
-    
+
     def _process_mblog(self, mblog: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """处理单条微博数据"""
         try:
             if not mblog:
                 return None
-            
+
             user = mblog.get('user', {}) or {}
             weibo_id = str(mblog.get('id', ''))
             bid = mblog.get('bid', '')
-            
-            # 获取用户性别
+
             gender = user.get('gender', '')
             if gender == 'm':
                 gender = '男'
@@ -254,7 +249,7 @@ class WeiboSpider:
                 gender = '女'
             else:
                 gender = '未知'
-            
+
             return {
                 'weibo_id': weibo_id,
                 'content': self._clean_content(mblog.get('text', '')),
@@ -273,44 +268,44 @@ class WeiboSpider:
         except Exception as e:
             print(f"处理微博数据出错: {e}")
             return None
-    
-    def _crawl_page(self, keyword: str, page: int) -> List[Dict[str, Any]]:
-        """爬取单页微博数据"""
+
+    async def _crawl_page(self, keyword: str, page: int) -> List[Dict[str, Any]]:
+        """爬取单页微博数据（异步）"""
         try:
-            self._prepare_visitor_session(keyword)
+            await self._prepare_visitor_session(keyword)
+            session = await self._get_session()
             params = {
                 "containerid": f"100103type=1&q={keyword}",
                 "page_type": "searchall",
             }
             if page > 1:
-                params["page"] = page
-            
+                params["page"] = str(page)
+
             self.request_count += 1
-            
-            response = self.session.get(
+
+            async with session.get(
                 self.BASE_URL,
                 params=params,
                 headers=self._get_headers(keyword),
                 allow_redirects=False,
-                timeout=30
-            )
-            
-            if response.status_code == 302:
-                self.last_error = "微博请求被重定向到访客/登录入口，当前 Cookie 未生效。请确认已点击保存配置，并重启当前桌面后端。"
-                self.fail_count += 1
-                return []
+            ) as response:
+                if response.status == 302:
+                    self.last_error = "微博请求被重定向到访客/登录入口，当前 Cookie 未生效。请确认已点击保存配置，并重启当前桌面后端。"
+                    self.fail_count += 1
+                    return []
 
-            if response.status_code != 200:
-                print(f"页面 {page} 请求失败: HTTP {response.status_code}")
-                if response.status_code == 432:
-                    self.last_error = "微博接口返回 HTTP 432，当前请求已被风控拦截。请在设置页补充可用的微博 Cookie 后重试。"
-                else:
-                    self.last_error = f"微博接口请求失败，HTTP {response.status_code}"
-                self.fail_count += 1
-                return []
-            
-            data = response.json()
-            
+                if response.status != 200:
+                    print(f"页面 {page} 请求失败: HTTP {response.status}")
+                    if response.status == 432:
+                        self.last_error = "微博接口返回 HTTP 432，当前请求已被风控拦截。请在设置页补充可用的微博 Cookie 后重试。"
+                    else:
+                        self.last_error = f"微博接口请求失败，HTTP {response.status}"
+                    self.fail_count += 1
+                    return []
+
+                # 微博偶尔会返回 text/plain，aiohttp 默认会校验 content-type，强制 None 解开
+                data = await response.json(content_type=None)
+
             if data.get("ok") == -100:
                 self.last_error = "微博搜索接口当前要求登录态。自动访客态已完成，但官方仍返回 signin，请在设置页填写有效微博 Cookie。"
                 self.fail_count += 1
@@ -321,19 +316,19 @@ class WeiboSpider:
                 self.last_error = "微博接口返回数据格式异常，可能是登录态失效或请求被限制。"
                 self.fail_count += 1
                 return []
-            
+
             cards = data.get('data', {}).get('cards', [])
             weibos = []
-            
+
             for card in cards:
                 card_type = card.get('card_type')
-                
+
                 if card_type == 9:
                     mblog = card.get('mblog', {})
                     weibo = self._process_mblog(mblog)
                     if weibo:
                         weibos.append(weibo)
-                        
+
                 elif card_type == 11:
                     card_group = card.get('card_group', [])
                     for sub_card in card_group:
@@ -342,12 +337,12 @@ class WeiboSpider:
                             weibo = self._process_mblog(mblog)
                             if weibo:
                                 weibos.append(weibo)
-            
+
             self.success_count += 1
             print(f"页面 {page} 获取到 {len(weibos)} 条数据")
             return weibos
-            
-        except requests.exceptions.Timeout:
+
+        except asyncio.TimeoutError:
             print(f"页面 {page} 请求超时")
             self.last_error = "微博接口请求超时，请稍后重试。"
             self.fail_count += 1
@@ -362,77 +357,70 @@ class WeiboSpider:
             self.last_error = f"微博爬取异常: {e}"
             self.fail_count += 1
             return []
-    
-    def search(self, keyword: str, max_page: int = 10) -> List[Dict[str, Any]]:
+
+    async def search(self, keyword: str, max_page: int = 10) -> List[Dict[str, Any]]:
         """
-        搜索微博
-        
+        搜索微博（异步）
+
         Args:
             keyword: 搜索关键词
             max_page: 最大页数 (1-50)
-            
+
         Returns:
             微博数据列表
         """
         print(f"开始爬取微博: keyword={keyword}, max_page={max_page}")
-        
-        # 限制最大页数
+
         max_page = min(max(max_page, 1), 50)
-        
-        all_weibos = []
-        seen_ids = set()
-        
-        for page in range(1, max_page + 1):
-            weibos = self._crawl_page(keyword, page)
-            
-            # 去重
-            for weibo in weibos:
-                weibo_id = weibo.get('weibo_id')
-                if weibo_id and weibo_id not in seen_ids:
-                    seen_ids.add(weibo_id)
-                    all_weibos.append(weibo)
-            
-            # 延迟请求，避免被封
-            if page < max_page:
-                delay = random.uniform(0.5, 1.5)
-                time.sleep(delay)
-        
-        print(f"爬取完成: 总计 {len(all_weibos)} 条数据, 成功 {self.success_count} 页, 失败 {self.fail_count} 页")
-        return all_weibos
-    
+
+        all_weibos: List[Dict[str, Any]] = []
+        seen_ids: set = set()
+
+        try:
+            for page in range(1, max_page + 1):
+                weibos = await self._crawl_page(keyword, page)
+
+                for weibo in weibos:
+                    weibo_id = weibo.get('weibo_id')
+                    if weibo_id and weibo_id not in seen_ids:
+                        seen_ids.add(weibo_id)
+                        all_weibos.append(weibo)
+
+                # 异步延迟，不阻塞事件循环
+                if page < max_page:
+                    await asyncio.sleep(random.uniform(0.5, 1.5))
+
+            print(f"爬取完成: 总计 {len(all_weibos)} 条数据, 成功 {self.success_count} 页, 失败 {self.fail_count} 页")
+            return all_weibos
+        finally:
+            await self.close()
+
     async def search_and_save(
         self,
         keyword: str,
         max_page: int,
         task: Task,
-        db: AsyncSession
+        db: AsyncSession,
     ) -> int:
-        """
-        搜索并保存到数据库
-        
-        Returns:
-            保存的数据数量
-        """
+        """搜索并保存到数据库"""
         from app.services.nlp_analyzer import NLPAnalyzer
-        
-        # 同步爬取
-        weibos = self.search(keyword, max_page)
-        
+
+        weibos = await self.search(keyword, max_page)
+
         if not weibos:
             print("未获取到任何数据")
             raise RuntimeError(self.last_error or "微博未返回任何数据，请检查关键词或登录态。")
-        
-        # 情感分析
+
+        # 情感分析（同步，但通过 to_thread 移出事件循环避免阻塞其他请求）
         analyzer = NLPAnalyzer()
         contents = [w.get('content', '') for w in weibos]
-        sentiments = analyzer.batch_sentiment_analysis(contents)
-        
-        # 保存到数据库
+        sentiments = await asyncio.to_thread(analyzer.batch_sentiment_analysis, contents)
+
         saved_count = 0
         for i, weibo in enumerate(weibos):
             try:
                 sentiment = sentiments[i] if i < len(sentiments) else {'label': 'neutral', 'score': 0.5}
-                
+
                 weibo_data = WeiboData(
                     task_id=task.id,
                     weibo_id=weibo.get('weibo_id', ''),
@@ -456,14 +444,14 @@ class WeiboSpider:
             except Exception as e:
                 print(f"保存微博数据出错: {e}")
                 continue
-        
+
         await db.commit()
         print(f"成功保存 {saved_count} 条数据到数据库")
         return saved_count
 
 
-# 便捷函数
+# 便捷函数（同步包装，给非异步调用方使用）
 def crawl_weibo(keyword: str, max_page: int = 10) -> List[Dict[str, Any]]:
-    """便捷的微博爬取函数"""
+    """便捷的微博爬取函数（仅供同步上下文使用）"""
     spider = WeiboSpider()
-    return spider.search(keyword, max_page)
+    return asyncio.run(spider.search(keyword, max_page))

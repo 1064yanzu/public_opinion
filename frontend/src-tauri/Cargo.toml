@@ -19,3 +19,17 @@ rfd = "0.15.4"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+
+# Release 体积 + 性能优化
+# lto = "thin"   ：链接期跨 crate 内联，比 "fat" 编译快得多，体积/速度收益 ~80%
+# codegen-units = 1：单 CU 让 LLVM 做完整优化（编译稍慢）
+# opt-level = "z"：以体积优先
+# strip = true   ：丢掉符号表
+# panic = "abort"：去掉 unwinding 表，进一步减小二进制
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = "z"
+strip = true
+panic = "abort"
+incremental = false

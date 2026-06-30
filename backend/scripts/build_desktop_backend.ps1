@@ -3,8 +3,9 @@
 .SYNOPSIS
     构建桌面后端 PyInstaller 二进制 (Windows)
 .DESCRIPTION
-    等效于 build_desktop_backend.sh 的 Windows PowerShell 版本。
-    输出到 frontend/src-tauri/resources/backend/public_opinion_backend.exe
+    采用 --onedir 模式：NSIS 安装时一次性解压，运行时不再触发杀软实时扫描，
+    冷启动从 30-60 秒压缩到 3-8 秒。
+    输出到 frontend/src-tauri/resources/backend/public_opinion_backend/
 #>
 param(
     [switch]$Clean
@@ -48,28 +49,31 @@ if (Test-Path $FONT_FILE) {
     Copy-Item $FONT_FILE $STAGED_FONT_FILE -Force
 }
 
-# 获取 snownlp 安装路径
-$snownlpPath = python -c "import snownlp, os; print(os.path.dirname(snownlp.__file__))"
-Write-Host "snownlp path: $snownlpPath"
-
 # ===== 查找 MSVC 运行时 DLL =====
 $pythonDir = python -c "import sys; print(sys.prefix)"
 $crtDlls = @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")
 $crtArgs = @()
 
+# System32（64位）和 SysWOW64（32位）都要查，覆盖所有干净的 Windows
+$searchRoots = @(
+    $pythonDir,
+    (Join-Path $env:SystemRoot "System32"),
+    (Join-Path $env:SystemRoot "SysWOW64")
+)
+
 foreach ($dll in $crtDlls) {
-    $dllPath = Join-Path $pythonDir $dll
-    if (Test-Path $dllPath) {
-        Write-Host "Found CRT DLL: $dllPath"
-        $crtArgs += @("--add-binary", "${dllPath};.")
-    } else {
-        $sysPath = Join-Path $env:SystemRoot "System32" $dll
-        if (Test-Path $sysPath) {
-            Write-Host "Found CRT DLL (system): $sysPath"
-            $crtArgs += @("--add-binary", "${sysPath};.")
-        } else {
-            Write-Warning "CRT DLL not found: $dll"
+    $found = $false
+    foreach ($root in $searchRoots) {
+        $dllPath = Join-Path $root $dll
+        if (Test-Path $dllPath) {
+            Write-Host "Found CRT DLL: $dllPath"
+            $crtArgs += @("--add-binary", "${dllPath};.")
+            $found = $true
+            break
         }
+    }
+    if (-not $found) {
+        Write-Warning "CRT DLL not found in any search root: $dll"
     }
 }
 
@@ -77,7 +81,8 @@ foreach ($dll in $crtDlls) {
 $pyinstallerArgs = @(
     "--noconfirm",
     "--clean",
-    "--onefile",
+    # ✨ onedir：杀软友好，启动快
+    "--onedir",
     "--name", "public_opinion_backend",
     "--distpath", $DIST_DIR,
     "--workpath", (Join-Path $BUILD_DIR "build"),
@@ -86,26 +91,23 @@ $pyinstallerArgs = @(
     "--win-no-prefer-redirects",
     "--additional-hooks-dir", $HOOKS_DIR,
     "--runtime-hook", (Join-Path $HOOKS_DIR "rthook-snownlp.py"),
-    "--collect-all", "snownlp",
-    "--collect-all", "jieba",
-    "--collect-all", "wordcloud",
-    "--add-data", "${snownlpPath}/normal/stopwords.txt;snownlp/normal/",
-    "--add-data", "${snownlpPath}/normal/pinyin.txt;snownlp/normal/",
-    "--add-data", "${snownlpPath}/seg/data.txt;snownlp/seg/",
-    "--add-data", "${snownlpPath}/seg/seg.marshal;snownlp/seg/",
-    "--add-data", "${snownlpPath}/seg/seg.marshal.3;snownlp/seg/",
-    "--add-data", "${snownlpPath}/sentiment/neg.txt;snownlp/sentiment/",
-    "--add-data", "${snownlpPath}/sentiment/pos.txt;snownlp/sentiment/",
-    "--add-data", "${snownlpPath}/sentiment/sentiment.marshal;snownlp/sentiment/",
-    "--add-data", "${snownlpPath}/sentiment/sentiment.marshal.3;snownlp/sentiment/",
-    "--add-data", "${snownlpPath}/tag/199801.txt;snownlp/tag/",
-    "--add-data", "${snownlpPath}/tag/tag.marshal;snownlp/tag/",
-    "--add-data", "${snownlpPath}/tag/tag.marshal.3;snownlp/tag/",
+    # hooks 已经收集了 snownlp/jieba/wordcloud 的数据文件，仅显式 submodules
+    "--collect-submodules", "snownlp",
+    "--collect-submodules", "jieba",
+    "--collect-submodules", "wordcloud",
     "--hidden-import", "aiosqlite",
     "--collect-submodules", "passlib.handlers",
     "--exclude-module", "tkinter",
     "--exclude-module", "matplotlib",
-    "--exclude-module", "scipy"
+    "--exclude-module", "scipy",
+    "--exclude-module", "IPython",
+    "--exclude-module", "unittest",
+    "--exclude-module", "pydoc",
+    "--exclude-module", "test",
+    "--exclude-module", "tests",
+    "--exclude-module", "PIL.ImageQt",
+    "--exclude-module", "PIL.ImageTk",
+    "--exclude-module", "numpy.tests"
 )
 
 # 追加 CRT DLL
@@ -118,13 +120,15 @@ if (Test-Path $STAGED_FONT_FILE) {
 
 $pyinstallerArgs += $ENTRY_FILE
 
-Write-Host "Running pyinstaller..."
+Write-Host "Running pyinstaller (onedir mode)..."
 & pyinstaller @pyinstallerArgs
 
-$backendExe = Join-Path $DIST_DIR "public_opinion_backend.exe"
+# onedir 模式下结果是 DIST_DIR/public_opinion_backend/public_opinion_backend.exe
+$backendBundleDir = Join-Path $DIST_DIR "public_opinion_backend"
+$backendExe = Join-Path $backendBundleDir "public_opinion_backend.exe"
 if (Test-Path $backendExe) {
-    $size = [math]::Round((Get-Item $backendExe).Length / 1MB, 1)
-    Write-Host "桌面后端已输出到 $DIST_DIR ($size MB)" -ForegroundColor Green
+    $bundleSize = (Get-ChildItem -Recurse $backendBundleDir | Measure-Object -Property Length -Sum).Sum / 1MB
+    Write-Host "桌面后端已输出到 $backendBundleDir（onedir，整体 $([math]::Round($bundleSize, 1)) MB）" -ForegroundColor Green
 } else {
     Write-Error "构建失败: $backendExe 未找到"
     exit 1

@@ -8,16 +8,17 @@ from sqlalchemy.pool import StaticPool
 from app.config import settings
 
 # 创建异步引擎
+# SQLite 在单文件模式下任一时刻只能有一个写事务，超大连接池只会让连接互相等锁；
+# 桌面端单进程更不需要 20+ 个连接。这里采用 5/0 的小池配置。
 async_engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
     pool_pre_ping=True,
-    # 连接池优化配置
-    pool_size=20,           # 连接池大小（默认 5）
-    max_overflow=10,        # 最大溢出连接数（默认 10）
-    pool_timeout=30,        # 获取连接的超时时间（秒）
-    pool_recycle=3600,      # 连接回收时间（秒），防止连接过期
+    pool_size=5,
+    max_overflow=0,
+    pool_timeout=30,
+    pool_recycle=3600,
 )
 
 # 创建同步引擎（用于 Alembic 迁移）
