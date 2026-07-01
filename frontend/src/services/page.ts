@@ -34,7 +34,7 @@ export async function deleteSpiderTask(taskId: number): Promise<void> {
 }
 
 export async function createSpiderTask(payload: {
-  task_type: 'weibo' | 'douyin';
+  task_type: 'weibo' | 'douyin' | 'youtube';
   keyword: string;
   max_page: number;
   async_mode: boolean;
@@ -43,7 +43,7 @@ export async function createSpiderTask(payload: {
   return response.data;
 }
 
-export async function fetchSpiderData(platform: 'weibo' | 'douyin', taskId?: number) {
+export async function fetchSpiderData(platform: 'weibo' | 'douyin' | 'youtube', taskId?: number) {
   const search = new URLSearchParams({ page_size: '50' });
   if (taskId) {
     search.set('task_id', String(taskId));

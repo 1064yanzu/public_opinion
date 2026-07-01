@@ -10,6 +10,7 @@ import {
   updateScheduledJob,
 } from '@/services/scheduler';
 import type { ScheduledJob, SchedulerStatus, SmartPhaseInfo } from '@/types';
+import { platformLabel } from '@/types';
 import styles from './ScheduledJobsPanel.module.css';
 
 // ─── 格式化工具 ──────────────────────────────────────
@@ -81,7 +82,7 @@ function JobCard({ job, onToggle, onDelete, onTrigger }: JobCardProps) {
       {/* 顶部 */}
       <div className={styles.jobHeader}>
         <span className={styles.jobKeyword}>{job.keyword}</span>
-        <Badge variant="neutral">{job.task_type === 'weibo' ? '微博' : '抖音'}</Badge>
+        <Badge variant="neutral">{platformLabel(job.task_type)}</Badge>
         <Badge variant={job.is_active ? 'success' : 'warning'}>
           {job.is_active ? '监控中' : '已暂停'}
         </Badge>

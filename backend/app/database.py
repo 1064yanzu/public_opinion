@@ -81,7 +81,7 @@ async def init_db():
     """创建所有数据库表"""
     async with async_engine.begin() as conn:
         # 导入所有模型
-        from app.models import user, task, weibo, douyin, hotspot, scheduled_job  # noqa: F401
+        from app.models import user, task, weibo, douyin, youtube, hotspot, scheduled_job  # noqa: F401
         
         # 创建表
         await conn.run_sync(Base.metadata.create_all)

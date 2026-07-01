@@ -74,6 +74,7 @@ class EnvironmentSettings(BaseSettings):
     CRAWLER_TIMEOUT: int = 30
     CRAWLER_DELAY: float = 1.0
     DOUYIN_COOKIE: str = ""
+    YOUTUBE_API_KEY: str = ""
 
     ENABLE_MONITORING: bool = True
     MONITORING_INTERVAL: int = 60
@@ -125,6 +126,7 @@ class SettingsSnapshot(BaseModel):
     CRAWLER_TIMEOUT: int
     CRAWLER_DELAY: float
     DOUYIN_COOKIE: str
+    YOUTUBE_API_KEY: str
     ENABLE_MONITORING: bool
     MONITORING_INTERVAL: int
 
@@ -203,6 +205,7 @@ class SettingsProxy:
             CRAWLER_TIMEOUT=runtime_config.crawler_timeout or env.CRAWLER_TIMEOUT,
             CRAWLER_DELAY=runtime_config.crawler_delay or env.CRAWLER_DELAY,
             DOUYIN_COOKIE=runtime_config.douyin_cookie or env.DOUYIN_COOKIE,
+            YOUTUBE_API_KEY=runtime_config.youtube_api_key or env.YOUTUBE_API_KEY,
             ENABLE_MONITORING=env.ENABLE_MONITORING,
             MONITORING_INTERVAL=env.MONITORING_INTERVAL,
         )

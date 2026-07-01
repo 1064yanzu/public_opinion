@@ -28,7 +28,7 @@ function getSentimentChartData(stats: AdvancedStats | null) {
 
 export const Analysis: React.FC = () => {
   const [keyword, setKeyword] = useState('');
-  const [platform, setPlatform] = useState<'weibo' | 'douyin'>('weibo');
+  const [platform, setPlatform] = useState<'weibo' | 'douyin' | 'youtube'>('weibo');
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<number | null>(null);
@@ -166,13 +166,20 @@ export const Analysis: React.FC = () => {
               >
                 抖音
               </button>
+              <button
+                type="button"
+                className={`${styles.platformBtn} ${platform === 'youtube' ? styles.active : ''}`}
+                onClick={() => setPlatform('youtube')}
+              >
+                YouTube
+              </button>
             </div>
             <div className={styles.inputWrapper}>
               <input
                 type="text"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder={`请输入${platform === 'weibo' ? '微博' : '抖音'}关键词...`}
+                placeholder={`请输入${platform === 'weibo' ? '微博' : platform === 'douyin' ? '抖音' : 'YouTube'}关键词...`}
                 className={styles.searchInput}
                 disabled={analyzing}
               />

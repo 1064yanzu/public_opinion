@@ -85,3 +85,42 @@ class DouyinListResponse(BaseModel):
     """抖音数据列表响应"""
     total: int = Field(..., description="总数")
     data: List[DouyinResponse] = Field(..., description="数据列表")
+
+
+class YoutubeBase(BaseModel):
+    """YouTube 数据基础模型"""
+    video_id: str = Field(..., description="视频ID")
+    title: Optional[str] = Field(None, description="视频标题")
+    content: Optional[str] = Field(None, description="视频描述")
+    author: Optional[str] = Field(None, description="频道名称")
+    author_id: Optional[str] = Field(None, description="频道ID")
+    publish_time: Optional[datetime] = Field(None, description="发布时间")
+    like_count: int = Field(default=0, description="点赞数")
+    comment_count: int = Field(default=0, description="评论数")
+    share_count: int = Field(default=0, description="转发数（YouTube 无，恒为 0）")
+    view_count: int = Field(default=0, description="播放量")
+    url: Optional[str] = Field(None, description="链接")
+    duration: Optional[str] = Field(None, description="视频时长")
+
+
+class YoutubeCreate(YoutubeBase):
+    """创建 YouTube 数据"""
+    task_id: Optional[int] = Field(None, description="关联任务ID")
+
+
+class YoutubeResponse(YoutubeBase):
+    """YouTube 数据响应"""
+    id: int = Field(..., description="数据ID")
+    task_id: Optional[int] = Field(None, description="关联任务ID")
+    sentiment_score: Optional[float] = Field(None, ge=0, le=1, description="情感分数")
+    sentiment_label: Optional[SentimentLabel] = Field(None, description="情感标签")
+    created_at: datetime = Field(..., description="创建时间")
+
+    class Config:
+        from_attributes = True
+
+
+class YoutubeListResponse(BaseModel):
+    """YouTube 数据列表响应"""
+    total: int = Field(..., description="总数")
+    data: List[YoutubeResponse] = Field(..., description="数据列表")

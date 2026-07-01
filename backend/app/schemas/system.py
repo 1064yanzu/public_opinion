@@ -14,6 +14,7 @@ class SystemConfigPayload(BaseModel):
     ai_model_id: str | None = Field(default=None, description="模型 ID")
     weibo_cookie: str | None = Field(default=None, description="微博 Cookie")
     douyin_cookie: str | None = Field(default=None, description="抖音 Cookie")
+    youtube_api_key: str | None = Field(default=None, description="YouTube Data API Key")
     crawler_max_page: int | None = Field(default=None, ge=1, le=100, description="默认最大页数")
     crawler_timeout: int | None = Field(default=None, ge=5, le=300, description="爬虫超时时间")
     crawler_delay: float | None = Field(default=None, ge=0, le=10, description="爬虫请求延迟")

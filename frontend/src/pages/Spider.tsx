@@ -10,6 +10,7 @@ import { Loading } from '@/components/common/Loading';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { ScheduledJobsPanel } from '@/components/spider/ScheduledJobsPanel';
 import type { SpiderDataItem, SpiderTaskSummary } from '@/types';
+import { platformLabel } from '@/types';
 import styles from './Spider.module.css';
 
 
@@ -48,7 +49,7 @@ function mapTaskStatus(status: SpiderTaskSummary['status']) {
 
 export function Spider() {
   const [keyword, setKeyword] = useState('');
-  const [platform, setPlatform] = useState<'weibo' | 'douyin'>('weibo');
+  const [platform, setPlatform] = useState<'weibo' | 'douyin' | 'youtube'>('weibo');
   const [maxPage, setMaxPage] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -82,7 +83,7 @@ export function Spider() {
     return nextTaskId;
   };
 
-  const loadRows = async (taskId: number | null, currentPlatform: 'weibo' | 'douyin') => {
+  const loadRows = async (taskId: number | null, currentPlatform: 'weibo' | 'douyin' | 'youtube') => {
     setTableLoading(true);
     try {
       const response = await fetchSpiderData(currentPlatform, taskId ?? undefined);
@@ -274,6 +275,13 @@ export function Spider() {
               >
                 抖音
               </button>
+              <button
+                className={`${styles.platformBtn} ${platform === 'youtube' ? styles.active : ''}`}
+                type="button"
+                onClick={() => setPlatform('youtube')}
+              >
+                YouTube
+              </button>
             </div>
 
             <label className={styles.field}>
@@ -326,7 +334,7 @@ export function Spider() {
               >
                 <div className={styles.taskMeta}>
                   <strong>{task.keyword}</strong>
-                  <span>{task.task_type === 'weibo' ? '微博' : '抖音'} · {formatDate(task.created_at)}</span>
+                  <span>{platformLabel(task.task_type)} · {formatDate(task.created_at)}</span>
                 </div>
                 <div className={styles.taskActions}>
                   <Badge variant={mapTaskStatus(task.status).variant}>

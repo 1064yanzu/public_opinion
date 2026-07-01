@@ -29,6 +29,7 @@ class Task(Base):
     user = relationship("User", back_populates="tasks")
     weibo_data = relationship("WeiboData", back_populates="task", cascade="all, delete-orphan")
     douyin_data = relationship("DouyinData", back_populates="task", cascade="all, delete-orphan")
+    youtube_data = relationship("YoutubeData", back_populates="task", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Task(id={self.id}, type='{self.task_type}', keyword='{self.keyword}', status='{self.status}')>"

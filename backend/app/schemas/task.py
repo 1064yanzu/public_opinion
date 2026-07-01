@@ -11,6 +11,7 @@ class TaskType(str, Enum):
     """任务类型枚举"""
     WEIBO = "weibo"
     DOUYIN = "douyin"
+    YOUTUBE = "youtube"
 
 
 class TaskStatus(str, Enum):

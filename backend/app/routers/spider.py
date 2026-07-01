@@ -12,9 +12,11 @@ from app.models.user import User
 from app.models.task import Task
 from app.models.weibo import WeiboData
 from app.models.douyin import DouyinData
+from app.models.youtube import YoutubeData
 from app.schemas import (
     TaskCreate, TaskResponse, TaskListResponse, TaskStatus, TaskType,
     WeiboListResponse, WeiboResponse, DouyinListResponse, DouyinResponse,
+    YoutubeListResponse, YoutubeResponse,
     MessageResponse
 )
 
@@ -114,6 +116,10 @@ async def execute_spider_task(
     elif task_type == "douyin":
         from app.services.douyin_spider import DouyinSpider
         spider = DouyinSpider()
+        return await spider.search_and_save(keyword, max_page, task, db)
+    elif task_type == "youtube":
+        from app.services.youtube_spider import YouTubeSpider
+        spider = YouTubeSpider()
         return await spider.search_and_save(keyword, max_page, task, db)
     else:
         raise ValueError(f"不支持的任务类型: {task_type}")
@@ -325,5 +331,43 @@ async def get_douyin_data(
     query = query.order_by(DouyinData.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
     data = result.scalars().all()
-    
+
     return DouyinListResponse(total=total, data=data)
+
+
+@router.get("/youtube", response_model=YoutubeListResponse, summary="获取YouTube数据",
+            description="获取 YouTube 爬虫数据列表")
+async def get_youtube_data(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    task_id: Optional[int] = Query(None, description="任务ID筛选"),
+    keyword: Optional[str] = Query(None, description="内容关键词搜索"),
+    sentiment: Optional[str] = Query(None, description="情感筛选"),
+    db: AsyncSession = Depends(get_db)
+):
+    """获取 YouTube 数据列表"""
+    query = select(YoutubeData)
+    count_query = select(func.count()).select_from(YoutubeData)
+
+    if task_id:
+        query = query.where(YoutubeData.task_id == task_id)
+        count_query = count_query.where(YoutubeData.task_id == task_id)
+
+    if keyword:
+        query = query.where(YoutubeData.content.contains(keyword))
+        count_query = count_query.where(YoutubeData.content.contains(keyword))
+
+    if sentiment:
+        query = query.where(YoutubeData.sentiment_label == sentiment)
+        count_query = count_query.where(YoutubeData.sentiment_label == sentiment)
+
+    # 统计总数
+    result = await db.execute(count_query)
+    total = result.scalar()
+
+    # 分页查询
+    query = query.order_by(YoutubeData.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    data = result.scalars().all()
+
+    return YoutubeListResponse(total=total, data=data)

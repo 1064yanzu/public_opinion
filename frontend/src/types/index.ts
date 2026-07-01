@@ -1,3 +1,19 @@
+// 支持的采集平台
+export type SpiderPlatform = 'weibo' | 'douyin' | 'youtube';
+
+export const PLATFORM_LABELS: Record<SpiderPlatform, string> = {
+    weibo: '微博',
+    douyin: '抖音',
+    youtube: 'YouTube',
+};
+
+export function platformLabel(platform?: string | null): string {
+    if (!platform) {
+        return '未知';
+    }
+    return PLATFORM_LABELS[platform as SpiderPlatform] ?? platform;
+}
+
 export interface User {
     id: number;
     username: string;
@@ -9,7 +25,7 @@ export interface User {
 
 export interface Task {
     id: number;
-    task_type: 'weibo' | 'douyin';
+    task_type: SpiderPlatform;
     keyword: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
     total_data: number;
@@ -79,6 +95,7 @@ export interface SystemConfigPayload {
     ai_model_id?: string | null;
     weibo_cookie?: string | null;
     douyin_cookie?: string | null;
+    youtube_api_key?: string | null;
     crawler_max_page?: number | null;
     crawler_timeout?: number | null;
     crawler_delay?: number | null;
@@ -120,7 +137,7 @@ export interface WeiboConnectionTestResponse {
 
 export interface SpiderTaskSummary {
     id: number;
-    task_type: 'weibo' | 'douyin';
+    task_type: SpiderPlatform;
     keyword: string;
     status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
     progress: number;
@@ -207,7 +224,7 @@ export interface ManualContentResponse {
 export interface CaseSummary {
     id: number;
     keyword: string;
-    type: 'weibo' | 'douyin';
+    type: SpiderPlatform;
     created_at?: string | null;
     completed_at?: string | null;
 }
@@ -220,7 +237,7 @@ export interface CaseListResponse {
 export interface CaseDetailResponse {
     id: number;
     keyword: string;
-    task_type: 'weibo' | 'douyin';
+    task_type: SpiderPlatform;
     status: string;
     created_at?: string | null;
     started_at?: string | null;
@@ -248,7 +265,7 @@ export interface CaseDetailResponse {
 export interface ScheduledJob {
   id: number;
   keyword: string;
-  task_type: 'weibo' | 'douyin';
+  task_type: SpiderPlatform;
   max_page: number;
   interval_minutes: number;
   use_smart_schedule: boolean;
@@ -269,7 +286,7 @@ export interface ScheduledJobListResponse {
 
 export interface ScheduledJobCreate {
   keyword: string;
-  task_type: 'weibo' | 'douyin';
+  task_type: SpiderPlatform;
   max_page: number;
   use_smart_schedule: boolean;
   interval_minutes: number;

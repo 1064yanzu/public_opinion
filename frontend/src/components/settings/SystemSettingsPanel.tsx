@@ -28,6 +28,7 @@ const EMPTY_CONFIG: SystemConfigPayload = {
   ai_model_id: '',
   weibo_cookie: '',
   douyin_cookie: '',
+  youtube_api_key: '',
   crawler_max_page: 10,
   crawler_timeout: 30,
   crawler_delay: 1,
@@ -364,6 +365,17 @@ export function SystemSettingsPanel() {
               value={form.douyin_cookie ?? ''}
               onChange={(event) => updateField('douyin_cookie', event.target.value)}
               placeholder="需要采集抖音数据时再填写。"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>YouTube API Key</label>
+            <input
+              className={styles.input}
+              type="password"
+              value={form.youtube_api_key ?? ''}
+              onChange={(event) => updateField('youtube_api_key', event.target.value)}
+              placeholder="在 Google Cloud Console 申请 YouTube Data API v3 Key 后填写。"
             />
           </div>
 

@@ -22,6 +22,7 @@ class RuntimeConfig(BaseModel):
     ai_model_id: str | None = None
     weibo_cookie: str | None = None
     douyin_cookie: str | None = None
+    youtube_api_key: str | None = None
     crawler_max_page: int | None = None
     crawler_timeout: int | None = None
     crawler_delay: float | None = None

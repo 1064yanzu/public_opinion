@@ -11,7 +11,8 @@ from app.schemas.task import (
 )
 from app.schemas.data import (
     SentimentLabel, WeiboBase, WeiboCreate, WeiboResponse, WeiboListResponse,
-    DouyinBase, DouyinCreate, DouyinResponse, DouyinListResponse
+    DouyinBase, DouyinCreate, DouyinResponse, DouyinListResponse,
+    YoutubeBase, YoutubeCreate, YoutubeResponse, YoutubeListResponse
 )
 from app.schemas.common import (
     MessageResponse, ErrorResponse, PaginationParams, StatsResponse,
@@ -42,6 +43,7 @@ __all__ = [
     # Data
     "SentimentLabel", "WeiboBase", "WeiboCreate", "WeiboResponse", "WeiboListResponse",
     "DouyinBase", "DouyinCreate", "DouyinResponse", "DouyinListResponse",
+    "YoutubeBase", "YoutubeCreate", "YoutubeResponse", "YoutubeListResponse",
     # Common
     "MessageResponse", "ErrorResponse", "PaginationParams", "StatsResponse",
     "SentimentDistribution", "HomeDataResponse", "WordCloudResponse",
